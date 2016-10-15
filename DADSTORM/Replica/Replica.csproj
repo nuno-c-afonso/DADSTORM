@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{DC9D549B-FFF4-4A1F-80CB-6FD9AB2BF206}</ProjectGuid>
+    <ProjectGuid>{8AB378F3-75F4-46F1-837C-8E96306E1514}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ProcessCreationService</RootNamespace>
-    <AssemblyName>ProcessCreationService</AssemblyName>
+    <RootNamespace>Replica</RootNamespace>
+    <AssemblyName>Replica</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
