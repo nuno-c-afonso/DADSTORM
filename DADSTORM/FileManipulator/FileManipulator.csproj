@@ -42,6 +42,7 @@
   <ItemGroup>
     <Compile Include="EmptyLineException.cs" />
     <Compile Include="EOFException.cs" />
+    <Compile Include="LineHasOddNumberQuotesException.cs" />
     <Compile Include="LineParser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReadFileByLine.cs" />
