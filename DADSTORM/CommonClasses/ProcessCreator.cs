@@ -13,8 +13,19 @@ namespace CommonClasses {
             // TODO: Receive the Puppet Master's URL, in order to send the logging info to the port 10001
             Process process = new Process();
             process.StartInfo.FileName = "..\\..\\..\\Replica\\bin\\Debug\\Replica.exe";
-            process.StartInfo.Arguments = "-n";
+
+            // Building the arguments for the main
+            process.StartInfo.Arguments = URL + " " + routing + " " + op + " -i";
+            addListString(inputs, process.StartInfo.Arguments);
+            process.StartInfo.Arguments += " -o";
+            addListString(output, process.StartInfo.Arguments);
+
             process.Start();
+        }
+
+        private void addListString(List<string> l, string final) {
+            foreach (string s in l)
+                final += " " + s;
         }
     }
 }

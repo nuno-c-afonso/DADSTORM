@@ -9,8 +9,10 @@ using System.Threading.Tasks;
 namespace PuppetMaster {
     class Program {
         // The arguments are the IP addresses of the Process Creation Services, ordered by the respective operators
+        // TODO: Check if the those IP addresses are the same as the ones given in the configuration file
         static void Main(string[] args) {
             const int PCS_RESERVED_PORT = 10000;
+            const int LOGGING_PORT = 10001;
 
             // TODO: Process the configuration file and then reach the process creation services
 
@@ -22,7 +24,8 @@ namespace PuppetMaster {
                 CommonClasses.IProcessCreator obj = (CommonClasses.IProcessCreator)Activator.GetObject(typeof(CommonClasses.IProcessCreator),
                 "tcp://" + s + ":" + PCS_RESERVED_PORT + "/ProcessCreator");
 
-                obj.createReplica(null, null, null, null, null);
+                // TODO: Send the right arguments
+                obj.createReplica("something", "other", "stuff", new List<string>(), new List<string>());
             }
 
             Console.ReadLine();
