@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PuppetMaster", "PuppetMaste
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Replica", "Replica\Replica.csproj", "{8AB378F3-75F4-46F1-837C-8E96306E1514}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommandLine", "CommandLine\CommandLine.csproj", "{3136F584-ED65-4F87-ACF9-BB9E6824CF65}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{8AB378F3-75F4-46F1-837C-8E96306E1514}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8AB378F3-75F4-46F1-837C-8E96306E1514}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8AB378F3-75F4-46F1-837C-8E96306E1514}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3136F584-ED65-4F87-ACF9-BB9E6824CF65}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3136F584-ED65-4F87-ACF9-BB9E6824CF65}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3136F584-ED65-4F87-ACF9-BB9E6824CF65}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3136F584-ED65-4F87-ACF9-BB9E6824CF65}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
