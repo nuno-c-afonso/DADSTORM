@@ -25,11 +25,7 @@ namespace FileManipulator {
 
                 hasEvenNumberQuotes();
 
-                List<string> splitted = splitByQuotes();
-
-                splitted = finalSplit(splitted);
-
-                return words = new ReadOnlyCollection<string>(splitted);
+                return words = new ReadOnlyCollection<string>(splitAll());
             }
         }
 
@@ -88,6 +84,48 @@ namespace FileManipulator {
             }
 
             return res;
+        }
+
+        // Attempt to merge the three methods
+        private List<string> splitAll() {
+            string str = "";
+            int count = 0;
+            int lineSize = line.Length;
+            bool inside = false;
+            List<string> splitted = new List<string>();
+
+            for (int i = 0; i < lineSize; i++) {
+                if (line[i] == '"') {
+                    count++;
+                    if (str.Length > 0) {
+                        if (inside)
+                            str += '"';
+                        splitted.Add(str);
+                    }
+
+                    str = inside ? "" : "\"";
+                    inside = !inside;
+                }
+
+                else {
+                    if (!inside && (line[i] == ' ' || line[i] == ',' || line[i] == '\t')) {
+                        if (str.Length > 0) {
+                            splitted.Add(str);
+                            str = "";
+                        }
+                    }
+                    else
+                        str += line[i];
+                }
+            }
+
+            if (count % 2 != 0)
+                throw new LineHasOddNumberQuotesException();
+
+            if (str.Length != 0)
+                splitted.Add(str);
+
+            return splitted;
         }
     }
 }
