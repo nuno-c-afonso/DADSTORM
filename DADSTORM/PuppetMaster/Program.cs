@@ -21,11 +21,21 @@ namespace PuppetMaster {
 
             // TODO: Check for the incoming exceptions when the URL is not available
             foreach (string s in args) {
-                CommonClasses.IProcessCreator obj = (CommonClasses.IProcessCreator)Activator.GetObject(typeof(CommonClasses.IProcessCreator),
-                "tcp://" + s + ":" + PCS_RESERVED_PORT + "/ProcessCreator");
+                Console.WriteLine("Calling PCS on address " + s);
+                try
+                {   
+                    CommonClasses.IProcessCreator obj = (CommonClasses.IProcessCreator)Activator.GetObject(typeof(CommonClasses.IProcessCreator),
+                    "tcp://" + s + ":" + PCS_RESERVED_PORT + "/ProcessCreator");
 
-                // TODO: Send the right arguments
-                obj.createReplica("something", "other", "stuff", new List<string>(), new List<string>());
+                    // TODO: Send the right arguments
+                    obj.createReplica("tcp://localhost:10005", "other", "stuff", new List<string>(), new List<string>());
+                }
+                catch (System.Net.Sockets.SocketException e)
+                {
+                    Console.WriteLine("Error with host " + s);
+                    //Console.WriteLine("Exception " + e);
+                }
+                
             }
 
             Console.ReadLine();
