@@ -19,28 +19,47 @@ namespace CommandLine
         }
 
         private void init() {
+            commands = new Dictionary<string, Command>();
+
             commands.Add("start", new StartCommand());
             commands.Add("interval", new IntervalCommand());
             commands.Add("status", new StatusCommand());
             commands.Add("crash", new CrashCommand());
             commands.Add("freeze", new FreezeCommand());
             commands.Add("unfreeze", new UnfreezeCommand());
+            commands.Add("wait", new WaitCommand());
+            commands.Add("", new ZeroLengthStringCommand());
         }
 
         public void execute() {
             bool leave = false;
             string prompt = "> ";
-            string line;
+            string line, first_word;
 
             Console.WriteLine("Puppet Master Shell ('exit' to leave)");
-            Console.WriteLine(prompt);
+
 
             while (!leave) {
                 char[] delimiters = { ' ' };
+                Console.Write(prompt);
                 line = Console.ReadLine();
+                line.ToLower();
 
                 string[] arg = line.Split(delimiters, System.StringSplitOptions.RemoveEmptyEntries);
-                Command c = commands[arg[0]];
+
+                first_word = (arg.Length == 0) ? "" : arg[0].ToLower();
+
+                Command c;
+                if (commands.TryGetValue(first_word, out c)) // Returns true.
+                {
+                    Console.WriteLine(c);
+                }
+                else
+                {
+                    Console.WriteLine("Unknown Command: "+ first_word);
+                    continue;
+                }
+                // Command c = commands[arg[0]];
 
                 // TODO: Finish the class
             }
