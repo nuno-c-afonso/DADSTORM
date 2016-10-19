@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace ProcessCreationService {
-    class Program {
+    class ProcessCreationService {
         static void Main(string[] args) {
             const int PCS_RESERVED_PORT = 10000;
 

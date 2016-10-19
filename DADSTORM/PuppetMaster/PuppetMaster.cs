@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace PuppetMaster {
-    class Program {
+    class PuppetMaster {
         // The arguments are the IP addresses of the Process Creation Services, ordered by the respective operators
         // TODO: Check if the those IP addresses are the same as the ones given in the configuration file
         static void Main(string[] args) {
