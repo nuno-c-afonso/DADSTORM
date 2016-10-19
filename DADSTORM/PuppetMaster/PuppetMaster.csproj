@@ -51,6 +51,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\CommandLine\CommandLine.csproj">
+      <Project>{3136f584-ed65-4f87-acf9-bb9e6824cf65}</Project>
+      <Name>CommandLine</Name>
+    </ProjectReference>
     <ProjectReference Include="..\CommonClasses\CommonClasses.csproj">
       <Project>{8583489c-986a-40c1-b688-5f32fe93783c}</Project>
       <Name>CommonClasses</Name>

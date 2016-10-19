@@ -5,6 +5,7 @@ using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
 using System.Text;
 using System.Threading.Tasks;
+using CommandLine;
 
 namespace PuppetMaster {
     class PuppetMaster {
@@ -37,6 +38,9 @@ namespace PuppetMaster {
                 }
                 
             }
+
+            Shell shell = new Shell();
+            shell.execute();
 
             Console.ReadLine();
         }
