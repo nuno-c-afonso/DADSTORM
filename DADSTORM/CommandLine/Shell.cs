@@ -27,6 +27,7 @@ namespace CommandLine
             commands.Add("crash", new CrashCommand());
             commands.Add("freeze", new FreezeCommand());
             commands.Add("unfreeze", new UnfreezeCommand());
+            commands.Add("wait", new WaitCommand());
             commands.Add("", new ZeroLengthStringCommand());
         }
 
@@ -42,10 +43,11 @@ namespace CommandLine
                 char[] delimiters = { ' ' };
                 Console.Write(prompt);
                 line = Console.ReadLine();
+                line.ToLower();
 
                 string[] arg = line.Split(delimiters, System.StringSplitOptions.RemoveEmptyEntries);
 
-                first_word = (arg.Length == 0) ? "" : arg[0];
+                first_word = (arg.Length == 0) ? "" : arg[0].ToLower();
 
                 Command c;
                 if (commands.TryGetValue(first_word, out c)) // Returns true.
