@@ -21,9 +21,10 @@ namespace Replica {
             List<string> inputs = new List<string>();
             List<string> outputs = new List<string>();
             int i = 0;
-            Object tuple;
-            Operator oper;
-
+            string[] tuple;
+            string[] result;
+            //Operator oper;
+            Operator oper = new Operator();//put the one before and create the one that should b instead
 
             //############ Parse and save the function arguments ###################
             if (args.Length < 3){
@@ -66,13 +67,16 @@ namespace Replica {
             RemotingServices.Marshal(mo, "ReplicaBuffer",typeof(ReplicaInterface));
 
 
-            /*
-            while (1 == 1) {
+            
+            while (mo.simulateCrash()==false) {
                 tuple = mo.getTuple();
-                oper.
+                result = oper.Operate(tuple);
+                
+                //chose Replica to foward
 
+                //
 
-    */
+ 
 
 
             }

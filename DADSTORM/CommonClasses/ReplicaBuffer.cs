@@ -14,7 +14,7 @@ namespace CommonClasses
         bool start = false;
         int interval = 0;
         bool statusRequested = false;//check this
-        bool crashRequested = false;
+        bool crashed = false;
         bool freezed = false;
 
         public ReplicaBuffer(): base(){
@@ -22,19 +22,19 @@ namespace CommonClasses
         }
 
         //TODO make methods
-        public void addTuple(Object tuple) {
+        public void addTuple(string[] tuple) {
             lock(tupleQueue.SyncRoot);
             tupleQueue.Enqueue(tuple);
             Monitor.Exit(tupleQueue.SyncRoot);
             Monitor.Pulse(tupleQueue.SyncRoot);
         }
 
-        public Object getTuple()
+        public string[] getTuple()
         {
             lock(tupleQueue.SyncRoot);
             if (tupleQueue.Count == 0)
                 Monitor.Wait(tupleQueue.SyncRoot);
-            Object result = tupleQueue.Dequeue();
+            string[] result =(String[])tupleQueue.Dequeue();
             Monitor.Exit(tupleQueue.SyncRoot);
             Monitor.Pulse(tupleQueue.SyncRoot);
             return result;
@@ -53,13 +53,18 @@ namespace CommonClasses
             statusRequested = true;
             return "FIXME"; }//TODO how to do this?
         public void Crash() {
-            crashRequested = true;
+            crashed = true;
         }
         public void Freeze() {
             freezed = true;
         }
         public void Unfreeze(){
             freezed = false;
+        }
+
+
+        public bool simulateCrash() {
+            return crashed;
         }
 
 
