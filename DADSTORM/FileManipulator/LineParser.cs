@@ -94,6 +94,9 @@ namespace FileManipulator {
             bool inside = false;
             List<string> splitted = new List<string>();
 
+            if (lineSize > 0 && line[0] == '%')
+                throw new LineIsCommentException();
+
             for (int i = 0; i < lineSize; i++) {
                 if (line[i] == '"') {
                     count++;

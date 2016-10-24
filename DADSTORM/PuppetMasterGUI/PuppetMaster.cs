@@ -17,7 +17,16 @@ namespace PuppetMasterGUI {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new Form1());
-
+            /*
+             * 
+             * 
+             * FIXME: This was the first Main, with the shell!!!
+             * 
+             * 
+             * 
+             * 
+             * 
+             * 
             // The arguments are the IP addresses of the Process Creation Services, ordered by the respective operators
             // TODO: Check if the those IP addresses are the same as the ones given in the configuration file
             const int PCS_RESERVED_PORT = 10000;
@@ -50,6 +59,7 @@ namespace PuppetMasterGUI {
             shell.execute();
 
             Console.ReadLine();
+            */
         }
     }
 }
