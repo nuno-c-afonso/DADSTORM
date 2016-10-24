@@ -8,24 +8,33 @@ using System.Runtime.Remoting.Channels.Tcp;
 using System.Text;
 using System.Threading.Tasks;
 
+
 namespace Replica {
-    public class Replica {
+    public class ReplicaMain {
 
         public static void Main(string[] args) {
 
-            if (args.Length < 3){
-                System.Console.WriteLine(" !!! The number of arguments is not correct: at least 3 expected");
-            }
-
-
-            // Parse and save the function arguments
-            string url = args[0];
+            string url;
             int port;
-            string routing = args[1];
-            string operation = args[2];
+            string routing;
+            string operation;
             List<string> inputs = new List<string>();
             List<string> outputs = new List<string>();
             int i = 0;
+            Object tuple;
+            Operator oper;
+
+
+            //############ Parse and save the function arguments ###################
+            if (args.Length < 3){
+                System.Console.WriteLine(" !!! The number of arguments is not correct: at least 3 expected");
+                return;
+            }
+            
+            url = args[0];
+            routing = args[1];
+            operation = args[2];
+
 
             if (args[3].Equals("-i") && !args[4].Equals("-o"))
                 for (i = 4; !args[i].Equals("-o") || i < args.Length; i++)
@@ -47,22 +56,33 @@ namespace Replica {
  
             CommonClasses.UrlSpliter urlspli = new CommonClasses.UrlSpliter();
             port = int.Parse(urlspli.getPort(url));
-   
+
+
+
+            //############ Open an input chanel ###################
             TcpChannel channel = new TcpChannel(port);
             ChannelServices.RegisterChannel(channel, true);
             ReplicaBuffer mo = new ReplicaBuffer();
             RemotingServices.Marshal(mo, "ReplicaBuffer",typeof(ReplicaInterface));
-            
+
+
+            /*
+            while (1 == 1) {
+                tuple = mo.getTuple();
+                oper.
+
+
+    */
+
+
+            }
+
+
+            //############ Start processing tuples ###################
             //TODO thread that eats the input and send to the next replica
 
 
-            System.Console.WriteLine("");
-
-            //createReplica(string URL, string routing,
-            //    string op, List < string > inputs, List < string > output)
-            //TODO: This is only a test to launch this program from the PCS
-
-            Console.WriteLine("Hello, world!");
+            System.Console.WriteLine("press enter to shutdown");
             Console.ReadLine();
         }
     }
