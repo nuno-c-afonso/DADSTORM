@@ -8,5 +8,10 @@ namespace Replica
 {
     public class CustomOperator : Operator
     {
+        public override string[] Operate(string[] tuple)
+        {
+            //TODO implement
+            return tuple;
+        }
     }
 }

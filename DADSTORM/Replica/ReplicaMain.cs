@@ -23,12 +23,11 @@ namespace Replica {
             int i = 0;
             string[] tuple;
             string[] result;
-            //Operator oper;
-            Operator oper = new DupOperator();//put the one before and create the one that should b instead
+            Operator oper;
 
             //############ Parse and save the function arguments ###################
             if (args.Length < 3){
-                System.Console.WriteLine(" !!! The number of arguments is not correct: at least 3 expected");
+                System.Console.WriteLine("The number of arguments is not correct: at least 3 expected  !!! ");
                 return;
             }
             
@@ -42,7 +41,7 @@ namespace Replica {
                     inputs.Add(args[i]);
             
             else 
-                System.Console.WriteLine(" !!! Input Sources expected");
+                System.Console.WriteLine("Expected Input Sources !!!");
 
 
             if (i <args.Length-1 && args[i].Equals("-o") )
@@ -50,13 +49,35 @@ namespace Replica {
                     outputs.Add(args[i]);
             
             else
-                System.Console.WriteLine(" !!! Output destinations expected");
+                System.Console.WriteLine("Expected output destinations  !!! ");
 
             System.Console.WriteLine("starting repica with URL:{0} \n routing:{1} \n operation {2}"
                     , url, routing, operation);//TODO can add more information
  
             CommonClasses.UrlSpliter urlspli = new CommonClasses.UrlSpliter();
             port = int.Parse(urlspli.getPort(url));
+
+
+            //############ creating an operator of the wanted type ############
+
+            switch (operation)
+            {
+                case "UNIQ":
+                    oper = new UniqOperator();
+                    break;
+                case "COUNT":
+                    oper = new CountOperator();
+                    break;
+                case "DUP":
+                    oper = new DupOperator();
+                    break;
+                case "FILTER":
+                    oper = new FilterOperator();
+                    break;
+                default:
+                    System.Console.WriteLine("the type of operation {0} is not known", operation);
+                    return;
+            }
 
 
 
