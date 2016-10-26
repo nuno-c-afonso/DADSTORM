@@ -63,27 +63,45 @@ namespace Replica {
             //############ Open an input chanel ###################
             TcpChannel channel = new TcpChannel(port);
             ChannelServices.RegisterChannel(channel, true);
-            ReplicaBuffer mo = new ReplicaBuffer();
-            RemotingServices.Marshal(mo, "ReplicaBuffer",typeof(ReplicaInterface));
-
+            ReplicaBuffer input = new ReplicaBuffer();
+            RemotingServices.Marshal(input, "ReplicaBuffer",typeof(ReplicaInterface));
 
             
-            while (mo.simulateCrash()==false) {
-                tuple = mo.getTuple();
+            //############ Create a consumer of the buffer ###################//CHECK
+            
+            //Should do like this or create an object to do it ??????????????????
+            
+            //############ Start processing tuples ###################//CHECK
+            while (input.Crashed == false) {
+                //see if it is feezed
+                input.checkFreeze();
+
+                //get tuple from the buffer
+                tuple = input.getTuple();
+
+                //see its own type of routin,
+                // if is primary and is the primary one select who will handle it
+                //else continue
+
+
                 result = oper.Operate(tuple);
+
+                //see the type of routing used by the desyination
                 
                 //chose Replica to foward
+                //TODO
 
-                //
-
+                //send to that replixa
+                //TODO
+                
+                //wait the defined time between processing
  
 
 
             }
 
 
-            //############ Start processing tuples ###################
-            //TODO thread that eats the input and send to the next replica
+
 
 
             System.Console.WriteLine("press enter to shutdown");

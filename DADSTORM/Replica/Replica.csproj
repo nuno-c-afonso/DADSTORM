@@ -44,6 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Consumer.cs" />
     <Compile Include="CountOperator.cs" />
     <Compile Include="CustomOperator.cs" />
     <Compile Include="DupOperator.cs" />
