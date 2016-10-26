@@ -24,7 +24,7 @@ namespace Replica {
             string[] tuple;
             string[] result;
             //Operator oper;
-            Operator oper = new Operator();//put the one before and create the one that should b instead
+            Operator oper = new DupOperator();//put the one before and create the one that should b instead
 
             //############ Parse and save the function arguments ###################
             if (args.Length < 3){
