@@ -77,18 +77,13 @@ namespace CommonClasses
         //Command used to simulate slow server
         //USED BY:PuppetMaster
         public void Freeze() {
-            lock(freezed);
             freezed = true;
-            Monitor.Exit(freezed);
-            Monitor.PulseAll(freezed);
         }
 
         //Command used to end the slow server simulation
         //USED BY:PuppetMaster
         public void Unfreeze(){
-            lock(freezed);
             freezed = false;
-            Monitor.Exit(freezed);
             Monitor.PulseAll(freezed);
         }
 
@@ -96,7 +91,6 @@ namespace CommonClasses
         //if the freeze is true who call this will wait until it is unfreezed
         //USED BY: owner(replica)
         public void checkFreeze() {
-            lock(freezed);
             while ((bool)freezed == true)
                 Monitor.Wait(freezed);
             Monitor.Exit(freezed);

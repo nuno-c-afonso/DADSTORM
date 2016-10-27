@@ -14,6 +14,12 @@ namespace Replica {
 
         public static void Main(string[] args) {
 
+            //TODO remove
+            for (int xcd = 0; xcd < args.Length; xcd++)
+                System.Console.WriteLine(args[xcd]);
+
+            
+
             string url;
             int port;
             string routing;
@@ -33,7 +39,8 @@ namespace Replica {
             
             url = args[0];
             routing = args[1];
-            operation = args[2];
+            operation = args[2];//last of the last version
+
 
 
             if (args[3].Equals("-i") && !args[4].Equals("-o"))
@@ -72,7 +79,7 @@ namespace Replica {
                     oper = new DupOperation();
                     break;
                 case "FILTER":
-                    oper = new FilterOperation();
+                    oper = new FilterOperation("x","X","X");
                     break;
                 default:
                     System.Console.WriteLine("the type of operation {0} is not known", operation);
@@ -106,6 +113,8 @@ namespace Replica {
 
 
                 result = oper.Operate(tuple);
+                if (result != null)
+                    result = null;//do nothing
 
                 //see the type of routing used by the desyination
                 

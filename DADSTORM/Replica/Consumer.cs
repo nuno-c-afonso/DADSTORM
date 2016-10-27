@@ -6,7 +6,15 @@ using System.Threading.Tasks;
 
 namespace Replica
 {
-    class Consumer
+    public class Consumer
     {
+        string[] tuple;
+        string[] result;
+
+
+
+
+
+
     }
 }
