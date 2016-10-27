@@ -2,7 +2,6 @@
 using System.Runtime.Serialization;
 
 namespace FileManipulator {
-    [Serializable]
     public class LineIsCommentException : System.ApplicationException {
         public LineIsCommentException() { }
 

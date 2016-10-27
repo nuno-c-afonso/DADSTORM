@@ -23,7 +23,7 @@ namespace Replica {
             int i = 0;
             string[] tuple;
             string[] result;
-            Operator oper;
+            Operation oper;
 
             //############ Parse and save the function arguments ###################
             if (args.Length < 3){
@@ -63,16 +63,16 @@ namespace Replica {
             switch (operation)
             {
                 case "UNIQ":
-                    oper = new UniqOperator();
+                    oper = new UniqOperation();
                     break;
                 case "COUNT":
-                    oper = new CountOperator();
+                    oper = new CountOperation();
                     break;
                 case "DUP":
-                    oper = new DupOperator();
+                    oper = new DupOperation();
                     break;
                 case "FILTER":
-                    oper = new FilterOperator();
+                    oper = new FilterOperation();
                     break;
                 default:
                     System.Console.WriteLine("the type of operation {0} is not known", operation);

@@ -6,10 +6,12 @@ using System.Threading.Tasks;
 
 namespace Replica
 {
-    public class DupOperator : Operator{
-        public override string[] Operate(string[] tuple){
+    public class CustomOperation : Operation
+    {
+        public override string[] Operate(string[] tuple)
+        {
+            //TODO implement
             return tuple;
         }
     }
-
 }

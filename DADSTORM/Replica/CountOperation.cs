@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Replica
 {
-    public class FilterOperator : Operator
+    public class CountOperation : Operation
     {
         public override string[] Operate(string[] tuple)
         {

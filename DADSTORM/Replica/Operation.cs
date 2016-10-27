@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Replica{
-    public abstract class Operator {
+    public abstract class Operation {
 
         public abstract string[] Operate(string[] tuple);
             

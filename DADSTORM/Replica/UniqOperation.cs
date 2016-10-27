@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Replica
 {
-    public class UniqOperator : Operator
+    public class UniqOperation : Operation
     {
         public override string[] Operate(string[] tuple)
         {
