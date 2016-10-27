@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace CommonClasses
 {
     public interface IProcessCreator {
-        void createReplica(string masterURL, string routing, string op,
-            string semantics, string logLevel, List<string> replicas, List<string> output);
+        void createReplica(string masterURL, string routing, string semantics, string logLevel,
+            int repIndex, List<string> op, List<string> replicas, List<string> output);
     }
 }
