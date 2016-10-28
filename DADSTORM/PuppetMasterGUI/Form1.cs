@@ -100,10 +100,13 @@ namespace PuppetMasterGUI {
                                 // TODO: Send the right arguments
                                 //TODO last argument is the addresses of replicas of next operator?
                                 //      if it is this should be done after the map OP1 -> OP2 is created  **step 2
-                                
+
+                                //puts OperatorType at the start of OperatorParameters (necessary for replica main)
+                                opb.SpecificParameters.Insert(0, opb.OperatorType);
 
                                 obj.createReplica("tcp://localhost:" + port++.ToString(), opb.Routing, semantics, loggingLevel,
                                                                    i, opb.SpecificParameters, opb.Addresses, new List<string>());
+
                             }
                             catch (System.Net.Sockets.SocketException e)
                             {
