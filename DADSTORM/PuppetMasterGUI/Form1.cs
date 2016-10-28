@@ -84,23 +84,34 @@ namespace PuppetMasterGUI {
                     default:
                        //# TODO Call create replica here
                         OperatorBuilder opb = new OperatorBuilder(ln.Words.ToList());
+                        //Use Name and Input to create a graph/map to know the next node  **step 1
+
                         Debug.WriteLine(opb.Name);
 
-                        string s = "localhost";
-                        Console.WriteLine("Calling PCS on address " + s);
-                        try
+                        for (int i = 0; i < opb.RepFactor; i++)
                         {
-                            CommonClasses.IProcessCreator obj = (CommonClasses.IProcessCreator)Activator.GetObject(typeof(CommonClasses.IProcessCreator),
-                            "tcp://" + s + ":" + PCS_RESERVED_PORT + "/ProcessCreator");
+                            string s = "localhost";
+                            Console.WriteLine("Calling PCS on address " + s);
+                            try
+                            {
+                                CommonClasses.IProcessCreator obj = (CommonClasses.IProcessCreator)Activator.GetObject(typeof(CommonClasses.IProcessCreator),
+                                "tcp://" + s + ":" + PCS_RESERVED_PORT + "/ProcessCreator");
 
-                            // TODO: Send the right arguments
-                            obj.createReplica("tcp://localhost:"+ port++.ToString(), "routing", semantics, loggingLevel, 1, new List<string>(), new List<string>(), new List<string>());
+                                // TODO: Send the right arguments
+                                //TODO last argument is the addresses of replicas of next operator?
+                                //      if it is this should be done after the map OP1 -> OP2 is created  **step 2
+                                
+
+                                obj.createReplica("tcp://localhost:" + port++.ToString(), opb.Routing, semantics, loggingLevel,
+                                                                   i, opb.SpecificParameters, opb.Addresses, new List<string>());
+                            }
+                            catch (System.Net.Sockets.SocketException e)
+                            {
+                                Console.WriteLine("Error with host " + s);
+                                //Console.WriteLine("Exception " + e);
+                            }
                         }
-                        catch (System.Net.Sockets.SocketException e)
-                        {
-                            Console.WriteLine("Error with host " + s);
-                            //Console.WriteLine("Exception " + e);
-                        }
+                        
                         break;
                 }
 
