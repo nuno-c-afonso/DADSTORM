@@ -18,21 +18,28 @@ namespace Replica {
             this.methodName = methodName;
         }
 
+        // Remember: The class name should be the complete one, which has the namespace
+        /*
+         *
+         * TODO: The output can be more than one tuple!!! 
+         * 
+        */
         public override string[] Operate(string[] tuple) {
-            
-            try {
-                Assembly library = Assembly.LoadFile(Directory.GetCurrentDirectory() + @"\" + dllName);
-                Object o = library.CreateInstance(className);
+            Assembly library = Assembly.LoadFile(Directory.GetCurrentDirectory() + @"\" + dllName);
+            Object o = library.CreateInstance(className);
+            if (o != null) {
                 Type[] argsTypes = { typeof(List<string>) };
 
                 MethodInfo mi = o.GetType().GetMethod(methodName, argsTypes);
+                if (mi != null)
+                    return (string[]) mi.Invoke(o, new Object[] { new List<string>(tuple) });
 
-            } catch(System.IO.FileNotFoundException e) {
-                Console.WriteLine("The .dll file was not found!");
+                else
+                    throw new MethodNotFoundException();
             }
 
-
-            return tuple;
+            else
+                throw new ClassNotFoundException();
         }
     }
 }
