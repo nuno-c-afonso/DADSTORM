@@ -28,7 +28,7 @@ namespace Replica {
             List<string> outputs = new List<string>();
             int i = 0;
             string[] tuple;
-            string[] result;
+            List<string[]> result;
             Operation oper;
 
             //############ Parse and save the function arguments ###################

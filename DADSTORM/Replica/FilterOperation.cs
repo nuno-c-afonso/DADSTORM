@@ -45,9 +45,12 @@ namespace Replica
             else
                 return false;
         }
-        public override string[] Operate(string[] tuple){
-            if (conditionCheck(tuple[fieldNumber], value))
-                return tuple;
+        public override List<string[]> Operate(string[] tuple){
+            if (conditionCheck(tuple[fieldNumber], value)) {
+                List<string[]> l = new List<string[]>();
+                l.Add(tuple);
+                return l;
+            }
             else
                 return null;
         }

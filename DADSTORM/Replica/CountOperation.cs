@@ -8,10 +8,10 @@ namespace Replica
 {
     public class CountOperation : Operation
     {
-        public override string[] Operate(string[] tuple)
+        public override List<string[]> Operate(string[] tuple)
         {
             //TODO implement
-            return tuple;
+            throw new NotImplementedException();
         }
     }
 }

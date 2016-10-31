@@ -19,12 +19,7 @@ namespace Replica {
         }
 
         // Remember: The class name should be the complete one, which has the namespace
-        /*
-         *
-         * TODO: The output can be more than one tuple!!! 
-         * 
-        */
-        public override string[] Operate(string[] tuple) {
+        public override List<string[]> Operate(string[] tuple) {
             Assembly library = Assembly.LoadFile(Directory.GetCurrentDirectory() + @"\" + dllName);
             Object o = library.CreateInstance(className);
             if (o != null) {
@@ -32,7 +27,7 @@ namespace Replica {
 
                 MethodInfo mi = o.GetType().GetMethod(methodName, argsTypes);
                 if (mi != null)
-                    return (string[]) mi.Invoke(o, new Object[] { new List<string>(tuple) });
+                    return (List<string[]>) mi.Invoke(o, new Object[] { new List<string>(tuple) });
 
                 else
                     throw new MethodNotFoundException();

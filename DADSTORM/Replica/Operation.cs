@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Replica{
     public abstract class Operation {
 
-        public abstract string[] Operate(string[] tuple);
+        public abstract List<string[]> Operate(string[] tuple);
             
 
     }
