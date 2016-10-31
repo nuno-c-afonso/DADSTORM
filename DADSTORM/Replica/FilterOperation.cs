@@ -8,10 +8,48 @@ namespace Replica
 {
     public class FilterOperation : Operation
     {
-        public override string[] Operate(string[] tuple)
-        {
-            //TODO implement
-            return tuple;
+        int fieldNumber;
+        string condition;
+        string value;
+        delegate bool checkcondition(string tupValue, string value);
+        checkcondition conditionCheck;
+
+        public FilterOperation(string field_number,string condition,string value){
+            fieldNumber = int.Parse(field_number);
+            this.value = value;
+            if (condition.Equals("<"))
+                conditionCheck = new checkcondition(lessThan);
+            if (condition.Equals(">"))
+                conditionCheck = new checkcondition(moreThan);
+            if (condition.Equals("="))
+                conditionCheck = new checkcondition(equal);
+        }
+
+        public static bool lessThan(string tupValue ,string  value ) {
+            if (tupValue.CompareTo(value) < 0)
+                return true;
+            else
+                return false;
+        }
+
+        public static bool moreThan(string tupValue, string value){
+            if (tupValue.CompareTo(value) > 0)
+                return true;
+            else
+                return false;
+        }
+
+        public static bool equal(string tupValue, string value){
+            if (tupValue.CompareTo(value) == 0)
+                return true;
+            else
+                return false;
+        }
+        public override string[] Operate(string[] tuple){
+            if (conditionCheck(tuple[fieldNumber], value))
+                return tuple;
+            else
+                return null;
         }
     }
 }
