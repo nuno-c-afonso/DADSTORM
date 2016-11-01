@@ -42,8 +42,8 @@ namespace PuppetMasterGUI
             SpecificParameters = words.Skip(i+1).Take(words.Count - i).ToList();
             
 
-            Debug.WriteLine("OP: {0}\n\t input: {1} \n\t rep_factor: {2}\n\t routing: {3}\n\t addresses: {4}\n\t  Type: {5}\n\t specific paremeters: {6}"
-                    , Name, Input, RepFactor, Routing, string.Join(",", Addresses), OperatorType, string.Join(",", SpecificParameters) );//TODO can add more information
+            //Debug.WriteLine("OP: {0}\n\t input: {1} \n\t rep_factor: {2}\n\t routing: {3}\n\t addresses: {4}\n\t  Type: {5}\n\t specific paremeters: {6}"
+            //        , Name, Input, RepFactor, Routing, string.Join(",", Addresses), OperatorType, string.Join(",", SpecificParameters) );//TODO can add more information
             
         }
 

@@ -16,8 +16,15 @@ using System.Runtime.Remoting;
 namespace PuppetMasterGUI {
     public partial class Form1 : Form {
         private ReadFileByLineFiltered lineParser;
+        CommonClasses.UrlSpliter urlsplitter = new CommonClasses.UrlSpliter();
+       
+
         private string loggingLevel ="light";
         private string semantics = "at-most-once";
+
+        private List<string> operatorNames = new List<string>();
+        private Dictionary<string, string> whereToSend = new Dictionary<string, string>(); // OP1 -> OP2 cause 'OP2 input ops OP1'
+        private Dictionary<string, OperatorBuilder> operatorNameToOperatorBuilderDictionary = new Dictionary<string, OperatorBuilder>();
 
         const int PCS_RESERVED_PORT = 10000;
         const int LOGGING_PORT = 10001;
@@ -74,7 +81,6 @@ namespace PuppetMasterGUI {
 
         private void runConfigCommands(List<string> lines)
         {
-            int port = 10005;
             foreach (var line in lines)
             {
                 ConsoleBox.AppendText(line+ "\r\n");
@@ -89,20 +95,69 @@ namespace PuppetMasterGUI {
                         loggingLevel = ln.Words[1];
                         break;
                     default:
-                       //# TODO Call create replica here
+                        //# TODO Call create replica here
                         OperatorBuilder opb = new OperatorBuilder(ln.Words.ToList());
+
+                        // use a class for this 3 variables ? #TODO FIXME
+                        operatorNames.Add(opb.Name);
+                        whereToSend.Add(opb.Input, opb.Name);
+                        operatorNameToOperatorBuilderDictionary.Add(opb.Name, opb);
+
+
                         //Use Name and Input to create a graph/map to know the next node  **step 1
 
-                        Debug.WriteLine(opb.Name);
+                        Debug.WriteLine("created fields association " + opb.Name);
+                        break;
+
+                }
+
+            }
+            int port = 10005;
+            foreach (var line in lines)
+            {
+                LineParser ln = new LineParser(line);
+                Debug.WriteLine(ln.Words[0]);
+                switch (ln.Words[0])
+                {
+                    case "Semantics":
+                        break;
+                    case "LoggingLevel":
+                        break;
+                    default:
+                        //# TODO Call create replica here
+                        OperatorBuilder opb = new OperatorBuilder(ln.Words.ToList()); //is it really necessary to rebuild this here ?
+
+                        // get outputReplicaList
+                        //      get whereToSend
+                        var outList = new List<string>();
+
+                        string nextOP;
+                        if( whereToSend.TryGetValue(opb.Name, out nextOP) )
+                        {
+                            OperatorBuilder o = operatorNameToOperatorBuilderDictionary[nextOP]; // need to check first ?
+                            outList = o.Addresses;
+                        }
+
+
+                        //Use Name and Input to create a graph/map to know the next node  **step 1
+                        
+                        Debug.WriteLine("\n### "+ opb.Name);
+                        Debug.WriteLine("-- nextAddresses " + string.Join(",", outList));
+
 
                         for (int i = 0; i < opb.RepFactor; i++)
                         {
-                            string s = "localhost";
-                            Console.WriteLine("Calling PCS on address " + s);
+                            Console.WriteLine("- Replica number " + i);
+                            Console.WriteLine("Machine Address: {0}\t port: {1}", urlsplitter.getAdress(opb.Addresses[i]), urlsplitter.getPort(opb.Addresses[i]));
+                            // TODO FIXME pcsAddress should be urlsplitter.getAdress(opb.Addresses[i])
+                            // but for now i can only create on localhost, not sure how to use addresses from configfile i do not control
+                            string pcsAddress = "localhost";
+                            Console.WriteLine("Calling PCS on address " + pcsAddress);
                             try
                             {
+
                                 CommonClasses.IProcessCreator obj = (CommonClasses.IProcessCreator)Activator.GetObject(typeof(CommonClasses.IProcessCreator),
-                                "tcp://" + s + ":" + PCS_RESERVED_PORT + "/ProcessCreator");
+                                "tcp://" + pcsAddress + ":" + PCS_RESERVED_PORT + "/ProcessCreator");
 
                                 // TODO: Send the right arguments
                                 //TODO last argument is the addresses of replicas of next operator?
@@ -111,9 +166,10 @@ namespace PuppetMasterGUI {
                                 //puts OperatorType at the start of OperatorParameters (necessary for replica main)
                                 //opb.SpecificParameters.Insert(0, opb.OperatorType);
 
+                                /*
                                 var wrongList = new List<string>();
                                 wrongList.Add("exemploDeOutputAddress");
-
+                                */
 
                                 // build this string: OPTYPE param1,param2,param3
                                 // ex: FILTER 3,=,"www.tecnico.ulisboa.pt"
@@ -121,8 +177,9 @@ namespace PuppetMasterGUI {
                                 operatorParametersComma.Add(opb.OperatorType);
                                 operatorParametersComma.Add(string.Join(",", opb.SpecificParameters));
 
+                                // TODO FIXME first argument being sent should be the puppetMasterUrl, it's still not
                                 obj.createReplica("tcp://localhost:" + port++.ToString(), opb.Routing, semantics, loggingLevel,
-                                                                   i, operatorParametersComma, opb.Addresses, wrongList);
+                                                                   i, operatorParametersComma, opb.Addresses, outList);
 
                                 //string args = createReplica("tcp://localhost:" + port++.ToString(), opb.Routing, semantics, loggingLevel, i, opb.SpecificParameters, opb.Addresses, new List<string>());
 
@@ -132,11 +189,11 @@ namespace PuppetMasterGUI {
                             }
                             catch (System.Net.Sockets.SocketException e)
                             {
-                                Console.WriteLine("Error with host " + s);
+                                Console.WriteLine("Error with host " + pcsAddress);
                                 //Console.WriteLine("Exception " + e);
                             }
                         }
-                        
+
                         break;
                 }
 

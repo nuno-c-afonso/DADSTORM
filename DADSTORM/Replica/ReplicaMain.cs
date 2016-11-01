@@ -48,28 +48,24 @@ namespace Replica {
             semantics = args[2];
             logLevel = args[3];
 
-            for (i = 5; !args[i].Equals("-r"); i++) {
+            i = 4; // index of -o argument
+            while (!args[++i].Equals("-r"))
                 operation.Add(args[i]);
+
+            // index 0: FILTER
+            // index 1: 3,=,"www.tecnico.ulisboa.pt"
+
+            if (operation.Count > 2)
+                throw new FormatException();
+            else if (operation.Count == 2)
+            {
+                var fields = operation[1];
+                var newList = fields.Split(',').ToList();
+                newList.Insert(0, operation[0]);
+                operation = newList;
+
             }
 
-            // FIXME: The case with " inside the strings is not considered
-            /* i = 4; // index of -o argument
-             while (!args[++i].Equals("-r"))
-                 operation.Add(args[i]);
-
-             // index 0: FILTER
-             // index 1: 3,=,"www.tecnico.ulisboa.pt"
-
-             if (operation.Count > 2)
-                 throw new FormatException();
-             else if (operation.Count == 2)
-             {
-                 var fields = operation[1];
-                 var newList = fields.Split(',').ToList();
-                 newList.Insert(0, operation[0]);
-                 operation = newList;
-
-             }*/
             /*
             // FIXME TODO not sure what this is for
             // has index out of bound exception
