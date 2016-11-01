@@ -18,27 +18,56 @@ namespace Replica {
             for (int xcd = 0; xcd < args.Length; xcd++)
                 System.Console.WriteLine(args[xcd]);
 
-            
+            /*  This information will be recovered from the Main arguments
+             *  Structure:
+             *  <PuppetMasterUrl> <routing> <semantics> <logLevel> -op <operation>
+             *  -r <replicaIndex> <replica1> <replica2> ... <replica-n>
+             *  -o <output1> <output2> ... <output-n>
+             */
+            string PuppetMasterUrl;                       // To store the Puppet Master's URL
+            string routing;                               // To store the routing type
+            string semantics;                             // To store the tuple processing semantics
+            string logLevel;                              // To store the desired logging level
+            int replicaIndex;                             // To store the position where the current replica's URL is
+            List<string> operation = new List<string>();  // To store the desired operation for the replica
+            List<string> replicasUrl = new List<string>();// To store the URLs for all replicas
+            List<string> outputs = new List<string>();    // To store the replica's outputsB
+            int port;                                     // To store the port in which the service will be available
 
-            string url;
-            int port;
-            string routing;
-            string operation;
-            List<string> inputs = new List<string>();
-            List<string> outputs = new List<string>();
-            int i = 0;
+            int i;
             string[] tuple;
             List<string[]> result;
             Operation oper;
 
             //############ Parse and save the function arguments ###################
+            PuppetMasterUrl = args[0];
+            routing = args[1];
+            semantics = args[2];
+            logLevel = args[3];
+
+            for (i = 5; !args[i].Equals("-r"); i++)
+                operation.Add(args[i]);
+
+            replicaIndex = int.Parse(args[++i]);
+            while (!args[++i].Equals("-o"))
+                replicasUrl.Add(args[i]);
+
+            /*
+             *  TODO: Check the case when there's no more outputs
+             */
+            int argsSize = args.Length;
+            while (++i < argsSize)
+                outputs.Add(args[i]);
+
+            CommonClasses.UrlSpliter urlspli = new CommonClasses.UrlSpliter();
+            port = int.Parse(urlspli.getPort(replicasUrl[replicaIndex]));
+
+            /* FIXME: This was the previous version
             if (args.Length < 3){
                 System.Console.WriteLine("The number of arguments is not correct: at least 3 expected  !!! ");
                 return;
             }
-            
-            url = args[0];
-            routing = args[1];
+
             operation = args[2];//last of the last version
 
 
@@ -63,11 +92,11 @@ namespace Replica {
  
             CommonClasses.UrlSpliter urlspli = new CommonClasses.UrlSpliter();
             port = int.Parse(urlspli.getPort(url));
-
+            */
 
             //############ creating an operator of the wanted type ############
 
-            switch (operation)
+            switch (operation[0])
             {
                 case "UNIQ":
                     oper = new UniqOperation();
@@ -79,7 +108,7 @@ namespace Replica {
                     oper = new DupOperation();
                     break;
                 case "FILTER":
-                    oper = new FilterOperation("x","X","X");
+                    oper = new FilterOperation(operation[1], operation[2], operation[3]);
                     break;
                 default:
                     System.Console.WriteLine("the type of operation {0} is not known", operation);
@@ -88,7 +117,7 @@ namespace Replica {
 
 
 
-            //############ Open an input chanel ###################
+            //############ Open an input channel ###################
             TcpChannel channel = new TcpChannel(port);
             ChannelServices.RegisterChannel(channel, true);
             ReplicaBuffer input = new ReplicaBuffer();

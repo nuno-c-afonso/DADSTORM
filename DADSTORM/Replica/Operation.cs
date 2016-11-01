@@ -7,6 +7,11 @@ using System.Threading.Tasks;
 namespace Replica{
     public abstract class Operation {
         private HashSet<string> seenStrings = new HashSet<string>();
+        private List<Operation> otherReplicas;
+
+        /*public Operation(List<string> replicasURL) {
+
+        }*/
 
         public abstract List<string[]> Operate(string[] tuple);
             
