@@ -81,16 +81,19 @@ namespace Replica {
             switch (operation[0])
             {
                 case "UNIQ":
-                    oper = new UniqOperation();
+                    oper = new UniqOperation(replicasUrl, replicaIndex, int.Parse(operation[1]));
                     break;
                 case "COUNT":
-                    oper = new CountOperation();
+                    oper = new CountOperation(replicasUrl, replicaIndex);
                     break;
                 case "DUP":
-                    oper = new DupOperation();
+                    oper = new DupOperation(replicasUrl, replicaIndex);
                     break;
                 case "FILTER":
-                    oper = new FilterOperation(operation[1], operation[2], operation[3]);
+                    oper = new FilterOperation(replicasUrl, replicaIndex, operation[1], operation[2], operation[3]);
+                    break;
+                case "CUSTOM":
+                    oper = new CustomOperation(replicasUrl, replicaIndex, operation[1], operation[2], operation[3]);
                     break;
                 default:
                     System.Console.WriteLine("the type of operation {0} is not known", operation);
