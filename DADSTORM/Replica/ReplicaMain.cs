@@ -1,6 +1,7 @@
 ﻿using CommonClasses;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
@@ -16,6 +17,8 @@ namespace Replica {
         public static void Main(string[] args) {
 
             //TODO remove
+            System.Console.WriteLine("program args " + string.Join(" ", args));
+
             for (int xcd = 0; xcd < args.Length; xcd++)
                 System.Console.WriteLine(args[xcd]);
 
@@ -46,6 +49,13 @@ namespace Replica {
             logLevel = args[3];
 
             // FIXME: The case with " inside the strings is not considered
+            i = 4; // index of -o argument
+            while (!args[++i].Equals("-r"))
+                operation.Add(args[i]);
+            /*
+            // FIXME TODO not sure what this is for
+            // has index out of bound exception
+
             string incomplete = "";
             for (i = 5; !args[i].Equals("-r"); i++) {
                 if (args[i][0] == '"' && args[i][args[i].Length - 1] == '"')
@@ -60,7 +70,7 @@ namespace Replica {
                     }
                 }
             }
-
+            */
             replicaIndex = int.Parse(args[++i]);
             while (!args[++i].Equals("-o"))
                 replicasUrl.Add(args[i]);
@@ -75,6 +85,9 @@ namespace Replica {
             CommonClasses.UrlSpliter urlspli = new CommonClasses.UrlSpliter();
             port = int.Parse(urlspli.getPort(replicasUrl[replicaIndex]));
 
+            //FIXME just for debug
+            System.Console.WriteLine("VARS.. PuppetMasterUrl: {0}\n\t routing: {1} \n\t semantics: {2}\n\t logLevel: {3}\n\t replicaIndex: {4}\n\t  port: {5}\n\t operation: {6}\n\t replicasUrl: {7}\n\t outputs: {8}"
+                    , PuppetMasterUrl, routing, semantics, logLevel, replicaIndex, port ,string.Join(",\n\t", operation),string.Join(",\n\t", replicasUrl), string.Join(",\n\t", outputs));
 
             //############ creating an operator of the wanted type ############
 
@@ -103,8 +116,8 @@ namespace Replica {
 
 
             //############ Open an input channel ###################
-            TcpChannel channel = new TcpChannel(port);
-            ChannelServices.RegisterChannel(channel, true);
+            //TcpChannel channel = new TcpChannel(port);
+            //ChannelServices.RegisterChannel(channel, true);
             ReplicaBuffer inputBuffer = new ReplicaBuffer();
             RemotingServices.Marshal(inputBuffer, "op",typeof(ReplicaInterface));
 

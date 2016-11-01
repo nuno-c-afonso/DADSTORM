@@ -104,8 +104,16 @@ namespace PuppetMasterGUI {
                                 //puts OperatorType at the start of OperatorParameters (necessary for replica main)
                                 opb.SpecificParameters.Insert(0, opb.OperatorType);
 
+                                var wrongList = new List<string>();
+                                wrongList.Add("exemploDeOutputAddress");
+
                                 obj.createReplica("tcp://localhost:" + port++.ToString(), opb.Routing, semantics, loggingLevel,
-                                                                   i, opb.SpecificParameters, opb.Addresses, new List<string>());
+                                                                   i, opb.SpecificParameters, opb.Addresses, wrongList);
+
+                                //string args = createReplica("tcp://localhost:" + port++.ToString(), opb.Routing, semantics, loggingLevel, i, opb.SpecificParameters, opb.Addresses, new List<string>());
+
+                                //Debug.WriteLine("REPLICA ARGS "+ args);
+
 
                             }
                             catch (System.Net.Sockets.SocketException e)
@@ -121,8 +129,23 @@ namespace PuppetMasterGUI {
             }
 
         }
+        /*
+        // used for debug instead of calling the processCreationService
+        public string createReplica(string masterURL, string routing, string semantics, string logLevel,
+            int repIndex, List<string> op, List<string> replicas, List<string> output)
+        {
 
+            string a = "";
 
+            // Building the arguments for the main
+            a = masterURL + " " + routing + " " + semantics + " " + logLevel;
+            a+=" -op " + string.Join(" ", op);
+            a += " -r " + repIndex +" " + string.Join(" ", replicas);
+            a += " -o " + string.Join(" ", output);
+
+            return a;
+        }
+        */
         private void button1_Click(object sender, EventArgs e)
         {
             try
