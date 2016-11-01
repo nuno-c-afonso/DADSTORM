@@ -48,20 +48,27 @@ namespace PuppetMasterGUI {
         }
         private void importConfigFile(string path)
         {
+            //incase the input file is not on .\input\dadstorm.config at the start of GUI
+            try
+            {
+                string text = System.IO.File.ReadAllText(path);
 
-            string text = System.IO.File.ReadAllText(path);
+                //textBox2.Text = text;
+                //textBox1.Text = text.Replace("\n", Environment.NewLine);
 
-            //textBox2.Text = text;
-            //textBox1.Text = text.Replace("\n", Environment.NewLine);
+                lineParser = new ReadFileByLineFiltered(path);
+                textBox2.Text = string.Join("\r\n", lineParser.remainingLines());
+                textBox3.Text = path.Split('\\').Last();
 
-            lineParser = new ReadFileByLineFiltered(path);
-            textBox2.Text = string.Join("\r\n", lineParser.remainingLines());
-            textBox3.Text = path.Split('\\').Last();
+                // shouldn't run more than once even if we load another config file #TODO
+                runConfigCommands(lineParser.getConfigCommandsLines());
 
-            // shouldn't run more than once even if we load another config file #TODO
-            runConfigCommands(lineParser.getConfigCommandsLines());
+                textBox2.Text = string.Join("\r\n", lineParser.remainingLines());
+            }
+            catch (System.IO.DirectoryNotFoundException)
+            {
 
-            textBox2.Text = string.Join("\r\n", lineParser.remainingLines());
+            }
 
         }
 
