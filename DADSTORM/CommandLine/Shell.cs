@@ -18,6 +18,19 @@ namespace CommandLine
             commands = commands.Concat(newCommands).ToDictionary(k => k.Key, v => v.Value);
         }
 
+        public bool doesCommandExist(string command)
+        {
+            char[] delimiters = { ' ' };
+            command.ToLower();
+
+            string[] arg = command.Split(delimiters, System.StringSplitOptions.RemoveEmptyEntries);
+
+            command = (arg.Length == 0) ? "" : arg[0].ToLower();
+
+            return commands.ContainsKey(command);
+
+        }
+
         private void init() {
             commands = new Dictionary<string, Command>();
 

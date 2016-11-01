@@ -7,13 +7,15 @@ using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 
 namespace FileManipulator {
-    class LineParser {
+    public class LineParser {
         private string line;
         private ReadOnlyCollection<string> words;
 
         public LineParser(string line) {
             if (line == null || line.Equals(""))
                 throw new EmptyLineException();
+            else if (line.Length > 0 && line[0] == '%')
+                throw new LineIsCommentException();
 
             this.line = line;
         }
@@ -37,7 +39,7 @@ namespace FileManipulator {
                     count++;
 
             if (count % 2 != 0)
-                throw new LineHasOddNumberQuotesException();
+                throw new FileManipulator.LineHasOddNumberQuotesException();
         }
 
         private List<string> splitByQuotes() {
@@ -93,9 +95,6 @@ namespace FileManipulator {
             int lineSize = line.Length;
             bool inside = false;
             List<string> splitted = new List<string>();
-
-            if (lineSize > 0 && line[0] == '%')
-                throw new LineIsCommentException();
 
             for (int i = 0; i < lineSize; i++) {
                 if (line[i] == '"') {
