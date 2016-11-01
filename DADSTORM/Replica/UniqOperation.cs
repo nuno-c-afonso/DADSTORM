@@ -5,15 +5,18 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Replica {
-    public class UniqOperation : Operation {
+    public class UniqOperation : GlobalStateOperation {
         private int fieldNumber;
         public UniqOperation(List<string> replicasURL, int myselfIndex, int fieldNumber)
             : base(replicasURL, myselfIndex) {
             this.fieldNumber = fieldNumber;
         }
 
+        // FIXME: The object is a Replica
         public override List<string[]> Operate(string[] tuple) {
             string element = tuple[fieldNumber];
+
+            processedTuple(tuple);
 
             if (wasElementSeen(element))
                 return null;

@@ -12,15 +12,14 @@ namespace Replica {
         private string className;
         private string methodName;
 
-        public CustomOperation(List<string> replicasURL, int myselfIndex,
-            string dllName, string className, string methodName) : base(replicasURL, myselfIndex) {
+        public CustomOperation(string dllName, string className, string methodName) {
             this.dllName = dllName;
             this.className = className;
             this.methodName = methodName;
         }
 
         // Remember: The class name should be the complete one, which has the namespace
-        public override List<string[]> Operate(string[] tuple) {
+        public List<string[]> Operate(string[] tuple) {
             Assembly library = Assembly.LoadFile(Directory.GetCurrentDirectory() + @"\" + dllName);
             Object o = library.CreateInstance(className);
             if (o != null) {

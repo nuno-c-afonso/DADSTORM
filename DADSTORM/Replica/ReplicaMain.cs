@@ -87,13 +87,13 @@ namespace Replica {
                     oper = new CountOperation(replicasUrl, replicaIndex);
                     break;
                 case "DUP":
-                    oper = new DupOperation(replicasUrl, replicaIndex);
+                    oper = new DupOperation();
                     break;
                 case "FILTER":
-                    oper = new FilterOperation(replicasUrl, replicaIndex, operation[1], operation[2], operation[3]);
+                    oper = new FilterOperation(operation[1], operation[2], operation[3]);
                     break;
                 case "CUSTOM":
-                    oper = new CustomOperation(replicasUrl, replicaIndex, operation[1], operation[2], operation[3]);
+                    oper = new CustomOperation(operation[1], operation[2], operation[3]);
                     break;
                 default:
                     System.Console.WriteLine("the type of operation {0} is not known", operation);

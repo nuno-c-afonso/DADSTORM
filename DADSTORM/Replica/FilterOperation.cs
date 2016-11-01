@@ -14,9 +14,7 @@ namespace Replica
         delegate bool checkcondition(string tupValue, string value);
         checkcondition conditionCheck;
 
-        public FilterOperation(List<string> replicasURL, int myselfIndex,
-            string field_number,string condition,string value)
-            : base(replicasURL, myselfIndex){
+        public FilterOperation(string field_number,string condition,string value) {
             fieldNumber = int.Parse(field_number);
             this.value = value;
             if (condition.Equals("<"))
@@ -47,7 +45,7 @@ namespace Replica
             else
                 return false;
         }
-        public override List<string[]> Operate(string[] tuple){
+        public List<string[]> Operate(string[] tuple){
             if (conditionCheck(tuple[fieldNumber], value)) {
                 List<string[]> l = new List<string[]>();
                 l.Add(tuple);

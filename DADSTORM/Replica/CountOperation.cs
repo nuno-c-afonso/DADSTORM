@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Replica {
-    public class CountOperation : Operation {
+    public class CountOperation : GlobalStateOperation {
         public CountOperation(List<string> replicasURL, int myselfIndex)
             : base(replicasURL, myselfIndex) { }
 

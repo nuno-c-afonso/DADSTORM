@@ -50,6 +50,7 @@
     <Compile Include="CustomOperation.cs" />
     <Compile Include="DupOperation.cs" />
     <Compile Include="FilterOperation.cs" />
+    <Compile Include="GlobalStateOperation.cs" />
     <Compile Include="MethodNotFoundException.cs" />
     <Compile Include="Operation.cs" />
     <Compile Include="ReplicaMain.cs" />
