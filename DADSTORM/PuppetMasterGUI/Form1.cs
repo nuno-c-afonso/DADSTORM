@@ -109,13 +109,20 @@ namespace PuppetMasterGUI {
                                 //      if it is this should be done after the map OP1 -> OP2 is created  **step 2
 
                                 //puts OperatorType at the start of OperatorParameters (necessary for replica main)
-                                opb.SpecificParameters.Insert(0, opb.OperatorType);
+                                //opb.SpecificParameters.Insert(0, opb.OperatorType);
 
                                 var wrongList = new List<string>();
                                 wrongList.Add("exemploDeOutputAddress");
 
+
+                                // build this string: OPTYPE param1,param2,param3
+                                // ex: FILTER 3,=,"www.tecnico.ulisboa.pt"
+                                var operatorParametersComma = new List<string>();
+                                operatorParametersComma.Add(opb.OperatorType);
+                                operatorParametersComma.Add(string.Join(",", opb.SpecificParameters));
+
                                 obj.createReplica("tcp://localhost:" + port++.ToString(), opb.Routing, semantics, loggingLevel,
-                                                                   i, opb.SpecificParameters, opb.Addresses, wrongList);
+                                                                   i, operatorParametersComma, opb.Addresses, wrongList);
 
                                 //string args = createReplica("tcp://localhost:" + port++.ToString(), opb.Routing, semantics, loggingLevel, i, opb.SpecificParameters, opb.Addresses, new List<string>());
 

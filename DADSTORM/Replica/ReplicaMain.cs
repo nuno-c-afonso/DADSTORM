@@ -39,7 +39,7 @@ namespace Replica {
             int port;                                     // To store the port in which the service will be available
 
             int i;
-            Operation oper;                               //the operation that this replica will make   
+            Operation oper;                               //the operatin that this replica will make   
             Consumer consumingOperator;                   //the thread that will be handling the tuples and sending them tho the next ones
 
             //############ Parse and save the function arguments ###################
@@ -47,7 +47,29 @@ namespace Replica {
             routing = args[1];
             semantics = args[2];
             logLevel = args[3];
-                
+
+            // FIXME: The case with " inside the strings is not considered
+            i = 4; // index of -o argument
+            while (!args[++i].Equals("-r"))
+                operation.Add(args[i]);
+
+            // index 0: FILTER
+            // index 1: 3,=,"www.tecnico.ulisboa.pt"
+
+            if (operation.Count > 2)
+                throw new FormatException();
+            else if (operation.Count == 2)
+            {
+                var fields = operation[1];
+                var newList = fields.Split(',').ToList();
+                newList.Insert(0, operation[0]);
+                operation = newList;
+
+            }
+            /*
+            // FIXME TODO not sure what this is for
+            // has index out of bound exception
+
             string incomplete = "";
             for (i = 5; !args[i].Equals("-r"); i++) {
                 if (args[i][0] == '"' && args[i][args[i].Length - 1] == '"')
@@ -62,7 +84,7 @@ namespace Replica {
                     }
                 }
             }
-
+            */
             replicaIndex = int.Parse(args[++i]);
             while (!args[++i].Equals("-o"))
                 replicasUrl.Add(args[i]);
@@ -78,8 +100,8 @@ namespace Replica {
             port = int.Parse(urlspli.getPort(replicasUrl[replicaIndex]));
 
             //FIXME just for debug
-            //System.Console.WriteLine("VARS.. PuppetMasterUrl: {0}\n\t routing: {1} \n\t semantics: {2}\n\t logLevel: {3}\n\t replicaIndex: {4}\n\t  port: {5}\n\t operation: {6}\n\t replicasUrl: {7}\n\t outputs: {8}"
-            //        , PuppetMasterUrl, routing, semantics, logLevel, replicaIndex, port ,string.Join(",\n\t", operation),string.Join(",\n\t", replicasUrl), string.Join(",\n\t", outputs));
+            System.Console.WriteLine("VARS.. PuppetMasterUrl: {0}\n\t routing: {1} \n\t semantics: {2}\n\t logLevel: {3}\n\t replicaIndex: {4}\n\t  port: {5}\n\t operation: {6}\n\t replicasUrl: {7}\n\t outputs: {8}"
+                    , PuppetMasterUrl, routing, semantics, logLevel, replicaIndex, port ,string.Join(",\n\t", operation),string.Join(",\n\t", replicasUrl), string.Join(",\n\t", outputs));
 
             //############ creating an operator of the wanted type ############
 
@@ -92,13 +114,13 @@ namespace Replica {
                     oper = new CountOperation(replicasUrl, replicaIndex);
                     break;
                 case "DUP":
-                    oper = new DupOperation();
+                    oper = new DupOperation(replicasUrl, replicaIndex);
                     break;
                 case "FILTER":
-                    oper = new FilterOperation(operation[1], operation[2], operation[3]);
+                    oper = new FilterOperation(replicasUrl, replicaIndex, operation[1], operation[2], operation[3]);
                     break;
                 case "CUSTOM":
-                    oper = new CustomOperation(operation[1], operation[2], operation[3]);
+                    oper = new CustomOperation(replicasUrl, replicaIndex, operation[1], operation[2], operation[3]);
                     break;
                 default:
                     System.Console.WriteLine("the type of operation {0} is not known", operation);

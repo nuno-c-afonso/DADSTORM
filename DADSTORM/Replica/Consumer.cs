@@ -5,8 +5,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
+using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels.Tcp;
 using System.Runtime.Remoting.Channels;
+using System.Runtime.Remoting.Messaging;
+
+
 
 namespace Replica{
 
@@ -16,25 +20,26 @@ namespace Replica{
         string[] tuple;
         List<string[]> result;
         ReplicaBuffer inputBuffer;
-        Operation opereration;
-        List<ReplicaInterface> nextOperators;
+        Operation operation;
+        List<ReplicaInterface> destinationOperators;
         int numberDestinations;
         string puppetMasterUrl;                       
         string routing;                               
         string semantics;                             
         string logLevel;
+        Random random;
 
         public Consumer(ReplicaBuffer inputBuffer, Operation opereration, List<string> outputsURL, int myselfIndex,
             string puppetMasterUrl, string routing, string semantics, string logLevel){
 
             //TODO missing inputs adding wen needed
             this.inputBuffer = inputBuffer;
-            this.opereration = opereration;
-            nextOperators = new List<ReplicaInterface>();
+            this.operation = opereration;
+            destinationOperators = new List<ReplicaInterface>();
             numberDestinations = 0;
 
-            channel = new TcpChannel();
-            ChannelServices.RegisterChannel(channel, false);
+            //channel = new TcpChannel();
+            //ChannelServices.RegisterChannel(channel, false);
 
             int numReplicas = outputsURL.Count;
             for (int i = 0; i < numReplicas; i++)
@@ -45,6 +50,7 @@ namespace Replica{
             this.routing = routing;
             this.semantics = semantics;
             this.logLevel = logLevel;
+            random = new Random();
 
         }
 
@@ -66,7 +72,7 @@ namespace Replica{
                 //get tuple from the buffer
                 tuple = inputBuffer.getTuple();
 
-                result = opereration.Operate(tuple);
+                result = operation.Operate(tuple);
                 if (result != null)
                 {
                     foreach(string[] outTuple in result)
@@ -78,15 +84,17 @@ namespace Replica{
 
 
         public void fowardTuple(string[] tuple){
-            //see the type os semantics used
-
-            //see the type of routing used by the desyination
-
             //chose Replica to foward
-            //TODO
+            int destI = selectRoutingDestination(tuple);
+            ReplicaInterface destination = destinationOperators[destI];
 
-            //send to that replixa
-            //TODO
+            //see the type of processing semantics send to the replixa
+            if (semantics.Equals("at-most-once"))
+                sendAtMostOnce(destination, tuple);
+            if (semantics.Equals("at-least-once"))
+                sendAtMostOnce(destination, tuple);
+            if (semantics.Equals("exactly-once"))
+                sendAtMostOnce(destination, tuple);
         }
 
         public void showStatus(){
@@ -96,13 +104,44 @@ namespace Replica{
         public void addTupleDestination(String url){
             try{
                 ReplicaInterface destination = (ReplicaInterface)Activator.GetObject(typeof(ReplicaInterface), url);
-                nextOperators.Add(destination);
+                destinationOperators.Add(destination);
                 ++numberDestinations;
             }
             catch (System.Net.Sockets.SocketException e){
                 Console.WriteLine("Error with host " + url);
                 Console.WriteLine(e);
             }
+        }
+
+        public int selectRoutingDestination(String[] tuple) {
+            if (routing.Equals("primary"))
+                return 0;//the primary is always the first one to apear
+            else if (routing.Equals("random")) {
+                return random.Next(0, numberDestinations - 1);
+            }
+            else /*(routing.StartsWith("hashing("))*/ {
+                int fieldnumber = int.Parse(routing[9].ToString());
+                return tuple[fieldnumber].GetHashCode() % numberDestinations;//check it should be numberDestinations -
+            }
+            /*else
+                throw new ArgumentException("the chosen routing policie doesnt exist");*/ //FIXME input validation issues
+        }
+
+
+        public void sendAtMostOnce(ReplicaInterface destination,string[] tuple){
+            destination.addTuple(tuple);//todo make this assync
+            /*RemoteAsyncDelegate RemoteDel = new RemoteAsyncDelegate(destination.addTuple());
+            IAsyncResult RemAr = RemoteDel.BeginInvoke(null, null);*/
+        }
+
+        public void sendAtLeastOnce(ReplicaInterface destination, string[] tuple)
+        {
+            //TODO
+        }
+
+        public void sendExactlyOnce(ReplicaInterface destination, string[] tuple)
+        {
+            //TODO
         }
 
 
