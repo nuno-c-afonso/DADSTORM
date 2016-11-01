@@ -52,6 +52,20 @@ namespace Replica {
             i = 4; // index of -o argument
             while (!args[++i].Equals("-r"))
                 operation.Add(args[i]);
+
+            // index 0: FILTER
+            // index 1: 3,=,"www.tecnico.ulisboa.pt"
+
+            if (operation.Count > 2)
+                throw new FormatException();
+            else if (operation.Count == 2)
+            {
+                var fields = operation[1];
+                var newList = fields.Split(',').ToList();
+                newList.Insert(0, operation[0]);
+                operation = newList;
+
+            }
             /*
             // FIXME TODO not sure what this is for
             // has index out of bound exception
