@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -57,9 +58,12 @@ namespace CommonClasses
         //USED BY: owner(replica)
         public string[] getTuple()
         {
-            lock(tupleQueue.SyncRoot);
-            if (tupleQueue.Count == 0)
-                Monitor.Wait(tupleQueue.SyncRoot);
+            lock (tupleQueue.SyncRoot)
+            {
+                if (tupleQueue.Count == 0)
+                    Monitor.Wait(tupleQueue.SyncRoot);
+            }
+
             string[] result =(String[])tupleQueue.Dequeue();
             Monitor.Exit(tupleQueue.SyncRoot);
             Monitor.Pulse(tupleQueue.SyncRoot);
@@ -113,10 +117,14 @@ namespace CommonClasses
         //if the freeze is true who call this will wait until it is unfreezed
         //USED BY: buffer consumer
         public void checkFreeze() {
-            while ((bool)freezed == true)
-                Monitor.Wait(freezed);
-            Monitor.Exit(freezed);
-            Monitor.Pulse(freezed);
+            lock (freezed)
+            {
+                while ((bool)freezed == true)
+                    Monitor.Wait(freezed);
+                Monitor.Pulse(freezed);
+            }
+
+
         }
 
         //if the freeze is true who call this will wait until it is unfreezed
