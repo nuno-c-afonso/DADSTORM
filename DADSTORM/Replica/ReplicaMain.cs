@@ -106,12 +106,12 @@ namespace Replica {
             TcpChannel channel = new TcpChannel(port);
             ChannelServices.RegisterChannel(channel, true);
             ReplicaBuffer inputBuffer = new ReplicaBuffer();
-            RemotingServices.Marshal(inputBuffer, "ReplicaBuffer",typeof(ReplicaInterface));
+            RemotingServices.Marshal(inputBuffer, "op",typeof(ReplicaInterface));
 
 
             //############ Create a consumer of the buffer ###################
 
-            consumingOperator = new Consumer(inputBuffer,oper);
+            consumingOperator = new Consumer(inputBuffer,oper, outputs, replicaIndex, PuppetMasterUrl, routing, semantics, logLevel);
 
             //############ Start processing tuples ###################//CHECK
             ThreadStart ts = new ThreadStart(consumingOperator.Operate);
