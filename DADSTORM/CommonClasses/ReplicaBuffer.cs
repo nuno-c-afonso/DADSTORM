@@ -12,13 +12,32 @@ namespace CommonClasses
 
         private Queue tupleQueue;
         bool start = false;
-        int interval = 0;
+        int waitingTime = 0;
         bool statusRequested = false;//check this
         bool crashed = false;
-        public bool Crashed{
-            get { return crashed; }//see locks
-        }
         object freezed = false;
+
+        public int WaitingTime{
+            get { return waitingTime; }
+        }
+
+        public bool Crashed{
+            get { return crashed; }
+        }
+
+        public bool StatusRequested{
+            get{
+                if (statusRequested)
+                {
+                    statusRequested = false;
+                    return true;
+                }
+                else
+                    return false;
+            }
+        }
+
+
 
 
         public ReplicaBuffer(): base(){
@@ -59,7 +78,7 @@ namespace CommonClasses
         //Command  to set the time to wait betwen tuple processing
         //USED BY:PuppetMaster
         public void Interval(int time) {
-            interval = time;
+            waitingTime = time;
         }
 
         //Command to print the current status
@@ -88,14 +107,19 @@ namespace CommonClasses
         }
 
 
+
+
         //if the freeze is true who call this will wait until it is unfreezed
-        //USED BY: owner(replica)
+        //USED BY: buffer consumer
         public void checkFreeze() {
             while ((bool)freezed == true)
                 Monitor.Wait(freezed);
             Monitor.Exit(freezed);
             Monitor.Pulse(freezed);
         }
+
+        //if the freeze is true who call this will wait until it is unfreezed
+        //USED BY: owner(replica)
 
 
 
