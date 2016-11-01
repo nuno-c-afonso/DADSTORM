@@ -17,5 +17,6 @@ namespace CommonClasses
         void Freeze();
         void Unfreeze();
 
+        bool wasElementSeen(string s);
     }
 }

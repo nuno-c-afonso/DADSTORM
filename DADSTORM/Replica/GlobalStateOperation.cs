@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CommonClasses;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Remoting.Channels;
@@ -43,12 +44,11 @@ namespace Replica {
         }
 
         // TODO: Check if is possible to do this without the channel closing
-        // FIXME: The object is a replica not an operation
-        protected Operation getGeneralReplica(string url) {
-            Operation obj = null;
+        protected ReplicaInterface getGeneralReplica(string url) {
+            ReplicaInterface obj = null;
 
             try {
-                obj = (Operation)Activator.GetObject(typeof(Operation), url);
+                obj = (ReplicaInterface)Activator.GetObject(typeof(ReplicaInterface), url);
             }
             catch (System.Net.Sockets.SocketException e) {
                 Console.WriteLine("Error with host " + url);

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CommonClasses;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,7 +13,6 @@ namespace Replica {
             this.fieldNumber = fieldNumber;
         }
 
-        // FIXME: The object is a Replica
         public override List<string[]> Operate(string[] tuple) {
             string element = tuple[fieldNumber];
 
@@ -23,9 +23,9 @@ namespace Replica {
 
             bool wasInOther = false;
             foreach(string s in OtherReplicas) {
-                Operation o = getGeneralReplica(s);
-                /*if (wasInOther = o.wasElementSeen(element))
-                    break;*/
+                ReplicaInterface rep = getGeneralReplica(s);
+                if (wasInOther = rep.wasElementSeen(element))
+                    break;
             }
 
             if (wasInOther)

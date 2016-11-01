@@ -56,6 +56,7 @@
     <Compile Include="OperatorBuilder.cs" />
     <Compile Include="PuppetMaster.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="PuppetMasterLog.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
