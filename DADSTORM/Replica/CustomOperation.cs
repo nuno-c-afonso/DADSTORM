@@ -12,7 +12,8 @@ namespace Replica {
         private string className;
         private string methodName;
 
-        public CustomOperation(string dllName, string className, string methodName) {
+        public CustomOperation(List<string> replicasURL, int myselfIndex,
+            string dllName, string className, string methodName) : base(replicasURL, myselfIndex) {
             this.dllName = dllName;
             this.className = className;
             this.methodName = methodName;

@@ -14,7 +14,9 @@ namespace Replica
         delegate bool checkcondition(string tupValue, string value);
         checkcondition conditionCheck;
 
-        public FilterOperation(string field_number,string condition,string value){
+        public FilterOperation(List<string> replicasURL, int myselfIndex,
+            string field_number,string condition,string value)
+            : base(replicasURL, myselfIndex){
             fieldNumber = int.Parse(field_number);
             this.value = value;
             if (condition.Equals("<"))
