@@ -45,8 +45,21 @@ namespace Replica {
             semantics = args[2];
             logLevel = args[3];
 
-            for (i = 5; !args[i].Equals("-r"); i++)
-                operation.Add(args[i]);
+            // FIXME: The case with " inside the strings is not considered
+            string incomplete = "";
+            for (i = 5; !args[i].Equals("-r"); i++) {
+                if (args[i][0] == '"' && args[i][args[i].Length - 1] == '"')
+                    operation.Add(args[i]);
+                else {
+                    if (args[i][0] == '"')
+                        incomplete = args[i];
+                    else {
+                        incomplete += " " + args[i];
+                        if (args[i][args[i].Length - 1] == '"')
+                            operation.Add(incomplete);
+                    }
+                }
+            }
 
             replicaIndex = int.Parse(args[++i]);
             while (!args[++i].Equals("-o"))
