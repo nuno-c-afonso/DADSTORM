@@ -24,8 +24,8 @@ namespace Replica {
             bool wasInOther = false;
             foreach(string s in OtherReplicas) {
                 Operation o = getGeneralReplica(s);
-                if (wasInOther = o.wasElementSeen(element))
-                    break;
+                /*if (wasInOther = o.wasElementSeen(element))
+                    break;*/
             }
 
             if (wasInOther)
