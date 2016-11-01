@@ -17,8 +17,11 @@ namespace PuppetMasterGUI {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new Form1());
-            /*
-             * 
+
+
+
+            
+             /** 
              * 
              * FIXME: This was the first Main, with the shell!!!
              * 
@@ -26,7 +29,8 @@ namespace PuppetMasterGUI {
              * 
              * 
              * 
-             * 
+             * */
+             /*
             // The arguments are the IP addresses of the Process Creation Services, ordered by the respective operators
             // TODO: Check if the those IP addresses are the same as the ones given in the configuration file
             const int PCS_RESERVED_PORT = 10000;
@@ -45,7 +49,7 @@ namespace PuppetMasterGUI {
                     "tcp://" + s + ":" + PCS_RESERVED_PORT + "/ProcessCreator");
 
                     // TODO: Send the right arguments
-                    obj.createReplica("tcp://localhost:10005", "other", "stuff", new List<string>(), new List<string>());
+                    obj.createReplica("tcp://localhost:10005", "routing", "semantics", "loglevel", 1, new List<string>(), new List<string>(), new List<string>());
                 }
                 catch (System.Net.Sockets.SocketException e) {
                     Console.WriteLine("Error with host " + s);
@@ -53,13 +57,14 @@ namespace PuppetMasterGUI {
                 }
 
             }
-
+            
             // TODO: Check where to put the commands
             Shell shell = new Shell();
             shell.execute();
 
             Console.ReadLine();
             */
+            
         }
     }
 }

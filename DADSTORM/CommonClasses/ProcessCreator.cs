@@ -14,13 +14,10 @@ namespace CommonClasses {
             process.StartInfo.FileName = "..\\..\\..\\Replica\\bin\\Debug\\Replica.exe";
 
             // Building the arguments for the main
-            process.StartInfo.Arguments = masterURL + " " + routing + " "
-                + semantics + " " + logLevel + " -op";
-            addListString(op, process.StartInfo.Arguments);
-            process.StartInfo.Arguments += " -r " + repIndex;
-            addListString(replicas, process.StartInfo.Arguments);
-            process.StartInfo.Arguments += " -o";
-            addListString(output, process.StartInfo.Arguments);
+            process.StartInfo.Arguments =  masterURL + " " + routing + " " + semantics + " " + logLevel;
+            process.StartInfo.Arguments += " -op " + string.Join(" ", op);
+            process.StartInfo.Arguments += " -r " + repIndex + " " + string.Join(" ", replicas);
+            process.StartInfo.Arguments += " -o " + string.Join(" ", output); //#FIXME if output is empty "-op " is sent alst space may cause problems
 
             process.Start();
         }
