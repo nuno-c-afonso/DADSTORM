@@ -31,11 +31,8 @@ namespace Replica {
             ReplicaInterface replica = null;
             string outputReplica = calculateNext(tuple);
 
-            TcpChannel channel = new TcpChannel();
-            ChannelServices.RegisterChannel(channel, false);
-
             try {
-                replica = (ReplicaInterface)Activator.GetObject(typeof(ReplicaInterface), outputReplica);
+                replica = (ReplicaInterface) Activator.GetObject(typeof(ReplicaInterface), outputReplica);
             }
             catch (System.Net.Sockets.SocketException e) {
                 Console.WriteLine("Error with host " + outputReplica);

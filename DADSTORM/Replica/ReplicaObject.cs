@@ -12,7 +12,6 @@ using System.Threading.Tasks;
 
 namespace Replica {
     public class ReplicaObject : MarshalByRefObject, ReplicaInterface {
-        private TcpChannel puppetMasterChannel;
         private PuppetMasterLog log;
         private Router router;  
         private bool logLevel;  // full = true, light = false
@@ -43,9 +42,6 @@ namespace Replica {
                 router = new HashRouter(output, semantics, int.Parse(splitted[1]));
 
             // Assuming that the service is in: tcp://<PuppetMasterIP>:10001/log
-            puppetMasterChannel = new TcpChannel();
-            ChannelServices.RegisterChannel(puppetMasterChannel, false);
-
             log = (PuppetMasterLog) Activator.GetObject(typeof(PuppetMasterLog),
                 PuppetMasterUrl.Substring(0, PuppetMasterUrl.Length - 1) + "1/log");
         }

@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 
 namespace Replica {
     public abstract class GlobalStateOperation : Operation {
-        TcpChannel channel;
         private List<string> otherReplicas = new List<string>();
 
         public GlobalStateOperation(List<string> replicasURL, int myselfIndex) {
@@ -17,9 +16,6 @@ namespace Replica {
             for (int i = 0; i < numReplicas; i++)
                 if (i != myselfIndex)
                     otherReplicas.Add(replicasURL[i]);
-
-            channel = new TcpChannel();
-            ChannelServices.RegisterChannel(channel, false);
         }
 
         public List<string> OtherReplicas {
