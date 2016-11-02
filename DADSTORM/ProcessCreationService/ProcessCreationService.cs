@@ -18,6 +18,7 @@ namespace ProcessCreationService {
             RemotingConfiguration.RegisterWellKnownServiceType(typeof(CommonClasses.ProcessCreator),
                 "ProcessCreator", WellKnownObjectMode.Singleton);
 
+            System.Console.WriteLine("Waiting on port "+ PCS_RESERVED_PORT);
             System.Console.WriteLine("Press <enter> to exit.");
             System.Console.ReadLine();
         }

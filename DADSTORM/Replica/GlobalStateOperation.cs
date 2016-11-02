@@ -19,8 +19,8 @@ namespace Replica {
                 if (i != myselfIndex)
                     otherReplicas.Add(replicasURL[i]);
 
-            channel = new TcpChannel();
-            ChannelServices.RegisterChannel(channel, false);
+            //channel = new TcpChannel();
+            //ChannelServices.RegisterChannel(channel, false);
         }
 
         public List<string> OtherReplicas {

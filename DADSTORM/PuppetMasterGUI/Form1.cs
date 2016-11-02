@@ -12,19 +12,20 @@ using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
 using System.Diagnostics;
 using System.Runtime.Remoting;
+using CommandLine;
+using CommonClasses;
+using System.Text.RegularExpressions;
 
 namespace PuppetMasterGUI {
     public partial class Form1 : Form {
         private ReadFileByLineFiltered lineParser;
         CommonClasses.UrlSpliter urlsplitter = new CommonClasses.UrlSpliter();
-       
+        OperatorsInfo operatorsInfo = new OperatorsInfo();
+
 
         private string loggingLevel ="light";
         private string semantics = "at-most-once";
 
-        private List<string> operatorNames = new List<string>();
-        private Dictionary<string, string> whereToSend = new Dictionary<string, string>(); // OP1 -> OP2 cause 'OP2 input ops OP1'
-        private Dictionary<string, OperatorBuilder> operatorNameToOperatorBuilderDictionary = new Dictionary<string, OperatorBuilder>();
 
         const int PCS_RESERVED_PORT = 10000;
         const int LOGGING_PORT = 10001;
@@ -98,49 +99,44 @@ namespace PuppetMasterGUI {
                         //# TODO Call create replica here
                         OperatorBuilder opb = new OperatorBuilder(ln.Words.ToList());
 
-                        // use a class for this 3 variables ? #TODO FIXME
-                        operatorNames.Add(opb.Name);
-                        whereToSend.Add(opb.Input, opb.Name);
-                        operatorNameToOperatorBuilderDictionary.Add(opb.Name, opb);
-
-
                         //Use Name and Input to create a graph/map to know the next node  **step 1
-
+                        operatorsInfo.AddNewOP(opb);
                         Debug.WriteLine("created fields association " + opb.Name);
                         break;
 
                 }
 
             }
-            int port = 10005;
+            int port = 11005;
             foreach (var line in lines)
             {
-                LineParser ln = new LineParser(line);
-                Debug.WriteLine(ln.Words[0]);
-                switch (ln.Words[0])
+                // get first word
+                var m = Regex.Match(line, @"^\w+");
+                switch (m.Value)
                 {
                     case "Semantics":
                         break;
                     case "LoggingLevel":
                         break;
                     default:
-                        //# TODO Call create replica here
-                        OperatorBuilder opb = new OperatorBuilder(ln.Words.ToList()); //is it really necessary to rebuild this here ?
 
-                        // get outputReplicaList
-                        //      get whereToSend
-                        var outList = new List<string>();
+                        string opName = m.Value;
+                        //# TODO Call create replica here ??
+                        OperatorBuilder opb = operatorsInfo.getOpInfo(opName);
 
-                        string nextOP;
-                        if( whereToSend.TryGetValue(opb.Name, out nextOP) )
-                        {
-                            OperatorBuilder o = operatorNameToOperatorBuilderDictionary[nextOP]; // need to check first ?
-                            outList = o.Addresses;
-                        }
+                        //OperatorBuilder opb = new OperatorBuilder(ln.Words.ToList()); //is it really necessary to rebuild this here ?
 
+                        var outList = operatorsInfo.getOuputListOfOP(opb.Name);
 
-                        //Use Name and Input to create a graph/map to know the next node  **step 1
-                        
+                         //puts OperatorType at the start of OperatorParameters (necessary for replica main)
+                        //opb.SpecificParameters.Insert(0, opb.OperatorType);
+
+                        // build this string: OPTYPE param1,param2,param3
+                        // ex: FILTER 3,=,"www.tecnico.ulisboa.pt"
+                        var operatorParametersComma = new List<string>();
+                        operatorParametersComma.Add(opb.OperatorType);
+                        operatorParametersComma.Add(string.Join(",", opb.SpecificParameters));
+
                         Debug.WriteLine("\n### "+ opb.Name);
                         Debug.WriteLine("-- nextAddresses " + string.Join(",", outList));
 
@@ -155,42 +151,31 @@ namespace PuppetMasterGUI {
                             Console.WriteLine("Calling PCS on address " + pcsAddress);
                             try
                             {
-
+                                port = PCS_RESERVED_PORT;
                                 CommonClasses.IProcessCreator obj = (CommonClasses.IProcessCreator)Activator.GetObject(typeof(CommonClasses.IProcessCreator),
-                                "tcp://" + pcsAddress + ":" + PCS_RESERVED_PORT + "/ProcessCreator");
-
-                                // TODO: Send the right arguments
-                                //TODO last argument is the addresses of replicas of next operator?
-                                //      if it is this should be done after the map OP1 -> OP2 is created  **step 2
-
-                                //puts OperatorType at the start of OperatorParameters (necessary for replica main)
-                                //opb.SpecificParameters.Insert(0, opb.OperatorType);
-
-                                /*
-                                var wrongList = new List<string>();
-                                wrongList.Add("exemploDeOutputAddress");
-                                */
-
-                                // build this string: OPTYPE param1,param2,param3
-                                // ex: FILTER 3,=,"www.tecnico.ulisboa.pt"
-                                var operatorParametersComma = new List<string>();
-                                operatorParametersComma.Add(opb.OperatorType);
-                                operatorParametersComma.Add(string.Join(",", opb.SpecificParameters));
+                                "tcp://" + pcsAddress + ":" + port + "/ProcessCreator");
 
                                 // TODO FIXME first argument being sent should be the puppetMasterUrl, it's still not
-                                obj.createReplica("tcp://localhost:" + port++.ToString(), opb.Routing, semantics, loggingLevel,
+                                obj.createReplica("tcp://localhost:" + port.ToString(), opb.Routing, semantics, loggingLevel,
                                                                    i, operatorParametersComma, opb.Addresses, outList);
-
-                                //string args = createReplica("tcp://localhost:" + port++.ToString(), opb.Routing, semantics, loggingLevel, i, opb.SpecificParameters, opb.Addresses, new List<string>());
-
-                                //Debug.WriteLine("REPLICA ARGS "+ args);
-
 
                             }
                             catch (System.Net.Sockets.SocketException e)
                             {
-                                Console.WriteLine("Error with host " + pcsAddress);
-                                //Console.WriteLine("Exception " + e);
+                                Console.WriteLine("Error with host1 " + pcsAddress);
+                                Console.WriteLine("Exceptio1n " + e);
+                            }
+
+                            try
+                            {
+
+                                
+
+                            }
+                            catch (System.Net.Sockets.SocketException e)
+                            {
+                                Console.WriteLine("Error with host2 " + pcsAddress);
+                                Console.WriteLine("Exception2 " + e);
                             }
                         }
 
@@ -200,23 +185,37 @@ namespace PuppetMasterGUI {
             }
 
         }
-        /*
-        // used for debug instead of calling the processCreationService
-        public string createReplica(string masterURL, string routing, string semantics, string logLevel,
-            int repIndex, List<string> op, List<string> replicas, List<string> output)
-        {
 
-            string a = "";
+        private void run(string line) {
+            line = line.ToLower();
 
-            // Building the arguments for the main
-            a = masterURL + " " + routing + " " + semantics + " " + logLevel;
-            a+=" -op " + string.Join(" ", op);
-            a += " -r " + repIndex +" " + string.Join(" ", replicas);
-            a += " -o " + string.Join(" ", output);
+            // get first word
+            var m = Regex.Match(line, @"^\w+");
+            Debug.WriteLine(m.Value);
+            switch (m.Value)
+            {
+                case "start":
+                    break;
+                case "interval":
+                    break;
+                case "status":
+                    break;
+                case "crash":
+                    break;
+                case "freeze":
+                    break;
+                case "unfreeze":
+                    break;
+                case "wait":
+                    break;
+                default:
+                    Debug.WriteLine("Oops, didn't find the command");
+                    break;
+            }
 
-            return a;
         }
-        */
+
+        //Run One Command
         private void button1_Click(object sender, EventArgs e)
         {
             try
@@ -224,8 +223,7 @@ namespace PuppetMasterGUI {
                 string line = lineParser.nextLine();
                 textBox1.Text = line;
                 textBox2.Text = string.Join("\r\n", lineParser.remainingLines());
-                LineParser ln = new LineParser(line);
-                var words = ln.Words;
+                run(line);
 
             }
             catch (EOFException)
@@ -235,6 +233,7 @@ namespace PuppetMasterGUI {
             
         }
 
+        //Run All Commands
         private void button2_Click(object sender, EventArgs e)
         {
             try

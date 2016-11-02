@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -109,6 +110,12 @@ namespace CommonClasses
         public void Unfreeze(){
             freezed = false;
             Monitor.PulseAll(freezed);
+        }
+
+        public void TESTCONSOLE()
+        {
+            Console.WriteLine("i'm alive");
+            Debug.WriteLine("i'm alive2");
         }
 
 
