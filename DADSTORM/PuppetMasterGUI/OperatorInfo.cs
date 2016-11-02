@@ -73,7 +73,7 @@ namespace PuppetMasterGUI
             }
             // Command c = commands[arg[0]];
             args.RemoveAt(0);
-            c.execute(args);
+            //c.execute(args);
         }
 
         public void consoleLoop() {
