@@ -7,10 +7,26 @@ using System.Threading.Tasks;
 
 namespace Replica {
     public class UniqOperation : GlobalStateOperation {
+        private HashSet<string> seenStrings;
         private int fieldNumber;
         public UniqOperation(List<string> replicasURL, int myselfIndex, int fieldNumber)
             : base(replicasURL, myselfIndex) {
             this.fieldNumber = fieldNumber;
+            seenStrings = new HashSet<string>();
+        }
+
+        public override bool wasElementSeen(string s) {
+            bool contains = seenStrings.Contains(s);
+
+            if (!contains)
+                seenStrings.Add(s);
+
+            return contains;
+        }
+
+        private void processedTuple(string[] tuple) {
+            foreach (string s in tuple)
+                seenStrings.Add(s);
         }
 
         public override List<string[]> Operate(string[] tuple) {

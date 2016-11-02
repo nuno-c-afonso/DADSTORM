@@ -39,8 +39,8 @@ namespace Replica {
             int port;                                     // To store the port in which the service will be available
 
             int i;
-            Operation oper;                               //the operatin that this replica will make   
-            Consumer consumingOperator;                   //the thread that will be handling the tuples and sending them tho the next ones
+            Operation oper;                               //the operation that this replica will make   
+            ReplicaObject consumingOperator;              //the thread that will be handling the tuples and sending them tho the next ones
 
             //############ Parse and save the function arguments ###################
             PuppetMasterUrl = args[0];
@@ -127,19 +127,20 @@ namespace Replica {
                     System.Console.WriteLine("the type of operation {0} is not known", operation);
                     return;
             }
-
-
+            Console.WriteLine("after operations\n");
 
             //############ Open an input channel ###################
-            //TcpChannel channel = new TcpChannel(port);
-            //ChannelServices.RegisterChannel(channel, true);
-            ReplicaBuffer inputBuffer = new ReplicaBuffer();
-            RemotingServices.Marshal(inputBuffer, "op",typeof(ReplicaInterface));
+            port = 10005;
+            TcpChannel channel = new TcpChannel(port);
+            ChannelServices.RegisterChannel(channel, false);
 
+            Console.WriteLine("after register tcp\n");
 
             //############ Create a consumer of the buffer ###################
 
-            consumingOperator = new Consumer(inputBuffer,oper, outputs, replicaIndex, PuppetMasterUrl, routing, semantics, logLevel);
+            consumingOperator = new ReplicaObject(PuppetMasterUrl, routing, semantics, logLevel, oper, outputs);
+
+            RemotingServices.Marshal(consumingOperator, "op", typeof(ReplicaInterface));
 
             //############ Start processing tuples ###################//CHECK
             ThreadStart ts = new ThreadStart(consumingOperator.Operate);

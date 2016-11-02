@@ -159,6 +159,16 @@ namespace PuppetMasterGUI {
                                 obj.createReplica("tcp://localhost:" + port.ToString(), opb.Routing, semantics, loggingLevel,
                                                                    i, operatorParametersComma, opb.Addresses, outList);
 
+                                //port++;
+                                port = 10005;
+                                CommonClasses.ReplicaInterface obj2 = (CommonClasses.ReplicaInterface)Activator.GetObject(typeof(CommonClasses.ReplicaInterface),
+                                "tcp://" + pcsAddress + ":" + port + "/op");
+
+                                obj2.Status();
+
+
+
+
                             }
                             catch (System.Net.Sockets.SocketException e)
                             {

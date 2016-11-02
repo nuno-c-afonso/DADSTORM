@@ -1,5 +1,4 @@
 ﻿using CommonClasses;
-using PuppetMasterGUI;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -12,10 +11,8 @@ using System.Threading.Tasks;
 
 namespace Replica {
     public class ReplicaObject : MarshalByRefObject, ReplicaInterface {
-        private TcpChannel puppetMasterChannel;
-        private PuppetMasterLog log;
-        private Router router;
-        private string semantics;  
+        //private PuppetMasterLog log;
+        private Router router;  
         private bool logLevel;  // full = true, light = false
         private Operation operation;
         private Queue tupleQueue;
@@ -26,21 +23,26 @@ namespace Replica {
         bool crashed = false;
         object freezed = false;
 
-        public ReplicaObject(string PuppetMasterUrl, Router router,
-            string semantics, string logLevel, Operation operation) {
-            this.router = router;
-            this.semantics = semantics;
+        public ReplicaObject(string PuppetMasterUrl, string routing, string semantics,
+            string logLevel, Operation operation, List<string> output) {
+            tupleQueue = new Queue();
+
             this.logLevel = logLevel.Equals("full");
             this.operation = operation;
 
-            tupleQueue = new Queue();
+            string routingLower = routing.ToLower();
+            char[] delimiters = { '(', ')' };
+            string[] splitted = routingLower.Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
+            if (splitted[0].Equals("primary"))
+                router = new PrimaryRouter(output, semantics);
+            else if (splitted[0].Equals("random"))
+                router = new RandomRouter(output, semantics);
+            else
+                router = new HashRouter(output, semantics, int.Parse(splitted[1]));
 
             // Assuming that the service is in: tcp://<PuppetMasterIP>:10001/log
-            puppetMasterChannel = new TcpChannel();
-            ChannelServices.RegisterChannel(puppetMasterChannel, false);
-
-            log = (PuppetMasterLog) Activator.GetObject(typeof(PuppetMasterLog),
-                PuppetMasterUrl.Substring(0, PuppetMasterUrl.Length - 1) + "1/log");
+            //log = (PuppetMasterLog) Activator.GetObject(typeof(PuppetMasterLog),
+            //    PuppetMasterUrl.Substring(0, PuppetMasterUrl.Length - 1) + "1/log");
         }
 
         public int WaitingTime {
@@ -74,9 +76,11 @@ namespace Replica {
         //method used to get tuples from the buffer
         //USED BY: owner(replica)
         public string[] getTuple() {
-            lock (tupleQueue.SyncRoot) ;
-            if (tupleQueue.Count == 0)
-                Monitor.Wait(tupleQueue.SyncRoot);
+            lock (tupleQueue.SyncRoot) {
+                if (tupleQueue.Count == 0)
+                    Monitor.Wait(tupleQueue.SyncRoot);
+            }
+
             string[] result = (String[])tupleQueue.Dequeue();
             Monitor.Exit(tupleQueue.SyncRoot);
             Monitor.Pulse(tupleQueue.SyncRoot);
@@ -98,6 +102,7 @@ namespace Replica {
         //Command to print the current status
         //USED BY:PuppetMaster
         public string Status() {
+            Console.WriteLine("IN STATUS\n");
             statusRequested = true; //TODO how to do this?
             throw new NotImplementedException();
         }
@@ -124,18 +129,47 @@ namespace Replica {
         //if the freeze is true who call this will wait until it is unfreezed
         //USED BY: buffer consumer
         public void checkFreeze() {
-            while ((bool)freezed == true)
-                Monitor.Wait(freezed);
-            Monitor.Exit(freezed);
-            Monitor.Pulse(freezed);
+            lock (freezed) {
+                while ((bool)freezed == true)
+                    Monitor.Wait(freezed);
+                Monitor.Pulse(freezed);
+            }
         }
 
-        //if the freeze is true who call this will wait until it is unfreezed
-        //USED BY: owner(replica)
-
+        //USED BY: other replica
         public bool wasElementSeen(string s) {
-            //TODO
-            throw new NotImplementedException();
+            return operation.wasElementSeen(s);
+        }
+
+        //USED BY: other replica
+        public int numberOfProcessedTuples() {
+            return operation.numberOfProcessedTuples();
+        }
+
+        // To be used in the consumer thread
+        public void Operate() {
+            while (!crashed) {
+                //see if it is feezed
+                checkFreeze();
+
+                //see if needs to show his status
+                /*if (inputBuffer.StatusRequested)
+                    showStatus();                       TODO: Use the STATUS from the interface above, it will create a thread automatically
+                */
+
+                //wait the defined time between processing
+                Thread.Sleep(WaitingTime * 1000);
+
+                //get tuple from the buffer
+                string[] tuple = getTuple();
+
+                List<string[]> result = operation.Operate(tuple);
+                if (result != null) {
+                    foreach (string[] outTuple in result)
+                        router.sendToNext(outTuple);
+
+                }
+            }
         }
     }
 }

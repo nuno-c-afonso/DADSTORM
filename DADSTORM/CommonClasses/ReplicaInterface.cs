@@ -18,6 +18,7 @@ namespace CommonClasses
         void Unfreeze();
 
         bool wasElementSeen(string s);
-        void TESTCONSOLE();
+
+        int numberOfProcessedTuples();
     }
 }

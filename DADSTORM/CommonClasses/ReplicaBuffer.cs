@@ -143,5 +143,9 @@ namespace CommonClasses
             // TODO
             throw new NotImplementedException();
         }
+
+        public int numberOfProcessedTuples() {
+            throw new NotImplementedException();
+        }
     }
 }
