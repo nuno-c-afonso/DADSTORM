@@ -19,7 +19,7 @@ namespace Replica {
         }
 
         // Remember: The class name should be the complete one, which has the namespace
-        public List<string[]> Operate(string[] tuple) {
+        public override List<string[]> Operate(string[] tuple) {
             Assembly library = Assembly.LoadFile(Directory.GetCurrentDirectory() + @"\" + dllName);
             Object o = library.CreateInstance(className);
             if (o != null) {

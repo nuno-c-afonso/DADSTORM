@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 namespace Replica {
     public abstract class GlobalStateOperation : Operation {
         TcpChannel channel;
-        private HashSet<string> seenStrings = new HashSet<string>();
         private List<string> otherReplicas = new List<string>();
 
         public GlobalStateOperation(List<string> replicasURL, int myselfIndex) {
@@ -29,20 +28,6 @@ namespace Replica {
             }
         }
 
-        public bool wasElementSeen(string s) {
-            bool contains = seenStrings.Contains(s);
-
-            if (!contains)
-                seenStrings.Add(s);
-
-            return contains;
-        }
-
-        protected void processedTuple(string[] tuple) {
-            foreach (string s in tuple)
-                seenStrings.Add(s);
-        }
-
         // TODO: Check if is possible to do this without the channel closing
         protected ReplicaInterface getGeneralReplica(string url) {
             ReplicaInterface obj = null;
@@ -57,7 +42,5 @@ namespace Replica {
 
             return obj;
         }
-
-        public abstract List<string[]> Operate(string[] tuple);
     }
 }
