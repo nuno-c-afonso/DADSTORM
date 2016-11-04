@@ -123,8 +123,11 @@ namespace Replica {
         //Command used to end the slow server simulation
         //USED BY:PuppetMaster
         public void Unfreeze() {
-            freezed = false;
-            Monitor.PulseAll(freezed);
+            lock (freezed)
+            {
+                freezed = false;
+                Monitor.PulseAll(freezed);
+            }
         }
 
         //if the freeze is true who call this will wait until it is unfreezed
