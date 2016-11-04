@@ -189,24 +189,35 @@ namespace PuppetMasterGUI {
         private void run(string line) {
             line = line.ToLower();
 
+            var list = line.Split(' ').ToList();
             // get first word
-            var m = Regex.Match(line, @"^\w+");
+            /*
+            var m = Regex.Match(line, @"\w+|\d+"); // use .NextMatch().Value
             Debug.WriteLine(m.Value);
-            switch (m.Value)
+            */
+            Debug.WriteLine(list[0]);
+
+            switch (list[0])
             {
                 case "start":
+                    Debug.WriteLine("Param1: {0}", list[1]);
                     break;
                 case "interval":
+                    Debug.WriteLine("Param1: {0} |Param2: {1}", list[1], list[2]);
                     break;
                 case "status":
                     break;
                 case "crash":
+                    Debug.WriteLine("Param1: {0} |Param2: {1}", list[1], list[2]);
                     break;
                 case "freeze":
+                    Debug.WriteLine("Param1: {0} |Param2: {1}", list[1], list[2]);
                     break;
                 case "unfreeze":
+                    Debug.WriteLine("Param1: {0} |Param2: {1}", list[1], list[2]);
                     break;
                 case "wait":
+                    Debug.WriteLine("Param1: {0}", list[1]);            
                     break;
                 default:
                     Debug.WriteLine("Oops, didn't find the command");
