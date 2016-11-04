@@ -15,6 +15,7 @@ using System.Runtime.Remoting;
 using CommandLine;
 using CommonClasses;
 using System.Text.RegularExpressions;
+using System.Net;
 
 namespace PuppetMasterGUI {
     public partial class Form1 : Form {
@@ -22,6 +23,7 @@ namespace PuppetMasterGUI {
         CommonClasses.UrlSpliter urlsplitter = new CommonClasses.UrlSpliter();
         OperatorsInfo operatorsInfo = new OperatorsInfo();
 
+        private bool alreadyRunConfigCommands = false;
 
         private string loggingLevel ="light";
         private string semantics = "at-most-once";
@@ -29,6 +31,7 @@ namespace PuppetMasterGUI {
 
         const int PCS_RESERVED_PORT = 10000;
         const int LOGGING_PORT = 10001;
+        private IPAddress puppetMasterIPAddress = IPAddresses.LocalIPAddress();
 
         public Form1() {
             InitializeComponent();
@@ -69,6 +72,7 @@ namespace PuppetMasterGUI {
                 textBox3.Text = path.Split('\\').Last();
 
                 // shouldn't run more than once even if we load another config file #TODO
+                
                 runConfigCommands(lineParser.getConfigCommandsLines());
 
                 textBox2.Text = string.Join("\r\n", lineParser.remainingLines());
@@ -82,6 +86,10 @@ namespace PuppetMasterGUI {
 
         private void runConfigCommands(List<string> lines)
         {
+            if (alreadyRunConfigCommands)
+                return;
+
+            alreadyRunConfigCommands = true;
             foreach (var line in lines)
             {
                 ConsoleBox.AppendText(line+ "\r\n");
@@ -100,7 +108,7 @@ namespace PuppetMasterGUI {
                         OperatorBuilder opb = new OperatorBuilder(ln.Words.ToList());
 
                         //Use Name and Input to create a graph/map to know the next node  **step 1
-                        operatorsInfo.AddNewOP(opb);
+                        operatorsInfo.addNewOP(opb);
                         Debug.WriteLine("created fields association " + opb.Name);
                         break;
 
@@ -147,24 +155,26 @@ namespace PuppetMasterGUI {
                             Console.WriteLine("Machine Address: {0}\t port: {1}", urlsplitter.getAdress(opb.Addresses[i]), urlsplitter.getPort(opb.Addresses[i]));
                             // TODO FIXME pcsAddress should be urlsplitter.getAdress(opb.Addresses[i])
                             // but for now i can only create on localhost, not sure how to use addresses from configfile i do not control
-                            string pcsAddress = "localhost";
-                            Console.WriteLine("Calling PCS on address " + pcsAddress);
+                            //string pcsAddress = "localhost";
+                            string address = urlsplitter.getAdress(opb.Addresses[i]);
+                            Console.WriteLine("Calling PCS on address " + address);
                             try
                             {
+
                                 port = PCS_RESERVED_PORT;
                                 CommonClasses.IProcessCreator obj = (CommonClasses.IProcessCreator)Activator.GetObject(typeof(CommonClasses.IProcessCreator),
-                                "tcp://" + pcsAddress + ":" + port + "/ProcessCreator");
+                                "tcp://" + address + ":" + port + "/ProcessCreator");
 
                                 // TODO FIXME first argument being sent should be the puppetMasterUrl, it's still not
-                                obj.createReplica("tcp://localhost:" + port.ToString(), opb.Routing, semantics, loggingLevel,
+                                obj.createReplica("tcp://" + puppetMasterIPAddress.ToString() + ":" + LOGGING_PORT.ToString(), opb.Routing, semantics, loggingLevel,
                                                                    i, operatorParametersComma, opb.Addresses, outList);
 
-                                //port++;
-                                port = 10005;
+                                // test status 
+                                port = int.Parse(urlsplitter.getPort(opb.Addresses[i]));
                                 CommonClasses.ReplicaInterface obj2 = (CommonClasses.ReplicaInterface)Activator.GetObject(typeof(CommonClasses.ReplicaInterface),
-                                "tcp://" + pcsAddress + ":" + port + "/op");
+                                "tcp://" + address + ":" + port + "/op");
 
-                                obj2.Status();
+                                Debug.WriteLine("OH WOW "+ obj2.Status());
 
 
 
@@ -172,7 +182,7 @@ namespace PuppetMasterGUI {
                             }
                             catch (System.Net.Sockets.SocketException e)
                             {
-                                Console.WriteLine("Error with host1 " + pcsAddress);
+                                Console.WriteLine("Error with host1 " + address);
                                 Console.WriteLine("Exceptio1n " + e);
                             }
 
@@ -184,7 +194,7 @@ namespace PuppetMasterGUI {
                             }
                             catch (System.Net.Sockets.SocketException e)
                             {
-                                Console.WriteLine("Error with host2 " + pcsAddress);
+                                Console.WriteLine("Error with host2 " + address);
                                 Console.WriteLine("Exception2 " + e);
                             }
                         }
@@ -194,6 +204,17 @@ namespace PuppetMasterGUI {
 
             }
 
+        }
+
+        private CommonClasses.ReplicaInterface getRemoteObject(string opName, int replicaIndex = 0)
+        {
+            var opInfo = operatorsInfo.getOpInfo(opName);
+            string address = opInfo.Addresses[replicaIndex];
+
+            return (CommonClasses.ReplicaInterface)Activator.GetObject(
+                        typeof(CommonClasses.ReplicaInterface),
+                        address
+                        );
         }
 
         private void run(string line) {
@@ -206,28 +227,54 @@ namespace PuppetMasterGUI {
             Debug.WriteLine(m.Value);
             */
             Debug.WriteLine(list[0]);
+            CommonClasses.ReplicaInterface obj = null;
 
             switch (list[0])
             {
                 case "start":
+                    obj = getRemoteObject(list[1]);
                     Debug.WriteLine("Param1: {0}", list[1]);
+                    obj.Start();
                     break;
                 case "interval":
+                    obj = getRemoteObject(list[1]);
                     Debug.WriteLine("Param1: {0} |Param2: {1}", list[1], list[2]);
+                    obj.Interval(int.Parse(list[2]));
                     break;
                 case "status":
+                    foreach (var opName in operatorsInfo.OperatorNames)
+                    {
+                        var opInfo = operatorsInfo.getOpInfo(opName);
+
+                        foreach (var address in opInfo.Addresses)
+                        {
+                            obj = (CommonClasses.ReplicaInterface)Activator.GetObject(
+                                typeof(CommonClasses.ReplicaInterface),
+                                address
+                                );
+                            obj.Status();
+
+                        }
+                    }
                     break;
                 case "crash":
+                    obj = getRemoteObject(list[1], int.Parse(list[2]));
                     Debug.WriteLine("Param1: {0} |Param2: {1}", list[1], list[2]);
+                    obj.Crash();
                     break;
                 case "freeze":
+                    obj = getRemoteObject(list[1], int.Parse(list[2]));
                     Debug.WriteLine("Param1: {0} |Param2: {1}", list[1], list[2]);
+                    obj.Freeze();
                     break;
                 case "unfreeze":
+                    obj = getRemoteObject(list[1], int.Parse(list[2]));
                     Debug.WriteLine("Param1: {0} |Param2: {1}", list[1], list[2]);
+                    obj.Unfreeze();
                     break;
                 case "wait":
-                    Debug.WriteLine("Param1: {0}", list[1]);            
+                    //#TODO wait x seconds on puppetMaster
+                    Debug.WriteLine("Param1: {0}", list[1]);   //[1] == time in ms         
                     break;
                 default:
                     Debug.WriteLine("Oops, didn't find the command");

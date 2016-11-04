@@ -104,7 +104,8 @@ namespace Replica {
         public string Status() {
             Console.WriteLine("IN STATUS\n");
             statusRequested = true; //TODO how to do this?
-            throw new NotImplementedException();
+            return "status replicaObject";
+            //throw new NotImplementedException();
         }
 
         //Command to simulate a program crash

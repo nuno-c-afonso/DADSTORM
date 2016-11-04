@@ -40,6 +40,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="IPAddresses.cs" />
     <Compile Include="IProcessCreator.cs" />
     <Compile Include="OperatorBuilder.cs" />
     <Compile Include="ProcessCreator.cs" />

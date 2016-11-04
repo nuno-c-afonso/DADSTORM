@@ -130,7 +130,6 @@ namespace Replica {
             Console.WriteLine("after operations\n");
 
             //############ Open an input channel ###################
-            port = 10005;
             TcpChannel channel = new TcpChannel(port);
             ChannelServices.RegisterChannel(channel, false);
 
