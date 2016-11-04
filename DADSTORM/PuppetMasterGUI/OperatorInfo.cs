@@ -16,6 +16,14 @@ namespace PuppetMasterGUI
         private Dictionary<string, string> whereToSend = new Dictionary<string, string>(); // OP1 -> OP2 cause 'OP2 input ops OP1'
         private Dictionary<string, OperatorBuilder> operatorNameToOperatorBuilderDictionary = new Dictionary<string, OperatorBuilder>();
 
+        public List<string> OperatorNames
+        {
+            get
+            {
+                return operatorNames;
+            }
+        }
+
         public OperatorsInfo() {
             init();
         }
@@ -24,6 +32,8 @@ namespace PuppetMasterGUI
             init();
             commands = commands.Concat(newCommands).ToDictionary(k => k.Key, v => v.Value);
         }
+
+
 
         public bool doesCommandExist(string command)
         {
@@ -50,6 +60,7 @@ namespace PuppetMasterGUI
             commands.Add("wait", new WaitCommand());
             commands.Add("", new ZeroLengthStringCommand());
         }
+
         public void run(string line)
         {
             string first_word;
@@ -95,20 +106,20 @@ namespace PuppetMasterGUI
             }
         }
 
-        public void AddNewOP(OperatorBuilder opb)
+        public void addNewOP(OperatorBuilder opb)
         {
-            operatorNames.Add(opb.Name);
+            operatorNames.Add(opb.Name.ToLower());
 
             if (!whereToSend.ContainsKey(opb.Input))
-                whereToSend.Add(opb.Input, opb.Name);
+                whereToSend.Add(opb.Input.ToLower(), opb.Name.ToLower());
 
-            if (!operatorNameToOperatorBuilderDictionary.ContainsKey(opb.Name))
-                operatorNameToOperatorBuilderDictionary.Add(opb.Name, opb);
+            if (!operatorNameToOperatorBuilderDictionary.ContainsKey(opb.Name.ToLower()))
+                operatorNameToOperatorBuilderDictionary.Add(opb.Name.ToLower(), opb);
         }
 
         public List<string> getOuputListOfOP(string opName)
         {
-            OperatorBuilder nextOpBuilder = getNextOpInfo(opName);
+            OperatorBuilder nextOpBuilder = getNextOpInfo(opName.ToLower());
             if (nextOpBuilder == null) return new List<string>();
             else return nextOpBuilder.Addresses;
 
@@ -119,7 +130,7 @@ namespace PuppetMasterGUI
             OperatorBuilder nextOpBuilder = null;
 
             string nextOP;
-            if (whereToSend.TryGetValue(opName, out nextOP))
+            if (whereToSend.TryGetValue(opName.ToLower(), out nextOP))
             {
                 nextOpBuilder = operatorNameToOperatorBuilderDictionary[nextOP]; // need to check first ?
             }
@@ -130,7 +141,7 @@ namespace PuppetMasterGUI
         public OperatorBuilder getOpInfo(string opName)
         {
             OperatorBuilder nextOpBuilder = null;
-            operatorNameToOperatorBuilderDictionary.TryGetValue(opName, out nextOpBuilder);
+            operatorNameToOperatorBuilderDictionary.TryGetValue(opName.ToLower(), out nextOpBuilder);
             return nextOpBuilder;
 
         }
