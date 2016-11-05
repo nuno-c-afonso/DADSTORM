@@ -18,8 +18,7 @@ namespace CommandLine
             commands = commands.Concat(newCommands).ToDictionary(k => k.Key, v => v.Value);
         }
 
-        public bool doesCommandExist(string command)
-        {
+        public bool doesCommandExist(string command) {
             char[] delimiters = { ' ' };
             command.ToLower();
 

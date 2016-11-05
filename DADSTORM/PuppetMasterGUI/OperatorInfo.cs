@@ -106,44 +106,44 @@ namespace PuppetMasterGUI
             }
         }
 
-        public void addNewOP(OperatorBuilder opb)
-        {
+        public void addNewOP(OperatorBuilder opb) {
             operatorNames.Add(opb.Name.ToLower());
 
+            foreach(string s in opb.Input) {
+                string sLower = s.ToLower();
+                if (!whereToSend.ContainsKey(sLower))
+                    whereToSend.Add(sLower, opb.Name.ToLower());
+            }
+
+            /*
             if (!whereToSend.ContainsKey(opb.Input))
                 whereToSend.Add(opb.Input.ToLower(), opb.Name.ToLower());
+            */
 
             if (!operatorNameToOperatorBuilderDictionary.ContainsKey(opb.Name.ToLower()))
                 operatorNameToOperatorBuilderDictionary.Add(opb.Name.ToLower(), opb);
         }
 
-        public List<string> getOuputListOfOP(string opName)
-        {
+        public List<string> getOuputListOfOP(string opName) {
             OperatorBuilder nextOpBuilder = getNextOpInfo(opName.ToLower());
             if (nextOpBuilder == null) return new List<string>();
             else return nextOpBuilder.Addresses;
-
         }
 
-        public OperatorBuilder getNextOpInfo(string opName)
-        {
+        public OperatorBuilder getNextOpInfo(string opName) {
             OperatorBuilder nextOpBuilder = null;
 
             string nextOP;
-            if (whereToSend.TryGetValue(opName.ToLower(), out nextOP))
-            {
+            if (whereToSend.TryGetValue(opName.ToLower(), out nextOP)) {
                 nextOpBuilder = operatorNameToOperatorBuilderDictionary[nextOP]; // need to check first ?
             }
             return nextOpBuilder;
-
         }
 
-        public OperatorBuilder getOpInfo(string opName)
-        {
+        public OperatorBuilder getOpInfo(string opName) {
             OperatorBuilder nextOpBuilder = null;
             operatorNameToOperatorBuilderDictionary.TryGetValue(opName.ToLower(), out nextOpBuilder);
             return nextOpBuilder;
-
         }
 
     }

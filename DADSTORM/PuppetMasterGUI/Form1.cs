@@ -62,7 +62,7 @@ namespace PuppetMasterGUI {
             //incase the input file is not on .\input\dadstorm.config at the start of GUI
             try
             {
-                string text = System.IO.File.ReadAllText(path);
+                //string text = System.IO.File.ReadAllText(path);
 
                 //textBox2.Text = text;
                 //textBox1.Text = text.Replace("\n", Environment.NewLine);
