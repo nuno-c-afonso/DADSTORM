@@ -44,27 +44,27 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AtLeastOnceSemantics.cs" />
-    <Compile Include="AtMostOnceSemantics.cs" />
+    <Compile Include="Semantics\AtLeastOnceSemantics.cs" />
+    <Compile Include="Semantics\AtMostOnceSemantics.cs" />
     <Compile Include="ClassNotFoundException.cs" />
     <Compile Include="Consumer.cs" />
     <Compile Include="CountOperation.cs" />
     <Compile Include="CustomOperation.cs" />
     <Compile Include="DupOperation.cs" />
-    <Compile Include="ExactlyOnceSemantics.cs" />
+    <Compile Include="Semantics\ExactlyOnceSemantics.cs" />
     <Compile Include="FilterOperation.cs" />
     <Compile Include="GlobalStateOperation.cs" />
-    <Compile Include="HashRouter.cs" />
+    <Compile Include="Routing\HashRouter.cs" />
     <Compile Include="ImpossibleOperationException.cs" />
     <Compile Include="MethodNotFoundException.cs" />
     <Compile Include="Operation.cs" />
-    <Compile Include="PrimaryRouter.cs" />
-    <Compile Include="RandomRouter.cs" />
+    <Compile Include="Routing\PrimaryRouter.cs" />
+    <Compile Include="Routing\RandomRouter.cs" />
     <Compile Include="ReplicaMain.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReplicaObject.cs" />
-    <Compile Include="Router.cs" />
-    <Compile Include="Semantics.cs" />
+    <Compile Include="Routing\Router.cs" />
+    <Compile Include="Semantics\Semantics.cs" />
     <Compile Include="UniqOperation.cs" />
   </ItemGroup>
   <ItemGroup>
