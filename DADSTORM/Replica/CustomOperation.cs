@@ -18,23 +18,39 @@ namespace Replica {
             this.methodName = methodName;
         }
 
-        // Remember: The class name should be the complete one, which has the namespace
         public override List<string[]> Operate(string[] tuple) {
             Assembly library = Assembly.LoadFile(Directory.GetCurrentDirectory() + @"\" + dllName);
-            Object o = library.CreateInstance(className);
-            if (o != null) {
-                Type[] argsTypes = { typeof(List<string>) };
+            List<string[]> convertedResult = null;
 
-                MethodInfo mi = o.GetType().GetMethod(methodName, argsTypes);
-                if (mi != null)
-                    return (List<string[]>) mi.Invoke(o, new Object[] { new List<string>(tuple) });
+            // To search for the desired class
+            foreach (Type type in library.GetTypes()) {
+                if (type.IsClass == true) {
+                    if (type.FullName.EndsWith("." + className)) {
+                        // create an instance of the object
+                        object o = Activator.CreateInstance(type);
 
-                else
-                    throw new MethodNotFoundException();
+                        // Dynamically Invoke the method
+                        List<string> l = new List<string>(tuple);
+                        object[] args = new object[] { l };
+
+                        object resultObject = type.InvokeMember(methodName,
+                          BindingFlags.Default | BindingFlags.InvokeMethod, null, o, args);
+
+                        IList<IList<string>> result = (IList<IList<string>>) resultObject;
+
+                        foreach (IList<string> t in result) {
+                            string[] tupleArray = new string[t.Count];
+                            for (int i = 0; i < t.Count; i++)
+                                tupleArray[i] = t[i];
+                            convertedResult.Add(tupleArray);
+                        }
+
+                        return convertedResult;
+                    }
+                }
             }
 
-            else
-                throw new ClassNotFoundException();
+            throw new CouldNotInvokeMethodException();
         }
     }
 }

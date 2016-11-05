@@ -44,9 +44,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CouldNotInvokeMethodException.cs" />
     <Compile Include="Semantics\AtLeastOnceSemantics.cs" />
     <Compile Include="Semantics\AtMostOnceSemantics.cs" />
-    <Compile Include="ClassNotFoundException.cs" />
     <Compile Include="Consumer.cs" />
     <Compile Include="CountOperation.cs" />
     <Compile Include="CustomOperation.cs" />
@@ -56,7 +56,6 @@
     <Compile Include="GlobalStateOperation.cs" />
     <Compile Include="Routing\HashRouter.cs" />
     <Compile Include="ImpossibleOperationException.cs" />
-    <Compile Include="MethodNotFoundException.cs" />
     <Compile Include="Operation.cs" />
     <Compile Include="Routing\PrimaryRouter.cs" />
     <Compile Include="Routing\RandomRouter.cs" />
