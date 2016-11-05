@@ -115,7 +115,7 @@ namespace PuppetMasterGUI {
                 }
 
             }
-            int port = 11005;
+            int port;
             foreach (var line in lines)
             {
                 // get first word

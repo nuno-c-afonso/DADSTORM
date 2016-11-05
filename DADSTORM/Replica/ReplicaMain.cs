@@ -17,7 +17,7 @@ namespace Replica {
         public static void Main(string[] args) {
 
             //TODO remove
-            System.Console.WriteLine("program args " + string.Join(" ", args));
+            System.Console.WriteLine("Program args:\n" + string.Join(" ", args));
 
             for (int xcd = 0; xcd < args.Length; xcd++)
                 System.Console.WriteLine(args[xcd]);
