@@ -4,11 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CommonClasses
-{
-    public interface ReplicaInterface
-    {
-        //void addTuple(Tuple<string> t); FIXME check if we can make a tuple with variable size 
+namespace CommonClasses {
+    public interface ReplicaInterface {
         void addTuple(string[] tuple);
         void Start();
         void Interval(int time);
