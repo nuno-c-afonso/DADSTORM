@@ -44,19 +44,20 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CouldNotInvokeMethodException.cs" />
+    <Compile Include="Operations\CouldNotInvokeMethodException.cs" />
+    <Compile Include="Operations\OutputOperation.cs" />
     <Compile Include="Semantics\AtLeastOnceSemantics.cs" />
     <Compile Include="Semantics\AtMostOnceSemantics.cs" />
     <Compile Include="Consumer.cs" />
-    <Compile Include="CountOperation.cs" />
-    <Compile Include="CustomOperation.cs" />
-    <Compile Include="DupOperation.cs" />
+    <Compile Include="Operations\CountOperation.cs" />
+    <Compile Include="Operations\CustomOperation.cs" />
+    <Compile Include="Operations\DupOperation.cs" />
     <Compile Include="Semantics\ExactlyOnceSemantics.cs" />
-    <Compile Include="FilterOperation.cs" />
-    <Compile Include="GlobalStateOperation.cs" />
+    <Compile Include="Operations\FilterOperation.cs" />
+    <Compile Include="Operations\GlobalStateOperation.cs" />
     <Compile Include="Routing\HashRouter.cs" />
-    <Compile Include="ImpossibleOperationException.cs" />
-    <Compile Include="Operation.cs" />
+    <Compile Include="Operations\ImpossibleOperationException.cs" />
+    <Compile Include="Operations\Operation.cs" />
     <Compile Include="Routing\PrimaryRouter.cs" />
     <Compile Include="Routing\RandomRouter.cs" />
     <Compile Include="ReplicaMain.cs" />
@@ -64,7 +65,7 @@
     <Compile Include="ReplicaObject.cs" />
     <Compile Include="Routing\Router.cs" />
     <Compile Include="Semantics\Semantics.cs" />
-    <Compile Include="UniqOperation.cs" />
+    <Compile Include="Operations\UniqOperation.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
