@@ -106,6 +106,23 @@ namespace PuppetMasterGUI
             }
         }
 
+
+        public bool isOperator(string opName)
+        {
+            return operatorNames.Contains(opName);
+        }
+
+
+        public void swapOperatorBuilder(string opName, OperatorBuilder opb)
+        {
+            if (operatorNameToOperatorBuilderDictionary.ContainsKey(opName.ToLower()))
+            {
+                operatorNameToOperatorBuilderDictionary.Remove(opName.ToLower());
+                operatorNameToOperatorBuilderDictionary.Add(opName.ToLower(), opb);
+            }
+                
+        }
+
         public void addNewOP(OperatorBuilder opb)
         {
             operatorNames.Add(opb.Name.ToLower());
