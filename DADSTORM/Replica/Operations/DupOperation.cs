@@ -4,8 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Replica
-{
+namespace Replica {
     public class DupOperation : Operation {
         public override List<string[]> Operate(string[] tuple){
             List<string[]> l = new List<string[]>();
