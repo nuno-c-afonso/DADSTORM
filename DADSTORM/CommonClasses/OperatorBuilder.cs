@@ -12,7 +12,8 @@ namespace CommonClasses
         public string Name { get; private set; }
         public string Input { get; private set; }
         public int RepFactor { get; private set; }
-        public string Routing { get; private set; }
+        public string PreviousRouting { get; private set; }
+        public string MyRouting { get; set; }
         public List<string> Addresses { get; private set; }
         public List<string> SpecificParameters { get; private set; }
         public string OperatorType { get; private set; }
@@ -20,14 +21,14 @@ namespace CommonClasses
 
         public OperatorBuilder(List<string> words)
         {
-            Name = words[0];
-            Input = words[3];
+            Name = words[0].ToLower();
+            Input = words[3].ToLower();
 
             int repFactor;
             int.TryParse(words[6],out repFactor);
             RepFactor = repFactor;
 
-            Routing = words[8];
+            PreviousRouting = words[8];
 
 
             //find "operator" string index

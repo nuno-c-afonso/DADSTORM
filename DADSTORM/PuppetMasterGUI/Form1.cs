@@ -22,6 +22,8 @@ namespace PuppetMasterGUI {
         private ReadFileByLineFiltered lineParser;
         CommonClasses.UrlSpliter urlsplitter = new CommonClasses.UrlSpliter();
         OperatorsInfo operatorsInfo = new OperatorsInfo();
+        private string firstOPName;
+        private string lastOPName;
 
         private bool alreadyRunConfigCommands = false;
 
@@ -132,12 +134,24 @@ namespace PuppetMasterGUI {
                         //# TODO Call create replica here ??
                         OperatorBuilder opb = operatorsInfo.getOpInfo(opName);
 
-                        //OperatorBuilder opb = new OperatorBuilder(ln.Words.ToList()); //is it really necessary to rebuild this here ?
+                        // if Input of operator is not an operator it means that we have the first Operator
+                        if (!operatorsInfo.isOperator(opb.Input))
+                        {
+                            firstOPName = opb.Name;
+                        }
+
+                        if(operatorsInfo.getNextOpInfo(opName) != null) { 
+                            opb.MyRouting = operatorsInfo.getNextOpInfo(opName).PreviousRouting;
+                            operatorsInfo.swapOperatorBuilder(opName, opb); // update with MyRouting info
+
+                        }
+                        else
+                        {
+                            lastOPName = opb.Name;
+                            opb.MyRouting = "primary"; // if no routing is present, use primary
+                        }
 
                         var outList = operatorsInfo.getOuputListOfOP(opb.Name);
-
-                         //puts OperatorType at the start of OperatorParameters (necessary for replica main)
-                        //opb.SpecificParameters.Insert(0, opb.OperatorType);
 
                         // build this string: OPTYPE param1,param2,param3
                         // ex: FILTER 3,=,"www.tecnico.ulisboa.pt"
@@ -166,7 +180,7 @@ namespace PuppetMasterGUI {
                                 "tcp://" + address + ":" + port + "/ProcessCreator");
 
                                 // TODO FIXME first argument being sent should be the puppetMasterUrl, it's still not
-                                obj.createReplica("tcp://" + puppetMasterIPAddress.ToString() + ":" + LOGGING_PORT.ToString(), opb.Routing, semantics, loggingLevel,
+                                obj.createReplica("tcp://" + puppetMasterIPAddress.ToString() + ":" + LOGGING_PORT.ToString(), opb.MyRouting, semantics, loggingLevel,
                                                                    i, operatorParametersComma, opb.Addresses, outList);
 
                                 // test status 
@@ -176,27 +190,13 @@ namespace PuppetMasterGUI {
 
                                 Debug.WriteLine("OH WOW "+ obj2.Status());
 
-
-
-
                             }
                             catch (System.Net.Sockets.SocketException e)
                             {
-                                Console.WriteLine("Error with host1 " + address);
-                                Console.WriteLine("Exceptio1n " + e);
+                                Console.WriteLine("Error with host " + address);
+                                Console.WriteLine("Exception " + e);
                             }
 
-                            try
-                            {
-
-                                
-
-                            }
-                            catch (System.Net.Sockets.SocketException e)
-                            {
-                                Console.WriteLine("Error with host2 " + address);
-                                Console.WriteLine("Exception2 " + e);
-                            }
                         }
 
                         break;
