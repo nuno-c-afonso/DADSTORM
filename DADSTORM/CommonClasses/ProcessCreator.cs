@@ -12,18 +12,21 @@ namespace CommonClasses {
             int repIndex, List<string> op, List<string> replicas, List<string> output, List<string> input) {
 
 
-            foreach (string s in input){//FIXME REMOVE DIOGO
+            foreach (string s in  op)
                 Console.Write(" " + s);//FIXME REMOVE DIOGO
-                Console.WriteLine("");
-            }
-            Console.WriteLine(Directory.GetCurrentDirectory());
+           Console.WriteLine("");
+            
+
 
             Process process = new Process();
             process.StartInfo.FileName = "..\\..\\..\\Replica\\bin\\Debug\\Replica.exe";
 
             // Building the arguments for the main
             process.StartInfo.Arguments =  masterURL + " " + routing + " " + semantics + " " + logLevel;
-            process.StartInfo.Arguments += " -op " + string.Join(" ", op);
+            process.StartInfo.Arguments += " -op " + string.Join(" ", op).Replace("\"","\\\"");
+            /*foreach (string s in op)
+                process.StartInfo.Arguments += " " + s;*/
+                        Console.Write(" " + process.StartInfo.Arguments);
             process.StartInfo.Arguments += " -r " + repIndex + " " + string.Join(" ", replicas);
             process.StartInfo.Arguments += " -o " + string.Join(" ", output); //#FIXME if output is empty "-op " is sent alst space may cause problems
             process.StartInfo.Arguments += " -i " + string.Join(" ", input);
