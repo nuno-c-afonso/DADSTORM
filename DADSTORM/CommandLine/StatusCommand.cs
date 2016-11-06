@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CommandLine {
@@ -19,7 +20,8 @@ namespace CommandLine {
                 foreach (string addr in opb.Addresses) {
 
                     ReplicaInterface obj = (ReplicaInterface)Activator.GetObject(typeof(ReplicaInterface), addr);
-                    obj.Status();// TODO use thread for this call ?
+                    //obj.Status(); // TODO use thread for this call ?
+                    new Thread(() => obj.Status()).Start();
                 }
             }
         }

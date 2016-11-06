@@ -137,7 +137,8 @@ namespace Replica {
 
             //############ Create a consumer of the buffer ###################
 
-            consumingOperator = new ReplicaObject(PuppetMasterUrl, routing, semantics, logLevel, oper, outputs);
+            consumingOperator = new ReplicaObject(PuppetMasterUrl, routing, semantics, logLevel, oper, outputs,
+                                                    replicasUrl[replicaIndex], operation[0]);
 
             RemotingServices.Marshal(consumingOperator, "op", typeof(ReplicaInterface));
 

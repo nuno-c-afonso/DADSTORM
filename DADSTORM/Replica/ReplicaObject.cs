@@ -18,18 +18,23 @@ namespace Replica {
         private Queue tupleQueue;
         private string PuppetMasterUrl;
 
+        private string replicaAddress;
+        private string operationName;
+        
         bool start = false;
         int waitingTime = 0;
         bool crashed = false;
         object freezed = false;
 
         public ReplicaObject(string PuppetMasterUrl, string routing, string semantics,
-            string logLevel, Operation operation, List<string> output) {
+            string logLevel, Operation operation, List<string> output, string replicaAddress, string operationName) {
             tupleQueue = new Queue();
 
             this.PuppetMasterUrl = PuppetMasterUrl;
             this.logLevel = logLevel.Equals("full");
             this.operation = operation;
+            this.replicaAddress = replicaAddress;
+            this.operationName = operationName;
 
             string routingLower = routing.ToLower();
             char[] delimiters = { '(', ')' };
@@ -92,12 +97,10 @@ namespace Replica {
 
         private void testLog()
         {
-   
 
             try
             {
-                Console.WriteLine("in thread\n");
-                log.Log("did it go through ?");
+                log.Log("Status " + operationName + " " + replicaAddress + " " + IPAddresses.LocalIPAddress());
                 Console.WriteLine("after log\n");
             }
             catch (Exception ex)
