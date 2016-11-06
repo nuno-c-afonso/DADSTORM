@@ -66,6 +66,7 @@
     <Compile Include="Routing\Router.cs" />
     <Compile Include="Semantics\Semantics.cs" />
     <Compile Include="Operations\UniqOperation.cs" />
+    <Compile Include="tupleFileReader.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -74,6 +75,10 @@
     <ProjectReference Include="..\CommonClasses\CommonClasses.csproj">
       <Project>{8583489C-986A-40C1-B688-5F32FE93783C}</Project>
       <Name>CommonClasses</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FileManipulator\FileManipulator.csproj">
+      <Project>{c5112bc6-abcb-4472-8722-ea24c123be13}</Project>
+      <Name>FileManipulator</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

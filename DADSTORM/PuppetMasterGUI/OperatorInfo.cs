@@ -106,7 +106,12 @@ namespace PuppetMasterGUI
             }
         }
 
-        public void addNewOP(OperatorBuilder opb) {
+        public bool isOperator(string opName) {
+            return operatorNames.Contains(opName);
+        }
+
+        public void addNewOP(OperatorBuilder opb)
+        {
             operatorNames.Add(opb.Name.ToLower());
 
             foreach(string s in opb.Input) {

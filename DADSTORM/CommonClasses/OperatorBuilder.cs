@@ -10,7 +10,8 @@ namespace CommonClasses {
         public string Name { get; private set; }
         public List<string> Input { get; private set; }
         public int RepFactor { get; private set; }
-        public string Routing { get; private set; }
+        public string PreviousRouting { get; private set; }
+        public string MyRouting { get; set; }
         public List<string> Addresses { get; private set; }
         public List<string> SpecificParameters { get; private set; }
         public string OperatorType { get; private set; }
@@ -20,8 +21,6 @@ namespace CommonClasses {
             Input = new List<string>();
             Addresses = new List<string>();
             SpecificParameters = new List<string>();
-
-            int index;
 
             Name = words[0];
 
@@ -34,14 +33,7 @@ namespace CommonClasses {
             int.TryParse(words[index],out repFactor);
             RepFactor = repFactor;
 
-            // Update the index to the routing position
-            index += 2;
-            Routing = words[index];
 
-            // Update the index to the addresses position
-            index += 2;
-            for (; !words[index].Equals("operator"); index++)
-                Addresses.Add(words[index]);
 
             // Update the index to the operator position
             index += 2;
