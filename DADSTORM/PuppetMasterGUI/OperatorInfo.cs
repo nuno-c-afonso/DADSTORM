@@ -120,19 +120,18 @@ namespace PuppetMasterGUI
                     whereToSend.Add(sLower, opb.Name.ToLower());
             }
 
-            /*
-            if (!whereToSend.ContainsKey(opb.Input))
-                whereToSend.Add(opb.Input.ToLower(), opb.Name.ToLower());
-            */
-
             if (!operatorNameToOperatorBuilderDictionary.ContainsKey(opb.Name.ToLower()))
                 operatorNameToOperatorBuilderDictionary.Add(opb.Name.ToLower(), opb);
         }
 
-        public List<string> getOuputListOfOP(string opName) {
+        public List<string> getOuputAddressesListOfOP(string opName) {
             OperatorBuilder nextOpBuilder = getNextOpInfo(opName.ToLower());
-            if (nextOpBuilder == null) return new List<string>();
-            else return nextOpBuilder.Addresses;
+            return nextOpBuilder.Addresses;
+        }
+
+        public string getMyRouting(string opName) {
+            OperatorBuilder nextOpBuilder = getNextOpInfo(opName.ToLower());
+            return nextOpBuilder.PreviousRouting;
         }
 
         public OperatorBuilder getNextOpInfo(string opName) {
@@ -140,8 +139,11 @@ namespace PuppetMasterGUI
 
             string nextOP;
             if (whereToSend.TryGetValue(opName.ToLower(), out nextOP)) {
-                nextOpBuilder = operatorNameToOperatorBuilderDictionary[nextOP]; // need to check first ?
+                nextOpBuilder = operatorNameToOperatorBuilderDictionary[nextOP]; // need to check 
             }
+            else
+                throw new LastOperatorException();
+
             return nextOpBuilder;
         }
 
@@ -149,6 +151,16 @@ namespace PuppetMasterGUI
             OperatorBuilder nextOpBuilder = null;
             operatorNameToOperatorBuilderDictionary.TryGetValue(opName.ToLower(), out nextOpBuilder);
             return nextOpBuilder;
+        }
+
+        public string getFirstOperator() {
+            Dictionary<string, string>.ValueCollection valueColl = whereToSend.Values;
+
+            foreach (string op in operatorNames)
+                if (!valueColl.Contains<string>(op))
+                    return op;
+
+            return null;
         }
 
     }
