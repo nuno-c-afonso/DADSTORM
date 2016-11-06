@@ -36,6 +36,8 @@ namespace Replica {
             List<string> operation = new List<string>();  // To store the desired operation for the replica
             List<string> replicasUrl = new List<string>();// To store the URLs for all replicas
             List<string> outputs = new List<string>();    // To store the replica's outputsB
+            List<string> inputs = new List<string>();       // To store the replica's inputs
+            List<Thread> fileReaders = new List<Thread>();
             int port;                                     // To store the port in which the service will be available
 
             int i;
@@ -90,12 +92,20 @@ namespace Replica {
             while (!args[++i].Equals("-o"))
                 replicasUrl.Add(args[i]);
 
+            while (!args[++i].Equals("-i"))
+                outputs.Add(args[i]);
+
             /*
-             *  TODO: Check the case when there's no more outputs
+             *  TODO: Check the case when there's no more inputs
              */
             int argsSize = args.Length;
             while (++i < argsSize)
-                outputs.Add(args[i]);
+                inputs.Add(args[i]);
+
+
+
+
+
 
             CommonClasses.UrlSpliter urlspli = new CommonClasses.UrlSpliter();
             port = int.Parse(urlspli.getPort(replicasUrl[replicaIndex]));
@@ -141,8 +151,20 @@ namespace Replica {
 
             RemotingServices.Marshal(consumingOperator, "op", typeof(ReplicaInterface));
 
-            //############ Start processing tuples ###################//CHECK
-            ThreadStart ts = new ThreadStart(consumingOperator.Operate);
+
+            foreach (string input in inputs)
+                if (input.EndsWith(".dat")) {
+                    tupleFileReader fr = new tupleFileReader(consumingOperator, input);
+                    ThreadStart tstart = new ThreadStart(fr.feedBuffer);
+                    Thread th = new Thread(tstart);
+                    th.Start();
+                    fileReaders.Add(th);
+                }
+
+
+
+                //############ Start processing tuples ###################//CHECK
+                ThreadStart ts = new ThreadStart(consumingOperator.Operate);
             Thread t = new Thread(ts);
             t.Start();
             t.Join();//FIXMEshould we wait?

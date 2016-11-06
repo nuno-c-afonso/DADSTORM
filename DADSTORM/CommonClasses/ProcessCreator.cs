@@ -8,8 +8,14 @@ using System.Diagnostics;
 namespace CommonClasses {
     public class ProcessCreator : MarshalByRefObject, IProcessCreator {
         public void createReplica(string masterURL, string routing, string semantics, string logLevel,
-            int repIndex, List<string> op, List<string> replicas, List<string> output) {
-            
+            int repIndex, List<string> op, List<string> replicas, List<string> output, List<string> input) {
+
+
+            foreach (string s in input){//FIXME REMOVE DIOGO
+                Console.Write(" " + s);//FIXME REMOVE DIOGO
+                Console.WriteLine("");
+            }
+
             Process process = new Process();
             process.StartInfo.FileName = "..\\..\\..\\Replica\\bin\\Debug\\Replica.exe";
 
@@ -18,7 +24,7 @@ namespace CommonClasses {
             process.StartInfo.Arguments += " -op " + string.Join(" ", op);
             process.StartInfo.Arguments += " -r " + repIndex + " " + string.Join(" ", replicas);
             process.StartInfo.Arguments += " -o " + string.Join(" ", output); //#FIXME if output is empty "-op " is sent alst space may cause problems
-
+            process.StartInfo.Arguments += " -i " + string.Join(" ", input);
             process.Start();
         }
 
