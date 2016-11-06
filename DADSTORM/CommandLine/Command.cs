@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace CommandLine {
-    public class Command {
+    public interface Command {
+        void execute(string[] args);
     }
 }
