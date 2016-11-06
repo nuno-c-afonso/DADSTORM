@@ -15,7 +15,7 @@ namespace CommonClasses
             return aux[0];
         }
 
-        public string getAdress(string url)
+        public string getAddress(string url)
         {
             char[] delimiters = { ':', '/' };
             string[] aux = url.Split(delimiters, System.StringSplitOptions.RemoveEmptyEntries);

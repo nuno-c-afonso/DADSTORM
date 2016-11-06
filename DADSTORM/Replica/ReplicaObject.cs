@@ -19,7 +19,6 @@ namespace Replica {
 
         bool start = false;
         int waitingTime = 0;
-        bool statusRequested = false;//check this
         bool crashed = false;
         object freezed = false;
 
@@ -45,25 +44,6 @@ namespace Replica {
             //    PuppetMasterUrl.Substring(0, PuppetMasterUrl.Length - 1) + "1/log");
         }
 
-        public int WaitingTime {
-            get { return waitingTime; }
-        }
-
-        public bool Crashed {
-            get { return crashed; }
-        }
-
-        public bool StatusRequested {
-            get {
-                if (statusRequested) {
-                    statusRequested = false;
-                    return true;
-                }
-                else
-                    return false;
-            }
-        }
-
         //method used to send tuples to the owner of this buffer
         //USED BY: other replicas, input file reader
         public void addTuple(string[] tuple) {
@@ -81,7 +61,7 @@ namespace Replica {
                     Monitor.Wait(tupleQueue.SyncRoot);
             }
 
-            string[] result = (String[])tupleQueue.Dequeue();
+            string[] result = (String[]) tupleQueue.Dequeue();
             Monitor.Exit(tupleQueue.SyncRoot);
             Monitor.Pulse(tupleQueue.SyncRoot);
             return result;
@@ -102,10 +82,10 @@ namespace Replica {
         //Command to print the current status
         //USED BY:PuppetMaster
         public string Status() {
+            // TODO: Check what informations will be helpful to send
+
             Console.WriteLine("IN STATUS\n");
-            statusRequested = true; //TODO how to do this?
             return "status replicaObject";
-            //throw new NotImplementedException();
         }
 
         //Command to simulate a program crash
@@ -123,8 +103,7 @@ namespace Replica {
         //Command used to end the slow server simulation
         //USED BY:PuppetMaster
         public void Unfreeze() {
-            lock (freezed)
-            {
+            lock (freezed) {
                 freezed = false;
                 Monitor.PulseAll(freezed);
             }
@@ -152,17 +131,15 @@ namespace Replica {
 
         // To be used in the consumer thread
         public void Operate() {
+            while (!start)
+                Thread.Sleep(100);
+
             while (!crashed) {
                 //see if it is feezed
                 checkFreeze();
 
-                //see if needs to show his status
-                /*if (inputBuffer.StatusRequested)
-                    showStatus();                       TODO: Use the STATUS from the interface above, it will create a thread automatically
-                */
-
                 //wait the defined time between processing
-                Thread.Sleep(WaitingTime * 1000);
+                Thread.Sleep(waitingTime * 1000);
 
                 //get tuple from the buffer
                 string[] tuple = getTuple();
@@ -171,7 +148,6 @@ namespace Replica {
                 if (result != null) {
                     foreach (string[] outTuple in result)
                         router.sendToNext(outTuple);
-
                 }
             }
         }

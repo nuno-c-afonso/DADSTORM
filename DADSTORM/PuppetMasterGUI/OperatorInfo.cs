@@ -106,61 +106,61 @@ namespace PuppetMasterGUI
             }
         }
 
-
-        public bool isOperator(string opName)
-        {
+        public bool isOperator(string opName) {
             return operatorNames.Contains(opName);
-        }
-
-
-        public void swapOperatorBuilder(string opName, OperatorBuilder opb)
-        {
-            if (operatorNameToOperatorBuilderDictionary.ContainsKey(opName.ToLower()))
-            {
-                operatorNameToOperatorBuilderDictionary.Remove(opName.ToLower());
-                operatorNameToOperatorBuilderDictionary.Add(opName.ToLower(), opb);
-            }
-                
         }
 
         public void addNewOP(OperatorBuilder opb)
         {
             operatorNames.Add(opb.Name.ToLower());
 
-            if (!whereToSend.ContainsKey(opb.Input))
-                whereToSend.Add(opb.Input.ToLower(), opb.Name.ToLower());
+            foreach(string s in opb.Input) {
+                string sLower = s.ToLower();
+                if (!whereToSend.ContainsKey(sLower))
+                    whereToSend.Add(sLower, opb.Name.ToLower());
+            }
 
             if (!operatorNameToOperatorBuilderDictionary.ContainsKey(opb.Name.ToLower()))
                 operatorNameToOperatorBuilderDictionary.Add(opb.Name.ToLower(), opb);
         }
 
-        public List<string> getOuputListOfOP(string opName)
-        {
+        public List<string> getOuputAddressesListOfOP(string opName) {
             OperatorBuilder nextOpBuilder = getNextOpInfo(opName.ToLower());
-            if (nextOpBuilder == null) return new List<string>();
-            else return nextOpBuilder.Addresses;
-
+            return nextOpBuilder.Addresses;
         }
 
-        public OperatorBuilder getNextOpInfo(string opName)
-        {
+        public string getMyRouting(string opName) {
+            OperatorBuilder nextOpBuilder = getNextOpInfo(opName.ToLower());
+            return nextOpBuilder.PreviousRouting;
+        }
+
+        public OperatorBuilder getNextOpInfo(string opName) {
             OperatorBuilder nextOpBuilder = null;
 
             string nextOP;
-            if (whereToSend.TryGetValue(opName.ToLower(), out nextOP))
-            {
-                nextOpBuilder = operatorNameToOperatorBuilderDictionary[nextOP]; // need to check first ?
+            if (whereToSend.TryGetValue(opName.ToLower(), out nextOP)) {
+                nextOpBuilder = operatorNameToOperatorBuilderDictionary[nextOP]; // need to check 
             }
-            return nextOpBuilder;
+            else
+                throw new LastOperatorException();
 
+            return nextOpBuilder;
         }
 
-        public OperatorBuilder getOpInfo(string opName)
-        {
+        public OperatorBuilder getOpInfo(string opName) {
             OperatorBuilder nextOpBuilder = null;
             operatorNameToOperatorBuilderDictionary.TryGetValue(opName.ToLower(), out nextOpBuilder);
             return nextOpBuilder;
+        }
 
+        public string getFirstOperator() {
+            Dictionary<string, string>.ValueCollection valueColl = whereToSend.Values;
+
+            foreach (string op in operatorNames)
+                if (!valueColl.Contains<string>(op))
+                    return op;
+
+            return null;
         }
 
     }
