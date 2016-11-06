@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using CommandLine;
+using System.Diagnostics;
 
 namespace FileManipulator {
     // diferenciar configCommands e operatorCommands
@@ -14,24 +15,19 @@ namespace FileManipulator {
         private int currentLine = 0;
         private int operatorCommandFirstLine = 0;
 
-        private Shell shell;
-
         public ReadFileByLineFiltered(string filepath) {
-            shell = new Shell();
-
+            int i;
             lines = System.IO.File.ReadAllLines(filepath);
             lines = lines.Where(line => (line.Length > 0 && line[0] != '%')).ToArray();
 
             // find where operatorCommands start
-            for (int i = 0; i < lines.Length; i++)
-            {
-                if (shell.doesCommandExist(lines[i]))
-                {
-                    operatorCommandFirstLine = i;
+            for (i = 0; i < lines.Length; i++) {
+                if (Shell.doesCommandExist(lines[i])) {
                     break;
                 }
             }
 
+            operatorCommandFirstLine = i;
         }
 
         public string nextLine() {

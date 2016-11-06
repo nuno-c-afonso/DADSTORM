@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.Serialization;
 
-namespace PuppetMasterGUI {
+namespace CommonClasses {
     public class LastOperatorException : ApplicationException {
         public LastOperatorException() {
         }

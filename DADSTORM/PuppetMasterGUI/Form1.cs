@@ -33,6 +33,7 @@ namespace PuppetMasterGUI {
         const int PCS_RESERVED_PORT = 10000;
         const int LOGGING_PORT = 10001;
         private IPAddress puppetMasterIPAddress = IPAddresses.LocalIPAddress();
+        private Shell shell;
 
         public Form1() {
             InitializeComponent();
@@ -110,6 +111,8 @@ namespace PuppetMasterGUI {
 
             }
 
+            shell = new Shell(operatorsInfo);
+
             firstOPName = operatorsInfo.getFirstOperator();
 
             contactReplicas();
@@ -176,74 +179,7 @@ namespace PuppetMasterGUI {
 
             return (CommonClasses.ReplicaInterface)Activator.GetObject(
                         typeof(CommonClasses.ReplicaInterface),
-                        address
-                        );
-        }
-
-        private void run(string line) {
-            line = line.ToLower();
-
-            var list = line.Split(' ').ToList();
-            // get first word
-            /*
-            var m = Regex.Match(line, @"\w+|\d+"); // use .NextMatch().Value
-            Debug.WriteLine(m.Value);
-            */
-            Debug.WriteLine(list[0]);
-            CommonClasses.ReplicaInterface obj = null;
-
-            switch (list[0])
-            {
-                case "start":
-                    obj = getRemoteObject(list[1]);
-                    Debug.WriteLine("Param1: {0}", list[1]);
-                    obj.Start();
-                    break;
-                case "interval":
-                    obj = getRemoteObject(list[1]);
-                    Debug.WriteLine("Param1: {0} |Param2: {1}", list[1], list[2]);
-                    obj.Interval(int.Parse(list[2]));
-                    break;
-                case "status":
-                    foreach (var opName in operatorsInfo.OperatorNames)
-                    {
-                        var opInfo = operatorsInfo.getOpInfo(opName);
-
-                        foreach (var address in opInfo.Addresses)
-                        {
-                            obj = (CommonClasses.ReplicaInterface)Activator.GetObject(
-                                typeof(CommonClasses.ReplicaInterface),
-                                address
-                                );
-                            obj.Status();
-
-                        }
-                    }
-                    break;
-                case "crash":
-                    obj = getRemoteObject(list[1], int.Parse(list[2]));
-                    Debug.WriteLine("Param1: {0} |Param2: {1}", list[1], list[2]);
-                    obj.Crash();
-                    break;
-                case "freeze":
-                    obj = getRemoteObject(list[1], int.Parse(list[2]));
-                    Debug.WriteLine("Param1: {0} |Param2: {1}", list[1], list[2]);
-                    obj.Freeze();
-                    break;
-                case "unfreeze":
-                    obj = getRemoteObject(list[1], int.Parse(list[2]));
-                    Debug.WriteLine("Param1: {0} |Param2: {1}", list[1], list[2]);
-                    obj.Unfreeze();
-                    break;
-                case "wait":
-                    //#TODO wait x seconds on puppetMaster
-                    Debug.WriteLine("Param1: {0}", list[1]);   //[1] == time in ms         
-                    break;
-                default:
-                    Debug.WriteLine("Oops, didn't find the command");
-                    break;
-            }
-
+                        address);
         }
 
         //Run One Command
@@ -254,7 +190,7 @@ namespace PuppetMasterGUI {
                 string line = lineParser.nextLine();
                 textBox1.Text = line;
                 textBox2.Text = string.Join("\r\n", lineParser.remainingLines());
-                run(line);
+                shell.run(line);
 
             }
             catch (EOFException)
@@ -265,6 +201,7 @@ namespace PuppetMasterGUI {
         }
 
         //Run All Commands
+        //TODO
         private void button2_Click(object sender, EventArgs e)
         {
             try
