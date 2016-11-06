@@ -31,6 +31,8 @@ namespace PuppetMasterGUI {
         private string loggingLevel ="light";
         private string semantics = "at-most-once";
 
+        string DEFAULT_CONFIG_PATH = @".\input\dadstorm.config";
+
         private List<string> logMessages;
 
 
@@ -44,12 +46,7 @@ namespace PuppetMasterGUI {
             PuppetMasterLog.form = this;
             logMessages = new List<string>();
 
-            string DEFAULT_CONFIG_PATH = @".\input\dadstorm.config";
-            importConfigFile(DEFAULT_CONFIG_PATH);
-
-
             // TODO: Process the configuration file and then reach the process creation services
-
             TcpChannel channel = new TcpChannel(LOGGING_PORT);
             
             // The code below was generating a weird exception, must investigate it
@@ -67,6 +64,9 @@ namespace PuppetMasterGUI {
             {
 
             }
+
+            importConfigFile(DEFAULT_CONFIG_PATH);
+
 
         }
         private void importConfigFile(string path)
@@ -186,7 +186,7 @@ namespace PuppetMasterGUI {
                             Console.WriteLine("Calling PCS on address " + address);
                             try
                             {
-
+                                
                                 port = PCS_RESERVED_PORT;
                                 CommonClasses.IProcessCreator obj = (CommonClasses.IProcessCreator)Activator.GetObject(typeof(CommonClasses.IProcessCreator),
                                 "tcp://" + address + ":" + port + "/ProcessCreator");
@@ -194,13 +194,9 @@ namespace PuppetMasterGUI {
                                 // TODO FIXME first argument being sent should be the puppetMasterUrl, it's still not
                                 obj.createReplica("tcp://" + puppetMasterIPAddress.ToString() + ":" + LOGGING_PORT.ToString(), opb.MyRouting, semantics, loggingLevel,
                                                                    i, operatorParametersComma, opb.Addresses, outList);
-
-                                // test status 
-                                port = int.Parse(urlsplitter.getPort(opb.Addresses[i]));
-                                CommonClasses.ReplicaInterface obj2 = (CommonClasses.ReplicaInterface)Activator.GetObject(typeof(CommonClasses.ReplicaInterface),
-                                "tcp://" + address + ":" + port + "/op");
-
-                                Debug.WriteLine("OH WOW "+ obj2.Status());
+                        
+                                          
+                                //testReplica(opb.Addresses[i]);
 
                             }
                             catch (System.Net.Sockets.SocketException e)
@@ -254,25 +250,18 @@ namespace PuppetMasterGUI {
                     obj.Interval(int.Parse(list[2]));
                     break;
                 case "status":
-
-                    Thread t = new Thread(() => testReplica("localhost", 10011));
-                    t.Start();
-
-
                     foreach (var opName in operatorsInfo.OperatorNames)
                     {
                         var opInfo = operatorsInfo.getOpInfo(opName);
 
                         foreach (var address in opInfo.Addresses)
                         {
-                            obj = (CommonClasses.ReplicaInterface)Activator.GetObject(
-                                typeof(CommonClasses.ReplicaInterface),
-                                address
-                                );
-                            obj.Status();
-
+                            //TODO FIXME best way to call ? (delegates vs invoke vs thread)
+                            new Thread(() => testReplica(address)).Start();
+                            //testReplica(address);
                         }
                     }
+                    
                     break;
                 case "crash":
                     obj = getRemoteObject(list[1], int.Parse(list[2]));
@@ -310,7 +299,10 @@ namespace PuppetMasterGUI {
                 string line = lineParser.nextLine();
                 textBox1.Text = line;
                 textBox2.Text = string.Join("\r\n", lineParser.remainingLines());
-                run(line);
+
+                this.Invoke(new CallCommands(run), new object[] { line });
+                //this.Invoke(new DelAddMsg(this.AddMsgToLog), args);
+                //run(line);
 
             }
             catch (EOFException)
@@ -357,18 +349,25 @@ namespace PuppetMasterGUI {
 
         }
 
-        public void testReplica(string address, int port)
+        public void testReplica(string address)
         {
             // test status 
             CommonClasses.ReplicaInterface obj3 = (CommonClasses.ReplicaInterface)Activator.GetObject(typeof(CommonClasses.ReplicaInterface),
-            "tcp://" + address + ":" + port + "/op");
+            address);
 
-            obj3.Status();
+            Debug.WriteLine("OH WOW " + obj3.Status());
+            //obj3.Status();
+
+        }
+
+        private void FormPuppetMaster_Load(object sender, EventArgs e)
+        {
+
         }
 
     }
 
-
+    delegate void CallCommands(string line);
     delegate void DelAddMsg(string mensagem);
 
 
@@ -380,6 +379,8 @@ namespace PuppetMasterGUI {
 
         public string Log(string args)
         {
+            Debug.WriteLine("LOG was called " + args);
+
             //form.AddMsgToLog(args);
             form.Invoke(new DelAddMsg(form.AddMsgToLog), args); // thread-safe access to form
             Debug.WriteLine("DEBUG LOG " + args);

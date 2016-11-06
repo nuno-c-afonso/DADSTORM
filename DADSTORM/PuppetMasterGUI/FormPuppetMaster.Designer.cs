@@ -148,7 +148,7 @@
             this.textBox3.Size = new System.Drawing.Size(100, 20);
             this.textBox3.TabIndex = 11;
             // 
-            // Form1
+            // FormPuppetMaster
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -165,8 +165,9 @@
             this.Controls.Add(this.button2);
             this.Controls.Add(this.button1);
             this.Margin = new System.Windows.Forms.Padding(2);
-            this.Name = "Form1";
+            this.Name = "FormPuppetMaster";
             this.Text = "Puppet Master";
+            this.Load += new System.EventHandler(this.FormPuppetMaster_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 

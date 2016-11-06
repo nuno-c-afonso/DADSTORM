@@ -43,8 +43,18 @@ namespace Replica {
                 router = new HashRouter(output, semantics, int.Parse(splitted[1]));
 
             // Assuming that the service is in: tcp://<PuppetMasterIP>:10001/log
-            string teststring = PuppetMasterUrl.Substring(0, PuppetMasterUrl.Length - 1) + "1/log";
-            
+            string testpuppetAddress = PuppetMasterUrl + "/log";
+            try
+            {
+                log = (IPuppetMasterLog)Activator.GetObject(typeof(IPuppetMasterLog),
+                   testpuppetAddress);
+            }
+            catch (Exception e)
+            {
+
+                Console.WriteLine("first e: " + e);
+            }
+
         }
 
         public int WaitingTime {
@@ -101,13 +111,33 @@ namespace Replica {
             waitingTime = time;
         }
 
+        private void testLog()
+        {
+   
+
+            try
+            {
+                Console.WriteLine("in thread\n");
+                log.Log("did it go through ?");
+                Console.WriteLine("after log\n");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("second ex: " + ex);
+            }
+
+        }
+
         //Command to print the current status
         //USED BY:PuppetMaster
         public string Status() {
-            Console.WriteLine("IN STATUS\n");
-            log = (IPuppetMasterLog)Activator.GetObject(typeof(IPuppetMasterLog),
-                PuppetMasterUrl.Substring(0, PuppetMasterUrl.Length - 1) + "1/log");
-            log.Log("did it go through ?");
+            Console.WriteLine("---------\nIN STATUS\n");
+
+            Thread t = new Thread(() => testLog());
+            t.Start();
+            Console.WriteLine("after thread\n-----------");
+            //testLog();
+
             statusRequested = true; //TODO how to do this?
             return "status replicaObject";
             //throw new NotImplementedException();
