@@ -84,19 +84,16 @@ namespace PuppetMasterGUI {
 
         }
 
-        private void runConfigCommands(List<string> lines)
-        {
+        private void runConfigCommands(List<string> lines) {
             if (alreadyRunConfigCommands)
                 return;
 
             alreadyRunConfigCommands = true;
-            foreach (var line in lines)
-            {
+            foreach (var line in lines) {
                 ConsoleBox.AppendText(line+ "\r\n");
                 LineParser ln = new LineParser(line);
                 Debug.WriteLine(ln.Words[0]);
-                switch (ln.Words[0])
-                {
+                switch (ln.Words[0]) {
                     case "Semantics":
                         semantics = ln.Words[1];
                         break;
@@ -111,13 +108,11 @@ namespace PuppetMasterGUI {
                         operatorsInfo.addNewOP(opb);
                         Debug.WriteLine("created fields association " + opb.Name);
                         break;
-
                 }
 
             }
             int port;
-            foreach (var line in lines)
-            {
+            foreach (var line in lines) {
                 // get first word
                 var m = Regex.Match(line, @"^\w+");
                 switch (m.Value)
