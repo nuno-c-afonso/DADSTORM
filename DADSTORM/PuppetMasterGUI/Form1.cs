@@ -19,7 +19,7 @@ using System.Net;
 using System.Threading;
 
 namespace PuppetMasterGUI {
-    public partial class FormPuppetMaster : Form {
+    public partial class Form1 : Form {
         private ReadFileByLineFiltered lineParser;
         CommonClasses.UrlSpliter urlsplitter = new CommonClasses.UrlSpliter();
         OperatorsInfo operatorsInfo = new OperatorsInfo();
@@ -40,7 +40,7 @@ namespace PuppetMasterGUI {
         const int LOGGING_PORT = 10001;
         private IPAddress puppetMasterIPAddress = IPAddresses.LocalIPAddress();
 
-        public FormPuppetMaster() {
+        public Form1() {
             InitializeComponent();
 
             PuppetMasterLog.form = this;
@@ -373,7 +373,7 @@ namespace PuppetMasterGUI {
 
     public class PuppetMasterLog : MarshalByRefObject, IPuppetMasterLog
     {
-        public static FormPuppetMaster form;
+        public static Form1 form;
 
         public PuppetMasterLog() { }
 

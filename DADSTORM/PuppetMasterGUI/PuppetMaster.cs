@@ -16,7 +16,7 @@ namespace PuppetMasterGUI {
         static void Main(string[] args) {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new FormPuppetMaster());
+            Application.Run(new Form1());
 
 
 
