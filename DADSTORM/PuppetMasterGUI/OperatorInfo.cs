@@ -154,11 +154,19 @@ namespace PuppetMasterGUI
         }
 
         public string getFirstOperator() {
-            Dictionary<string, string>.ValueCollection valueColl = whereToSend.Values;
+            foreach (string op in operatorNames) {
+                bool isFirst = true;
 
-            foreach (string op in operatorNames)
-                if (!valueColl.Contains<string>(op))
+                foreach (KeyValuePair<string, string> entry in whereToSend) {
+                    if (op.Equals(entry.Value) && operatorNames.Contains(entry.Key)) {
+                        isFirst = false;
+                        break;
+                    }
+                }
+
+                if (isFirst)
                     return op;
+            }
 
             return null;
         }
