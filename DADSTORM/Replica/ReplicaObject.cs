@@ -117,7 +117,6 @@ namespace Replica {
             Console.WriteLine("after thread\n-----------");
             //testLog();
 
-            statusRequested = true; //TODO how to do this?
             return "status replicaObject";
         }
 
