@@ -26,27 +26,46 @@ namespace Replica
         }
 
         public static bool lessThan(string tupValue ,string  value ) {
-            if (tupValue.CompareTo(value) < 0)
+            Console.Write(" ____{0} < {1} =", tupValue, value);
+            if (tupValue.CompareTo(value) < 0){
+                Console.WriteLine("true ____");
                 return true;
-            else
+            }
+            else{
+                Console.WriteLine("false ____");
                 return false;
+            }
         }
 
         public static bool moreThan(string tupValue, string value){
+            Console.Write(" ____{0} > {1} =", tupValue, value);
             if (tupValue.CompareTo(value) > 0)
+            {
+                Console.WriteLine("true ____");
                 return true;
+            }
             else
+            {
+                Console.WriteLine("false ____");
                 return false;
+            }
         }
 
         public static bool equal(string tupValue, string value){
-            if (tupValue.CompareTo(value) == 0)
+            Console.Write(" ____{0} == {1} =", tupValue, value);
+            if (tupValue.Equals(value))
+            {
+                Console.WriteLine("true ____");
                 return true;
+            }
             else
+            {
+                Console.WriteLine("false ____");
                 return false;
+            }
         }
         public override List<string[]> Operate(string[] tuple){
-            if (conditionCheck(tuple[fieldNumber], value)) {
+            if (conditionCheck(tuple[fieldNumber - 1], value)) {
                 List<string[]> l = new List<string[]>();
                 l.Add(tuple);
                 return l;

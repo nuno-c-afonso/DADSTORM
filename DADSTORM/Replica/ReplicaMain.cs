@@ -138,20 +138,21 @@ namespace Replica {
                     System.Console.WriteLine("the type of operation {0} is not known", operation);
                     return;
             }
-            Console.WriteLine("after operations\n");
+            Console.WriteLine("1-Registering TCP chanel");
 
             //############ Open an input channel ###################
             TcpChannel channel = new TcpChannel(port);
             ChannelServices.RegisterChannel(channel, false);
 
-            Console.WriteLine("after register tcp\n");
+            Console.WriteLine("2-Creating Buffer");
 
-            //############ Create a consumer of the buffer ###################
+            //############ Create a  buffer ###################
 
             consumingOperator = new ReplicaObject(PuppetMasterUrl, routing, semantics, logLevel, oper, outputs);
 
             RemotingServices.Marshal(consumingOperator, "op", typeof(ReplicaInterface));
 
+            Console.WriteLine("3-If needed creating File reader");
 
             foreach (string input in inputs)
                 if (input.EndsWith(".dat") || input.EndsWith(".data")){
@@ -162,12 +163,11 @@ namespace Replica {
                     fileReaders.Add(th);
                 }
 
-
+            Console.WriteLine("4-Start processing tuples");
 
             //############ Start processing tuples ###################//CHECK
             ThreadStart ts = new ThreadStart(consumingOperator.Operate);
             Thread t = new Thread(ts);
-            Console.WriteLine("starting consumer");
             t.Start();
             t.Join();//FIXMEshould we wait?
 
