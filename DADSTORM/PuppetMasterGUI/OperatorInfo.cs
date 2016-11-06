@@ -131,8 +131,8 @@ namespace PuppetMasterGUI
 
         public List<string> getInputAddressesListOfOP(string opName)
         {
-            OperatorBuilder nextOpBuilder = getNextOpInfo(opName.ToLower());
-            return nextOpBuilder.Input;
+            OperatorBuilder OpBuilder = getOpInfo(opName.ToLower());
+            return OpBuilder.Input;
         }
 
         public string getMyRouting(string opName) {

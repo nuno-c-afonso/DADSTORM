@@ -47,23 +47,24 @@ namespace Replica {
         //method used to send tuples to the owner of this buffer
         //USED BY: other replicas, input file reader
         public void addTuple(string[] tuple) {
-            lock (tupleQueue.SyncRoot) ;
+            Console.WriteLine("in addTuple");
+            Monitor.Enter(tupleQueue.SyncRoot);
             tupleQueue.Enqueue(tuple);
-            Monitor.Exit(tupleQueue.SyncRoot);
             Monitor.Pulse(tupleQueue.SyncRoot);
+            Monitor.Exit(tupleQueue.SyncRoot);
         }
 
         //method used to get tuples from the buffer
         //USED BY: owner(replica)
         public string[] getTuple() {
-            lock (tupleQueue.SyncRoot) {
-                if (tupleQueue.Count == 0)
+            Console.WriteLine("in getTuple");
+            Monitor.Enter(tupleQueue.SyncRoot);
+            while(tupleQueue.Count == 0)
                     Monitor.Wait(tupleQueue.SyncRoot);
-            }
-
             string[] result = (String[]) tupleQueue.Dequeue();
-            Monitor.Exit(tupleQueue.SyncRoot);
+            Console.WriteLine("got tuple");
             Monitor.Pulse(tupleQueue.SyncRoot);
+            Monitor.Exit(tupleQueue.SyncRoot);
             return result;
         }
 

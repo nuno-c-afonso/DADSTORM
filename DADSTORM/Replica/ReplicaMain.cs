@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
@@ -87,7 +88,7 @@ namespace Replica {
                 }
             }
             */
-
+            
             replicaIndex = int.Parse(args[++i]);
             while (!args[++i].Equals("-o"))
                 replicasUrl.Add(args[i]);
@@ -111,8 +112,8 @@ namespace Replica {
             port = int.Parse(urlspli.getPort(replicasUrl[replicaIndex]));
 
             //FIXME just for debug
-            System.Console.WriteLine("VARS.. PuppetMasterUrl: {0}\n\t routing: {1} \n\t semantics: {2}\n\t logLevel: {3}\n\t replicaIndex: {4}\n\t  port: {5}\n\t operation: {6}\n\t replicasUrl: {7}\n\t outputs: {8}"
-                    , PuppetMasterUrl, routing, semantics, logLevel, replicaIndex, port ,string.Join(",\n\t", operation),string.Join(",\n\t", replicasUrl), string.Join(",\n\t", outputs));
+            System.Console.WriteLine("VARS.. PuppetMasterUrl: {0}\n\t routing: {1} \n\t semantics: {2}\n\t logLevel: {3}\n\t replicaIndex: {4}\n\t  port: {5}\n\t operation: {6}\n\t replicasUrl: {7}\n\t outputs: {8} \n\t inputs: {9}"
+                    , PuppetMasterUrl, routing, semantics, logLevel, replicaIndex, port ,string.Join(",\n\t", operation),string.Join(",\n\t", replicasUrl), string.Join(",\n\t", outputs), string.Join(",\n\t", inputs));
 
             //############ creating an operator of the wanted type ############
 
@@ -153,7 +154,7 @@ namespace Replica {
 
 
             foreach (string input in inputs)
-                if (input.EndsWith(".dat")) {
+                if (input.EndsWith(".dat") || input.EndsWith(".data")){
                     tupleFileReader fr = new tupleFileReader(consumingOperator, input);
                     ThreadStart tstart = new ThreadStart(fr.feedBuffer);
                     Thread th = new Thread(tstart);
@@ -163,9 +164,10 @@ namespace Replica {
 
 
 
-                //############ Start processing tuples ###################//CHECK
-                ThreadStart ts = new ThreadStart(consumingOperator.Operate);
+            //############ Start processing tuples ###################//CHECK
+            ThreadStart ts = new ThreadStart(consumingOperator.Operate);
             Thread t = new Thread(ts);
+            Console.WriteLine("starting consumer");
             t.Start();
             t.Join();//FIXMEshould we wait?
 

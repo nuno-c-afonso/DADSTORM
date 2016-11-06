@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
+using System.IO;
 
 namespace CommonClasses {
     public class ProcessCreator : MarshalByRefObject, IProcessCreator {
@@ -15,6 +16,7 @@ namespace CommonClasses {
                 Console.Write(" " + s);//FIXME REMOVE DIOGO
                 Console.WriteLine("");
             }
+            Console.WriteLine(Directory.GetCurrentDirectory());
 
             Process process = new Process();
             process.StartInfo.FileName = "..\\..\\..\\Replica\\bin\\Debug\\Replica.exe";
