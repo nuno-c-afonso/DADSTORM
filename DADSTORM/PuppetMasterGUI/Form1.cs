@@ -120,16 +120,19 @@ namespace PuppetMasterGUI {
                 OperatorBuilder opb = operatorsInfo.getOpInfo(opName);
                 string routing = null;
                 List<string> output = null;
+                List<string> input = null;
                 List<string> operation = new List<string>();
 
                 // Setting the common parameters between replicas
                 try {
                     routing = operatorsInfo.getMyRouting(opb.Name);
                     output = operatorsInfo.getOuputAddressesListOfOP(opb.Name);
+                    input = operatorsInfo.getInputAddressesListOfOP(opb.Name);
                 }
                 catch (LastOperatorException e) {
                     routing = "primary";
                     output = new List<string>();
+                    input = new List<string>();
                 }
 
                 operation.Add(opb.OperatorType);
@@ -152,7 +155,7 @@ namespace PuppetMasterGUI {
 
                         // TODO FIXME first argument being sent should be the puppetMasterUrl, it's still not
                         obj.createReplica("tcp://" + puppetMasterIPAddress.ToString() + ":" + LOGGING_PORT.ToString(),
-                            routing, semantics, loggingLevel, i, operation, opb.Addresses, output);
+                            routing, semantics, loggingLevel, i, operation, opb.Addresses, output, input);
 
                         // test status 
                         int port = int.Parse(urlsplitter.getPort(opb.Addresses[i]));

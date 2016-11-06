@@ -129,6 +129,12 @@ namespace PuppetMasterGUI
             return nextOpBuilder.Addresses;
         }
 
+        public List<string> getInputAddressesListOfOP(string opName)
+        {
+            OperatorBuilder nextOpBuilder = getNextOpInfo(opName.ToLower());
+            return nextOpBuilder.Input;
+        }
+
         public string getMyRouting(string opName) {
             OperatorBuilder nextOpBuilder = getNextOpInfo(opName.ToLower());
             return nextOpBuilder.PreviousRouting;
