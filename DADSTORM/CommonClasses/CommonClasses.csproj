@@ -45,6 +45,7 @@
     <Compile Include="OperatorBuilder.cs" />
     <Compile Include="ProcessCreator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="IPuppetMasterLog.cs" />
     <Compile Include="ReplicaBuffer.cs" />
     <Compile Include="ReplicaInterface.cs" />
     <Compile Include="UrlSpliter.cs" />

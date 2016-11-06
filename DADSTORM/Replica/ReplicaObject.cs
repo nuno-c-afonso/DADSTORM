@@ -11,11 +11,12 @@ using System.Threading.Tasks;
 
 namespace Replica {
     public class ReplicaObject : MarshalByRefObject, ReplicaInterface {
-        //private PuppetMasterLog log;
+        private IPuppetMasterLog log;
         private Router router;  
         private bool logLevel;  // full = true, light = false
         private Operation operation;
         private Queue tupleQueue;
+        private string PuppetMasterUrl;
 
         bool start = false;
         int waitingTime = 0;
@@ -27,6 +28,7 @@ namespace Replica {
             string logLevel, Operation operation, List<string> output) {
             tupleQueue = new Queue();
 
+            this.PuppetMasterUrl = PuppetMasterUrl;
             this.logLevel = logLevel.Equals("full");
             this.operation = operation;
 
@@ -41,8 +43,8 @@ namespace Replica {
                 router = new HashRouter(output, semantics, int.Parse(splitted[1]));
 
             // Assuming that the service is in: tcp://<PuppetMasterIP>:10001/log
-            //log = (PuppetMasterLog) Activator.GetObject(typeof(PuppetMasterLog),
-            //    PuppetMasterUrl.Substring(0, PuppetMasterUrl.Length - 1) + "1/log");
+            string teststring = PuppetMasterUrl.Substring(0, PuppetMasterUrl.Length - 1) + "1/log";
+            
         }
 
         public int WaitingTime {
@@ -103,6 +105,9 @@ namespace Replica {
         //USED BY:PuppetMaster
         public string Status() {
             Console.WriteLine("IN STATUS\n");
+            log = (IPuppetMasterLog)Activator.GetObject(typeof(IPuppetMasterLog),
+                PuppetMasterUrl.Substring(0, PuppetMasterUrl.Length - 1) + "1/log");
+            log.Log("did it go through ?");
             statusRequested = true; //TODO how to do this?
             return "status replicaObject";
             //throw new NotImplementedException();
