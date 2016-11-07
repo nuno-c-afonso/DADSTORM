@@ -24,7 +24,7 @@ namespace Replica {
         bool start = false;
         int waitingTime = 0;
         bool crashed = false;
-        object freezed = false;
+        bool freezed = false;
 
         public ReplicaObject(string PuppetMasterUrl, string routing, string semantics,
             string logLevel, Operation operation, List<string> output, string replicaAddress, string operationName) {
@@ -73,15 +73,14 @@ namespace Replica {
         //method used to get tuples from the buffer
         //USED BY: owner(replica)
         public string[] getTuple() {
-            Console.WriteLine("IN getTuple");
+            Console.WriteLine("getTuple()");
             Monitor.Enter(tupleQueue.SyncRoot);
             while(tupleQueue.Count == 0)
                     Monitor.Wait(tupleQueue.SyncRoot);
             string[] result = (String[]) tupleQueue.Dequeue();
-            Console.WriteLine("GOT tuple");
+            Console.WriteLine("         GOT tuple");
             Monitor.Pulse(tupleQueue.SyncRoot);
             Monitor.Exit(tupleQueue.SyncRoot);
-            Console.WriteLine("OUT getTuple");
             return result;
         }
 
@@ -143,21 +142,9 @@ namespace Replica {
         //USED BY:PuppetMaster
         public void Unfreeze() {
             Console.WriteLine("-->UNFREEZE comand received");
-            lock (freezed) {
                 freezed = false;
-                Monitor.PulseAll(freezed);
-            }
         }
 
-        //if the freeze is true who call this will wait until it is unfreezed
-        //USED BY: buffer consumer
-        public void checkFreeze() {
-            lock (freezed) {
-                while ((bool)freezed == true)
-                    Monitor.Wait(freezed);
-                Monitor.Pulse(freezed);
-            }
-        }
 
         //USED BY: other replica
         public bool wasElementSeen(string s) {
@@ -177,7 +164,8 @@ namespace Replica {
 
             while (!crashed) {
                 //see if it is feezed
-                checkFreeze();
+                while(freezed == true)
+                    Thread.Sleep(100);
 
                 //wait the defined time between processing
                 Thread.Sleep(waitingTime);
@@ -187,7 +175,6 @@ namespace Replica {
 
                 List<string[]> result = operation.Operate(tuple);
                 if (result != null) {
-                    Console.WriteLine("operation Result != null");
                     foreach (string[] outTuple in result){
                         Console.WriteLine("sending tuple");
                         router.sendToNext(outTuple);
