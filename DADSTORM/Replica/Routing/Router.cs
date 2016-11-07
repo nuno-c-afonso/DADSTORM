@@ -16,6 +16,7 @@ namespace Replica {
         }
 
         public Router(List<string> output, string semantics) {
+            Console.WriteLine("3-Router Created");
             nextOperator = output;
             string lowerCase = semantics.ToLower();
 

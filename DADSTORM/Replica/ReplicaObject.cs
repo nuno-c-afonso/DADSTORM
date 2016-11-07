@@ -104,7 +104,7 @@ namespace Replica {
             try
             {
                 log.Log("Status " + operationName + " " + replicaAddress + " " + IPAddresses.LocalIPAddress());
-                Console.WriteLine("after log\n");
+                //Console.WriteLine("after log\n");
             }
             catch (Exception ex)
             {
@@ -120,7 +120,7 @@ namespace Replica {
 
             Thread t = new Thread(() => testLog());
             t.Start();
-            Console.WriteLine("after thread\n-----------");
+            //Console.WriteLine("after thread\n-----------");
             //testLog();
         }
 
@@ -158,7 +158,7 @@ namespace Replica {
 
         // To be used in the consumer thread
         public void Operate() {
-            Console.WriteLine("5-Waiting for START comand");
+            Console.WriteLine("6-Waiting for START comand");
             while (!start)
                 Thread.Sleep(100);
 

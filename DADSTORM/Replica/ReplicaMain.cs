@@ -134,6 +134,9 @@ namespace Replica {
                 case "CUSTOM":
                     oper = new CustomOperation(operation[1], operation[2], operation[3]);
                     break;
+                case "TOFILE":
+                    oper = new OutputOperation();
+                    break;
                 default:
                     System.Console.WriteLine("the type of operation {0} is not known", operation);
                     return;
@@ -153,7 +156,7 @@ namespace Replica {
 
             RemotingServices.Marshal(consumingOperator, "op", typeof(ReplicaInterface));
 
-            Console.WriteLine("3-If needed creating File reader");
+            Console.WriteLine("4-If needed creating File reader");
 
             foreach (string input in inputs)
                 if (input.EndsWith(".dat") || input.EndsWith(".data")){
@@ -164,7 +167,7 @@ namespace Replica {
                     fileReaders.Add(th);
                 }
 
-            Console.WriteLine("4-Start processing tuples");
+            Console.WriteLine("5-Start processing tuples");
 
             //############ Start processing tuples ###################//CHECK
             ThreadStart ts = new ThreadStart(consumingOperator.Operate);
