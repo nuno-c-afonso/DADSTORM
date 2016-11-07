@@ -112,15 +112,15 @@ namespace Replica {
 
         //Command to print the current status
         //USED BY:PuppetMaster
-        public string Status() {
+        public void Status() {
+            //TODO
+
             Console.WriteLine("---------\nIN STATUS\n");
 
             Thread t = new Thread(() => testLog());
             t.Start();
             Console.WriteLine("after thread\n-----------");
             //testLog();
-
-            return "status replicaObject";
         }
 
         //Command to simulate a program crash

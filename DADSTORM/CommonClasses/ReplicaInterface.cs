@@ -9,7 +9,7 @@ namespace CommonClasses {
         void addTuple(string[] tuple);
         void Start();
         void Interval(int time);
-        string Status();
+        void Status();
         void Crash();
         void Freeze();
         void Unfreeze();

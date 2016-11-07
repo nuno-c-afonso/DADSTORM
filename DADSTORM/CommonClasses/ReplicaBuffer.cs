@@ -88,7 +88,7 @@ namespace CommonClasses
 
         //Command to print the current status
         //USED BY:PuppetMaster
-        public string Status() {
+        public void Status() {
             statusRequested = true; //TODO how to do this?
             throw new NotImplementedException();
         }

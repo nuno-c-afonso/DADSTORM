@@ -6,14 +6,14 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace CommandLine {
-    public class FreezeCommand : Command {
+    public class FreezeCommand : AsyncCommand {
         private OperatorsInfo operatorsInfo;
 
         public FreezeCommand(OperatorsInfo opi) {
             operatorsInfo = opi;
         }
 
-        public void execute(string[] args) {
+        public override void execute(string[] args) {
             if (args.Length < 2)
                 throw new WrongNumberOfArgsException();
 
@@ -30,7 +30,8 @@ namespace CommandLine {
                 throw new IndexOutOfBoundsException();
 
             ReplicaInterface obj = (ReplicaInterface)Activator.GetObject(typeof(ReplicaInterface), opb.Addresses[repIndex]);
-            obj.Freeze();
+            RemoteAsyncDelegate RemoteDel = new RemoteAsyncDelegate(obj.Freeze);
+            IAsyncResult RemAr = RemoteDel.BeginInvoke(null, obj);
         }
     }
 }

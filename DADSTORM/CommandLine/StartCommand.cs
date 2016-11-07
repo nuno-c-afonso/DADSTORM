@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace CommandLine {
-    public class StartCommand : Command {
+    public class StartCommand : AsyncCommand {
         private bool wasStarted;
         private OperatorsInfo operatorsInfo;
 
@@ -15,7 +15,7 @@ namespace CommandLine {
             operatorsInfo = opi;
         }
 
-        public void execute(string[] args) {
+        public override void execute(string[] args) {
             if(!wasStarted) {
                 if (args.Length == 0)
                     throw new WrongNumberOfArgsException();
@@ -26,7 +26,9 @@ namespace CommandLine {
 
                 foreach(string addr in opb.Addresses) {
                     ReplicaInterface obj = (ReplicaInterface) Activator.GetObject(typeof(ReplicaInterface), addr);
-                    obj.Start();
+
+                    RemoteAsyncDelegate RemoteDel = new RemoteAsyncDelegate(obj.Start);
+                    IAsyncResult RemAr = RemoteDel.BeginInvoke(null, obj);
                 }
 
                 wasStarted = true;

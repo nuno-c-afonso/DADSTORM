@@ -253,7 +253,7 @@ namespace PuppetMasterGUI {
             CommonClasses.ReplicaInterface obj3 = (CommonClasses.ReplicaInterface)Activator.GetObject(typeof(CommonClasses.ReplicaInterface),
             address);
 
-            Debug.WriteLine("OH WOW " + obj3.Status());
+            Debug.WriteLine("OH WOW ");
             //obj3.Status();
 
         }

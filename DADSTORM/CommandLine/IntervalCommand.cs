@@ -6,14 +6,14 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace CommandLine {
-    public class IntervalCommand : Command {
+    public class IntervalCommand : AsyncCommand {
         private OperatorsInfo operatorsInfo;
 
         public IntervalCommand(OperatorsInfo opi) {
             operatorsInfo = opi;
         }
 
-        public void execute(string[] args) {
+        public override void execute(string[] args) {
             if (args.Length < 2)
                 throw new WrongNumberOfArgsException();
 
@@ -28,7 +28,8 @@ namespace CommandLine {
 
             foreach (string addr in opb.Addresses) {
                 ReplicaInterface obj = (ReplicaInterface)Activator.GetObject(typeof(ReplicaInterface), addr);
-                obj.Interval(interval);
+                RemoteAsyncDelegateWithTime RemoteDel = new RemoteAsyncDelegateWithTime(obj.Interval);
+                IAsyncResult RemAr = RemoteDel.BeginInvoke(interval, null, obj);
             }
         }
     }
