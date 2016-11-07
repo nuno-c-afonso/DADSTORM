@@ -32,10 +32,10 @@ namespace Replica {
         public override List<string[]> Operate(string[] tuple) {
             string element = tuple[fieldNumber];
 
-            processedTuple(tuple);
-
             if (wasElementSeen(element))
                 return null;
+
+            processedTuple(tuple);
 
             bool wasInOther = false;
             foreach(string s in OtherReplicas) {
@@ -46,7 +46,7 @@ namespace Replica {
 
             if (wasInOther)
                 return null;
-           
+
             List<string[]> l = new List<string[]>();
             l.Add(tuple);
             return l;
