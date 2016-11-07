@@ -191,54 +191,45 @@ namespace PuppetMasterGUI {
         }
 
         //Run One Command
-        private void button1_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                string line = lineParser.nextLine();
-                textBox1.Text = line;
-                textBox2.Text = string.Join("\r\n", lineParser.remainingLines());
+        private void button1_Click(object sender, EventArgs e) {
+            if (textBox2.Text != null || !textBox2.Text.Equals("")) {
+                string[] delimiter = { "\r\n" };
+                string[] lines = textBox2.Text.Split(delimiter, StringSplitOptions.RemoveEmptyEntries);
 
-                //this.Invoke(new CallCommands(shell.run), new object[] { line });
-                //this.Invoke(new DelAddMsg(this.AddMsgToLog), args);
-                new Thread(() => shell.run(line)).Start();
-                //shell.run(line);
+                if (lines.Length > 0) {
+                    textBox1.Text = lines[0];
+                    textBox2.Text = string.Join("\r\n", lines.Skip(1));
 
+                    new Thread(() => shell.run(lines[0])).Start();
+                    //shell.run(line);
+                }
             }
-            catch (EOFException)
-            {
-                textBox1.Text = "";
-            }
-            
         }
 
         //Run All Commands
-        //TODO
-        private void button2_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                while (true)
-                {
-                    string line = lineParser.nextLine();
-                    textBox1.Text = line;
+        private void button2_Click(object sender, EventArgs e) {
+            if (textBox2.Text != null || !textBox2.Text.Equals("")) {
+                string[] delimiter = { "\r\n" };
+                string[] lines = textBox2.Text.Split(delimiter, StringSplitOptions.RemoveEmptyEntries);
+
+                if (lines.Length > 0) {
+                    textBox1.Text = lines[lines.Length - 1];
+                    textBox2.Text = "";
+
+                    new Thread(() => runAllCommandsThread(lines)).Start();
                 }
-
             }
-            catch (EOFException)
-            {
-                textBox2.Text = string.Join("\r\n", lineParser.remainingLines());
-            }
-
         }
 
-        private void button3_Click(object sender, EventArgs e)
-        {
-            if (openFileDialog1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-            {
-                importConfigFile(openFileDialog1.FileName);
-            }
+        // Needed for running all the remaining commands
+        private void runAllCommandsThread(string[] lines) {
+            foreach (string line in lines)
+                shell.run(line);
+        }
 
+        private void button3_Click(object sender, EventArgs e) {
+            if (openFileDialog1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                importConfigFile(openFileDialog1.FileName);
         }
 
 
