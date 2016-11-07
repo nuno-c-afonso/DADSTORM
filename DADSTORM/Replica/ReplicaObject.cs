@@ -63,35 +63,39 @@ namespace Replica {
         //method used to send tuples to the owner of this buffer
         //USED BY: other replicas, input file reader
         public void addTuple(string[] tuple) {
-            lock (tupleQueue.SyncRoot) ;
+            Console.WriteLine("addTuple({0})", tuple);
+            Monitor.Enter(tupleQueue.SyncRoot);
             tupleQueue.Enqueue(tuple);
+            Monitor.PulseAll(tupleQueue.SyncRoot);
             Monitor.Exit(tupleQueue.SyncRoot);
-            Monitor.Pulse(tupleQueue.SyncRoot);
         }
 
         //method used to get tuples from the buffer
         //USED BY: owner(replica)
         public string[] getTuple() {
-            lock (tupleQueue.SyncRoot) {
-                if (tupleQueue.Count == 0)
+            Console.WriteLine("IN getTuple");
+            Monitor.Enter(tupleQueue.SyncRoot);
+            while(tupleQueue.Count == 0)
                     Monitor.Wait(tupleQueue.SyncRoot);
-            }
-
             string[] result = (String[]) tupleQueue.Dequeue();
-            Monitor.Exit(tupleQueue.SyncRoot);
+            Console.WriteLine("GOT tuple");
             Monitor.Pulse(tupleQueue.SyncRoot);
+            Monitor.Exit(tupleQueue.SyncRoot);
+            Console.WriteLine("OUT getTuple");
             return result;
         }
 
         //Command to start working
         //USED BY:PuppetMaster
         public void Start() {
+            Console.WriteLine("-->START comand received");
             start = true;
         }
 
         //Command  to set the time to wait betwen tuple processing
         //USED BY:PuppetMaster
         public void Interval(int time) {
+            Console.WriteLine("-->Interva comand received time={0}",time);
             waitingTime = time;
         }
 
@@ -112,32 +116,35 @@ namespace Replica {
 
         //Command to print the current status
         //USED BY:PuppetMaster
-        public void Status() {
-            //TODO
-
-            Console.WriteLine("---------\nIN STATUS\n");
+        public string Status() {
+            Console.WriteLine("-->STATUS comand received");
 
             Thread t = new Thread(() => testLog());
             t.Start();
             Console.WriteLine("after thread\n-----------");
             //testLog();
+
+            return "status replicaObject";
         }
 
         //Command to simulate a program crash
         //USED BY:PuppetMaster 
         public void Crash() {
+            Console.WriteLine("-->CRASH comand received");
             crashed = true;
         }
 
         //Command used to simulate slow server
         //USED BY:PuppetMaster
         public void Freeze() {
+            Console.WriteLine("-->FREEZE comand received");
             freezed = true;
         }
 
         //Command used to end the slow server simulation
         //USED BY:PuppetMaster
         public void Unfreeze() {
+            Console.WriteLine("-->UNFREEZE comand received");
             lock (freezed) {
                 freezed = false;
                 Monitor.PulseAll(freezed);
@@ -166,6 +173,7 @@ namespace Replica {
 
         // To be used in the consumer thread
         public void Operate() {
+            Console.WriteLine("5-Waiting for START comand");
             while (!start)
                 Thread.Sleep(100);
 
@@ -174,15 +182,18 @@ namespace Replica {
                 checkFreeze();
 
                 //wait the defined time between processing
-                Thread.Sleep(waitingTime * 1000);
+                Thread.Sleep(waitingTime);
 
                 //get tuple from the buffer
                 string[] tuple = getTuple();
 
                 List<string[]> result = operation.Operate(tuple);
                 if (result != null) {
-                    foreach (string[] outTuple in result)
+                    Console.WriteLine("operation Result != null");
+                    foreach (string[] outTuple in result){
+                        Console.WriteLine("sending tuple");
                         router.sendToNext(outTuple);
+                    }
                 }
             }
         }
