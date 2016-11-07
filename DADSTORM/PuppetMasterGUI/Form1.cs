@@ -232,6 +232,26 @@ namespace PuppetMasterGUI {
                 importConfigFile(openFileDialog1.FileName);
         }
 
+        private void scriptButton_Click(object sender, EventArgs e) {
+            OpenFileDialog openFileDialog2 = new OpenFileDialog();
+
+            if (alreadyRunConfigCommands && openFileDialog2.ShowDialog() == System.Windows.Forms.DialogResult.OK) {
+                scriptTextBox.Text = openFileDialog2.FileName;
+                ReadFileByLine rfbl = new ReadFileByLine(openFileDialog2.FileName);
+                string toAdd = "";
+
+                try {
+                    while(true)
+                        toAdd += rfbl.nextLine() + "\r\n";
+                } catch(EOFException) { }
+
+                if (!textBox2.Text.EndsWith("\r\n") && textBox2.Text.Length > 0)
+                    textBox2.Text += "\r\n" + toAdd;
+                else
+                    textBox2.Text = toAdd;
+            }
+        }
+
 
         public void AddMsgToLog(string args)
         {
@@ -256,7 +276,6 @@ namespace PuppetMasterGUI {
         {
 
         }
-
     }
 
     delegate void CallCommands(string line);
