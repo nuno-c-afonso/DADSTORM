@@ -248,7 +248,7 @@ namespace PuppetMasterGUI {
                 if (!textBox2.Text.EndsWith("\r\n") && textBox2.Text.Length > 0)
                     textBox2.Text += "\r\n" + toAdd;
                 else
-                    textBox2.Text = toAdd;
+                    textBox2.Text += toAdd;
             }
         }
 
