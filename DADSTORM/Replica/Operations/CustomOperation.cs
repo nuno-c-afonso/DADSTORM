@@ -18,13 +18,15 @@ namespace Replica {
             this.methodName = methodName;
         }
 
-        public override List<string[]> Operate(string[] tuple) {
-            Assembly library = Assembly.LoadFile(Directory.GetCurrentDirectory() + @"\" + dllName);
+        public override List<string[]> Operate(string[] tuple) { 
+            string[] fileLocation = Directory.GetFiles(Directory.GetCurrentDirectory(), dllName, System.IO.SearchOption.AllDirectories);
+            Assembly library = Assembly.LoadFile(fileLocation[0]);
             List<string[]> convertedResult = null;
-
+            Console.WriteLine("dllName:|{0}|, className:|{1}|, methodName|{2}|", dllName, className, methodName);
             // To search for the desired class
             foreach (Type type in library.GetTypes()) {
                 if (type.IsClass == true) {
+                    Console.WriteLine("type.IsClass == true type.fullname{0}", type.FullName);
                     if (type.FullName.EndsWith("." + className)) {
                         // create an instance of the object
                         object o = Activator.CreateInstance(type);

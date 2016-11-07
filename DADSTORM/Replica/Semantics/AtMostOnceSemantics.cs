@@ -19,12 +19,15 @@ namespace Replica {
 
         // TODO: Check if this is the right asynchronous call
         public void sendTuple(ReplicaInterface replica, string[] tuple) {
-            // Asynchronous call
             RemoteAsyncDelegate RemoteDel = new RemoteAsyncDelegate(replica.addTuple);
-            // Create delegate to local callback
-            AsyncCallback RemoteCallback = new AsyncCallback(remoteAsyncCallBack);
-            // Call remote method
-            IAsyncResult RemAr = RemoteDel.BeginInvoke(tuple, RemoteCallback, replica);
+            IAsyncResult RemAr = RemoteDel.BeginInvoke(tuple, null, replica);
+
+            /* // Asynchronous call
+             RemoteAsyncDelegate RemoteDel = new RemoteAsyncDelegate(replica.addTuple);
+             // Create delegate to local callback
+             AsyncCallback RemoteCallback = new AsyncCallback(remoteAsyncCallBack);
+             // Call remote method
+             IAsyncResult RemAr = RemoteDel.BeginInvoke(tuple, RemoteCallback, replica);*/
         }
     }
 }

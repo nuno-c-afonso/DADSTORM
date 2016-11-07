@@ -47,6 +47,12 @@ namespace CommonClasses {
             return nextOpBuilder.Addresses;
         }
 
+        public List<string> getInputAddressesListOfOP(string opName)
+        {
+            OperatorBuilder OpBuilder = getOpInfo(opName.ToLower());
+            return OpBuilder.Input;
+        }
+
         public string getMyRouting(string opName) {
             OperatorBuilder nextOpBuilder = getNextOpInfo(opName.ToLower());
             return nextOpBuilder.PreviousRouting;
