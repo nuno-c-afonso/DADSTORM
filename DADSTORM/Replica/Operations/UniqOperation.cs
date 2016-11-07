@@ -8,10 +8,10 @@ using System.Threading.Tasks;
 namespace Replica {
     public class UniqOperation : GlobalStateOperation {
         private HashSet<string> seenStrings;
-        private int fieldNumber;
+        private int fieldIndex;
         public UniqOperation(List<string> replicasURL, int myselfIndex, int fieldNumber)
             : base(replicasURL, myselfIndex) {
-            this.fieldNumber = fieldNumber;
+            this.fieldIndex = fieldNumber - 1;
             seenStrings = new HashSet<string>();
         }
 
@@ -30,7 +30,7 @@ namespace Replica {
         }
 
         public override List<string[]> Operate(string[] tuple) {
-            string element = tuple[fieldNumber];
+            string element = tuple[fieldIndex];
 
             if (wasElementSeen(element))
                 return null;
