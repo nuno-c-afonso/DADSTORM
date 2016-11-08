@@ -193,7 +193,7 @@ namespace PuppetMasterGUI {
 
         //Run One Command
         private void button1_Click(object sender, EventArgs e) {
-            if (textBox2.Text != null || !textBox2.Text.Equals("")) {
+            if ((textBox2.Text != null || !textBox2.Text.Equals("")) && alreadyRunConfigCommands) {
                 string[] delimiter = { "\r\n" };
                 string[] lines = textBox2.Text.Split(delimiter, StringSplitOptions.RemoveEmptyEntries);
 
@@ -210,7 +210,7 @@ namespace PuppetMasterGUI {
 
         //Run All Commands
         private void button2_Click(object sender, EventArgs e) {
-            if (textBox2.Text != null || !textBox2.Text.Equals("")) {
+            if ((textBox2.Text != null || !textBox2.Text.Equals("")) && alreadyRunConfigCommands) {
                 string[] delimiter = { "\r\n" };
                 string[] lines = textBox2.Text.Split(delimiter, StringSplitOptions.RemoveEmptyEntries);
 
