@@ -103,7 +103,7 @@ namespace Replica {
 
             try
             {
-                log.Log("Status " + operationName + " " + replicaAddress + " " + IPAddresses.LocalIPAddress());
+                log.Log("Status " + operationName + " " + replicaAddress); //  + " " + IPAddresses.LocalIPAddress()
                 //Console.WriteLine("after log\n");
             }
             catch (Exception ex)
@@ -178,6 +178,9 @@ namespace Replica {
                     foreach (string[] outTuple in result){
                         Console.WriteLine("sending tuple");
                         router.sendToNext(outTuple);
+
+                        if (logLevel)
+                            log.Log("tuple " + operationName + " " + replicaAddress + " <" + string.Join(" - ", outTuple) + ">" );
                     }
                 }
             }

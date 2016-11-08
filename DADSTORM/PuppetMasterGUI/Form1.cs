@@ -46,11 +46,9 @@ namespace PuppetMasterGUI {
             PuppetMasterLog.form = this;
             logMessages = new List<string>();
 
-            // TODO: Process the configuration file and then reach the process creation services
             TcpChannel channel = new TcpChannel(LOGGING_PORT);
-            
-            // The code below was generating a weird exception, must investigate it
-            //#TODO
+
+            // #TODO The code below was generating a weird exception, must investigate it
             try
             {
                 ChannelServices.RegisterChannel(channel, false);
@@ -58,12 +56,8 @@ namespace PuppetMasterGUI {
                     typeof(PuppetMasterLog), "log",
                     WellKnownObjectMode.Singleton);
 
-
             }
-            catch (RemotingException ex)
-            {
-
-            }
+            catch (RemotingException ex){}
 
             importConfigFile(DEFAULT_CONFIG_PATH);
 
@@ -99,7 +93,10 @@ namespace PuppetMasterGUI {
 
             alreadyRunConfigCommands = true;
             foreach (var line in lines) {
-                ConsoleBox.AppendText(line + "\r\n");
+
+                AddMsgToLog(line);
+                //ConsoleBox.AppendText(line + "\r\n");
+
                 LineParser ln = new LineParser(line);
                 Debug.WriteLine(ln.Words[0]);
                 switch (ln.Words[0]) {
@@ -200,6 +197,7 @@ namespace PuppetMasterGUI {
                     textBox1.Text = lines[0];
                     textBox2.Text = string.Join("\r\n", lines.Skip(1));
 
+                    AddMsgToLog(lines[0]);
                     new Thread(() => shell.run(lines[0])).Start();
                     //shell.run(line);
                 }
@@ -216,15 +214,15 @@ namespace PuppetMasterGUI {
                     textBox1.Text = lines[lines.Length - 1];
                     textBox2.Text = "";
 
-                    new Thread(() => runAllCommandsThread(lines)).Start();
+                    foreach (string line in lines)
+                    {
+                        AddMsgToLog(line);
+                        new Thread(() => shell.run(line)).Start();
+                        ;
+                    }
+                    
                 }
             }
-        }
-
-        // Needed for running all the remaining commands
-        private void runAllCommandsThread(string[] lines) {
-            foreach (string line in lines)
-                shell.run(line);
         }
 
         private void button3_Click(object sender, EventArgs e) {
@@ -253,8 +251,11 @@ namespace PuppetMasterGUI {
         }
 
 
-        public void AddMsgToLog(string args)
+        public void AddMsgToLog(string args, bool replaceWithTabs = false)
         {
+            if (replaceWithTabs)
+                args = args.Replace(" ", "\t");
+
             logMessages.Add("time| " + args);
             ConsoleBox.AppendText(args + "\r\n");
             Debug.WriteLine("in form DEBUG LOG " + args);
@@ -279,7 +280,7 @@ namespace PuppetMasterGUI {
     }
 
     delegate void CallCommands(string line);
-    delegate void DelAddMsg(string mensagem);
+    delegate void DelAddMsg(string mensagem, bool replace);
 
 
     public class PuppetMasterLog : MarshalByRefObject, IPuppetMasterLog
@@ -293,7 +294,7 @@ namespace PuppetMasterGUI {
             Debug.WriteLine("LOG was called " + args);
 
             //form.AddMsgToLog(args);
-            form.Invoke(new DelAddMsg(form.AddMsgToLog), args); // thread-safe access to form
+            form.Invoke(new DelAddMsg(form.AddMsgToLog), args, false); // thread-safe access to form
             Debug.WriteLine("DEBUG LOG " + args);
             return "YUP ITS DEBUG";
         }
