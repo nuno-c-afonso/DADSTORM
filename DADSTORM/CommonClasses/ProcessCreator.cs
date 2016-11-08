@@ -8,7 +8,7 @@ using System.IO;
 
 namespace CommonClasses {
     public class ProcessCreator : MarshalByRefObject, IProcessCreator {
-        public void createReplica(string masterURL, string routing, string semantics, string logLevel,
+        public void createReplica(string masterURL, string routing, string incomingRouting, string semantics, string logLevel,
             int repIndex, List<string> op, List<string> replicas, List<string> output, List<string> input) {
 
 
@@ -22,7 +22,7 @@ namespace CommonClasses {
             process.StartInfo.FileName = "..\\..\\..\\Replica\\bin\\Debug\\Replica.exe";
 
             // Building the arguments for the main
-            process.StartInfo.Arguments =  masterURL + " " + routing + " " + semantics + " " + logLevel;
+            process.StartInfo.Arguments =  masterURL + " " + routing + " " + incomingRouting + " " + semantics + " " + logLevel;
             process.StartInfo.Arguments += " -op " + string.Join(" ", op).Replace("\"","\\\"");
             /*foreach (string s in op)
                 process.StartInfo.Arguments += " " + s;*/

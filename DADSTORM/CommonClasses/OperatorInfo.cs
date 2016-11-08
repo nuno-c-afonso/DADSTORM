@@ -58,6 +58,11 @@ namespace CommonClasses {
             return nextOpBuilder.PreviousRouting;
         }
 
+        public string getMyIncomingRouting(string opName) {
+            OperatorBuilder OpBuilder = getOpInfo(opName.ToLower());
+            return OpBuilder.PreviousRouting;
+        }
+
         public OperatorBuilder getNextOpInfo(string opName) {
             OperatorBuilder nextOpBuilder = null;
 
