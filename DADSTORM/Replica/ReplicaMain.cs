@@ -172,8 +172,9 @@ namespace Replica {
             //############ Start processing tuples ###################//CHECK
             ThreadStart ts = new ThreadStart(consumingOperator.Operate);
             Thread t = new Thread(ts);
+            consumingOperator.addThread(t);
             t.Start();
-            t.Join();//FIXMEshould we wait?
+            t.Join();
         }
     }
 }

@@ -23,8 +23,9 @@ namespace Replica {
         
         bool start = false;
         int waitingTime = 0;
-        bool crashed = false;
         bool freezed = false;
+
+        private Thread consumer;
 
         public ReplicaObject(string PuppetMasterUrl, string routing, string semantics,
             string logLevel, Operation operation, List<string> output, string replicaAddress, string operationName) {
@@ -58,6 +59,10 @@ namespace Replica {
 
                 Console.WriteLine("first e: " + e);
             }
+        }
+
+        public void addThread(Thread t) {
+            consumer = t;
         }
 
         //method used to send tuples to the owner of this buffer
@@ -127,8 +132,7 @@ namespace Replica {
         //Command to simulate a program crash
         //USED BY:PuppetMaster 
         public void Crash() {
-            Console.WriteLine("-->CRASH comand received");
-            crashed = true;
+            consumer.Abort();
         }
 
         //Command used to simulate slow server
@@ -162,7 +166,7 @@ namespace Replica {
             while (!start)
                 Thread.Sleep(100);
 
-            while (!crashed) {
+            while (true) {
                 //see if it is feezed
                 while(freezed == true)
                     Thread.Sleep(100);
