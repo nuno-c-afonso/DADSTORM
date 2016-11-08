@@ -178,7 +178,9 @@ namespace Replica {
                     foreach (string[] outTuple in result){
                         Console.WriteLine("sending tuple");
                         router.sendToNext(outTuple);
-                        log.Log("tuple " + operationName + " " + replicaAddress + " <" + string.Join(" - ", outTuple) + ">" );
+
+                        if (logLevel)
+                            log.Log("tuple " + operationName + " " + replicaAddress + " <" + string.Join(" - ", outTuple) + ">" );
                     }
                 }
             }
