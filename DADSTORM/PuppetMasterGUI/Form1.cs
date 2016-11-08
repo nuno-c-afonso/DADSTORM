@@ -238,11 +238,15 @@ namespace PuppetMasterGUI {
             if (alreadyRunConfigCommands && openFileDialog2.ShowDialog() == System.Windows.Forms.DialogResult.OK) {
                 scriptTextBox.Text = openFileDialog2.FileName;
                 ReadFileByLine rfbl = new ReadFileByLine(openFileDialog2.FileName);
+                char[] delimiter = { ' ' };
                 string toAdd = "";
 
                 try {
-                    while(true)
-                        toAdd += rfbl.nextLine() + "\r\n";
+                    while (true) {
+                        string command = rfbl.nextLine();
+                        if(Shell.doesCommandExist(command))
+                            toAdd += command + "\r\n";
+                    }
                 } catch(EOFException) { }
 
                 if (!textBox2.Text.EndsWith("\r\n") && textBox2.Text.Length > 0)
