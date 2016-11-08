@@ -70,26 +70,6 @@ namespace Replica {
                 operation = newList;
 
             }
-
-            /*
-            // FIXME TODO not sure what this is for
-            // has index out of bound exception
-
-            string incomplete = "";
-            for (i = 5; !args[i].Equals("-r"); i++) {
-                if (args[i][0] == '"' && args[i][args[i].Length - 1] == '"')
-                    operation.Add(args[i]);
-                else {
-                    if (args[i][0] == '"')
-                        incomplete = args[i];
-                    else {
-                        incomplete += " " + args[i];
-                        if (args[i][args[i].Length - 1] == '"')
-                            operation.Add(incomplete);
-                    }
-                }
-            }
-            */
             
             replicaIndex = int.Parse(args[++i]);
             while (!args[++i].Equals("-o"))
@@ -98,19 +78,11 @@ namespace Replica {
             while (!args[++i].Equals("-i"))
                 outputs.Add(args[i]);
 
-            /*
-             *  TODO: Check the case when there's no more inputs
-             */
             int argsSize = args.Length;
             while (++i < argsSize)
                 inputs.Add(args[i]);
 
-
-
-
-
-
-            CommonClasses.UrlSpliter urlspli = new CommonClasses.UrlSpliter();
+            UrlSpliter urlspli = new UrlSpliter();
             port = int.Parse(urlspli.getPort(replicasUrl[replicaIndex]));
 
             //FIXME just for debug

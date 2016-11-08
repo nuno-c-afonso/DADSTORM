@@ -201,6 +201,8 @@ namespace PuppetMasterGUI {
                     textBox1.Text = lines[0];
                     textBox2.Text = string.Join("\r\n", lines.Skip(1));
 
+                    Thread.Sleep(shell.Waiting);
+                    shell.Waiting = 0;
                     AddMsgToLog(lines[0]);
                     new Thread(() => shell.run(lines[0])).Start();
                     //shell.run(line);
@@ -221,6 +223,8 @@ namespace PuppetMasterGUI {
                     foreach (string line in lines)
                     {
                         AddMsgToLog(line);
+                        Thread.Sleep(shell.Waiting);
+                        shell.Waiting = 0;
                         new Thread(() => shell.run(line)).Start();
                         ;
                     }

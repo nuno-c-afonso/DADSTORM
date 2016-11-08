@@ -28,6 +28,10 @@ namespace CommandLine
             set {
                 waiting = value;
             }
+
+            get {
+                return waiting;
+            }
         }
 
         public Shell(OperatorsInfo opi) {
@@ -97,6 +101,7 @@ namespace CommandLine
             if (arg.Length == 0)
                 return;
 
+            Thread.Sleep(waiting);
             Command c = getCommand(arg[0]);
 
             if (c != null) {

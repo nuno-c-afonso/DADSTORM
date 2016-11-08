@@ -23,13 +23,13 @@ namespace Replica {
         
         private bool start = false;
         private int waitingTime = 0;
-        private bool crashed = false;
         private bool freezed = false;
+
+        private Thread consumer;
+
         public bool Started {
             get { return start; }
         }
-
-        private Thread consumer;
 
         public ReplicaObject(string PuppetMasterUrl, string routing, string semantics,
             string logLevel, Operation operation, List<string> output, string replicaAddress, string operationName) {
@@ -107,19 +107,15 @@ namespace Replica {
             waitingTime = time;
         }
 
-        private void testLog()
-        {
-
-            try
-            {
-                log.Log("Status " + operationName + " " + replicaAddress); //  + " " + IPAddresses.LocalIPAddress()
-                //Console.WriteLine("after log\n");
-            }
-            catch (Exception ex)
-            {
+        private void testLog() {
+            try {
+                //log.Log("Status " + operationName + " " + replicaAddress); //  + " " + IPAddresses.LocalIPAddress()
+                Console.WriteLine("Replica Address: " + replicaAddress + "\r\nOperation: " +
+                    operationName + "\r\nFLAGS\r\nStart: " + start + "\r\nWaiting: " +
+                    waitingTime + "\r\nFreezed: " + freezed);
+            } catch (Exception ex) {
                 Console.WriteLine("second ex: " + ex);
             }
-
         }
 
         //Command to print the current status
@@ -127,8 +123,9 @@ namespace Replica {
         public void Status() {
             Console.WriteLine("-->STATUS command received");
 
-            Thread t = new Thread(() => testLog());
-            t.Start();
+            new Thread(() => testLog()).Start();
+            //Thread t = new Thread(() => testLog());
+            //t.Start();
             //Console.WriteLine("after thread\n-----------");
             //testLog();
         }
