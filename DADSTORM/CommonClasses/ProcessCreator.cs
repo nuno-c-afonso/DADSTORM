@@ -23,7 +23,11 @@ namespace CommonClasses {
 
             // Building the arguments for the main
             process.StartInfo.Arguments =  masterURL + " " + routing + " " + incomingRouting + " " + semantics + " " + logLevel;
-            process.StartInfo.Arguments += " -op " + string.Join(" ", op).Replace("\"","\\\"");
+            string operationS = ""; 
+            foreach(string s in op) {
+                operationS += s.Replace("\"", "\\\"").Replace(" ", "\\ ") + " " ;
+            }
+            process.StartInfo.Arguments += " -op " + operationS;
             /*foreach (string s in op)
                 process.StartInfo.Arguments += " " + s;*/
                         Console.Write(" " + process.StartInfo.Arguments);
