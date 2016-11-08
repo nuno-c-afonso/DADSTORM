@@ -16,6 +16,7 @@ namespace Replica {
         }
 
         public Router(List<string> output, string semantics) {
+            Console.WriteLine("3-Router Created");
             nextOperator = output;
             string lowerCase = semantics.ToLower();
 
@@ -28,18 +29,19 @@ namespace Replica {
         }
 
         public void sendToNext(string[] tuple) {
-            ReplicaInterface replica = null;
-            string outputReplica = calculateNext(tuple);
+            if (nextOperator.Count != 0) {
+                ReplicaInterface replica = null;
+                string outputReplica = calculateNext(tuple);
 
-            try {
-                replica = (ReplicaInterface) Activator.GetObject(typeof(ReplicaInterface), outputReplica);
-            }
-            catch (System.Net.Sockets.SocketException e) {
-                Console.WriteLine("Error with host " + outputReplica);
-                Console.WriteLine(e);
-            }
+                try {
+                    replica = (ReplicaInterface)Activator.GetObject(typeof(ReplicaInterface), outputReplica);
+                } catch (System.Net.Sockets.SocketException e) {
+                    Console.WriteLine("Error with host " + outputReplica);
+                    Console.WriteLine(e);
+                }
 
-            semantics.sendTuple(replica, tuple);
+                semantics.sendTuple(replica, tuple);
+            }
         }
 
         // To be implemented by subclasses

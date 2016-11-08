@@ -21,7 +21,7 @@ namespace Replica {
             List<string[]> result = new List<string[]>();
 
             result.Add(tuple);
-            return result;
+            return null;
         }
     }
 }
