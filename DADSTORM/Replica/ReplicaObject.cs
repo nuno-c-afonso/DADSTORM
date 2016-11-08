@@ -171,7 +171,7 @@ namespace Replica {
 
         // To be used in the consumer thread
         public void Operate() {
-            Console.WriteLine("5-Waiting for START comand");
+            Console.WriteLine("5-Waiting for START command");
             while (!start)
                 Thread.Sleep(100);
 

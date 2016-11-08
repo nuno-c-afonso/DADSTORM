@@ -17,6 +17,7 @@ using CommonClasses;
 using System.Text.RegularExpressions;
 using System.Net;
 using System.Threading;
+using System.Windows;
 
 namespace PuppetMasterGUI {
     public partial class Form1 : Form {
@@ -42,6 +43,7 @@ namespace PuppetMasterGUI {
 
         public Form1() {
             InitializeComponent();
+            this.FormClosing += new FormClosingEventHandler(formClosing);
 
             PuppetMasterLog.form = this;
             logMessages = new List<string>();
@@ -279,6 +281,18 @@ namespace PuppetMasterGUI {
         private void FormPuppetMaster_Load(object sender, EventArgs e)
         {
 
+        }
+
+        // To intercept the closing command
+        private void formClosing(object sender, FormClosingEventArgs e) {
+            List<string> replicasNames = operatorsInfo.OperatorNames;
+
+            foreach(string name in replicasNames) {
+                OperatorBuilder ob = operatorsInfo.getOpInfo(name);
+                int repFactor = ob.RepFactor;
+                for(int i = 0; i < repFactor; i++)
+                    shell.run("crash " + name + " " + i);
+            }            
         }
     }
 

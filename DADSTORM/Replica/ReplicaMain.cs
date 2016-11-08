@@ -171,10 +171,6 @@ namespace Replica {
             Thread t = new Thread(ts);
             t.Start();
             t.Join();//FIXMEshould we wait?
-
-
-            System.Console.WriteLine("press enter to shutdown");
-            Console.ReadLine();
         }
     }
 }
