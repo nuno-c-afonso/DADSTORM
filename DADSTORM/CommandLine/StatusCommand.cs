@@ -15,18 +15,44 @@ namespace CommandLine {
         }
 
         public override void execute(string[] args) {
-            foreach(string name in operatorsInfo.OperatorNames) {
-                OperatorBuilder opb = operatorsInfo.getOpInfo(name);
-                foreach (string addr in opb.Addresses) {
+            if (args.Length > 0) {
+                OperatorBuilder opb;
 
-                    ReplicaInterface obj = (ReplicaInterface)Activator.GetObject(typeof(ReplicaInterface), addr);
-                    RemoteAsyncDelegate RemoteDel = new RemoteAsyncDelegate(obj.Status);
-                    IAsyncResult RemAr = RemoteDel.BeginInvoke(null, obj);
+                if ((opb = operatorsInfo.getOpInfo(args[0])) == null)
+                    throw new WrongOperatorException();
 
-                    //obj.Status(); // TODO use thread for this call ?
-                    //new Thread(() => obj.Status()).Start();
+                if (args.Length > 1) {
+                    int repIndex;
+
+                    if (!int.TryParse(args[1], out repIndex))
+                        throw new WrongTypeOfArgException();
+
+                    if (!(repIndex < opb.Addresses.Count && repIndex >= 0))
+                        throw new IndexOutOfBoundsException();
+
+                    callSpecificReplica(opb, repIndex);
                 }
+                else
+                    callAllReplicas(opb);
             }
+            else
+                callAllOperators();
+        }
+
+        private void callSpecificReplica(OperatorBuilder opb, int index) {
+            ReplicaInterface obj = (ReplicaInterface)Activator.GetObject(typeof(ReplicaInterface), opb.Addresses[index]);
+            RemoteAsyncDelegate RemoteDel = new RemoteAsyncDelegate(obj.Status);
+            IAsyncResult RemAr = RemoteDel.BeginInvoke(null, obj);
+        }
+
+        private void callAllReplicas(OperatorBuilder opb) {
+            for (int i = 0; i < opb.Addresses.Count; i++)
+                callSpecificReplica(opb, i);
+        }
+
+        private void callAllOperators() {
+            foreach (string name in operatorsInfo.OperatorNames)
+                    callAllReplicas(operatorsInfo.getOpInfo(name));
         }
     }
 }

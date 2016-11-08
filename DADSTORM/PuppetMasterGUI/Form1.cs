@@ -35,7 +35,6 @@ namespace PuppetMasterGUI {
 
         private List<string> logMessages;
 
-
         const int PCS_RESERVED_PORT = 10000;
         const int LOGGING_PORT = 10001;
         private IPAddress puppetMasterIPAddress = IPAddresses.LocalIPAddress();
