@@ -214,19 +214,15 @@ namespace PuppetMasterGUI {
                     textBox1.Text = lines[lines.Length - 1];
                     textBox2.Text = "";
 
-                    new Thread(() => runAllCommandsThread(lines)).Start();
+                    foreach (string line in lines)
+                    {
+                        AddMsgToLog(line);
+                        new Thread(() => shell.run(line)).Start();
+                        ;
+                    }
+                    
                 }
             }
-        }
-
-        // Needed for running all the remaining commands
-        private void runAllCommandsThread(string[] lines) {
-            foreach (string line in lines)
-            {
-                AddMsgToLog(line);
-                shell.run(line);
-            }
-                
         }
 
         private void button3_Click(object sender, EventArgs e) {
