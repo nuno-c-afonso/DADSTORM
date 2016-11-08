@@ -21,9 +21,13 @@ namespace Replica {
         private string replicaAddress;
         private string operationName;
         
-        bool start = false;
-        int waitingTime = 0;
-        bool freezed = false;
+        private bool start = false;
+        private int waitingTime = 0;
+        private bool crashed = false;
+        private bool freezed = false;
+        public bool Started {
+            get { return start; }
+        }
 
         private Thread consumer;
 

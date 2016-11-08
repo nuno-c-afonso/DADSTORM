@@ -31,6 +31,7 @@ namespace Replica {
              */
             string PuppetMasterUrl;                       // To store the Puppet Master's URL
             string routing;                               // To store the routing type
+            string incomingRouting;                         
             string semantics;                             // To store the tuple processing semantics
             string logLevel;                              // To store the desired logging level
             int replicaIndex;                             // To store the position where the current replica's URL is
@@ -48,10 +49,11 @@ namespace Replica {
             //############ Parse and save the function arguments ###################
             PuppetMasterUrl = args[0];
             routing = args[1];
-            semantics = args[2];
-            logLevel = args[3];
+            incomingRouting = args[2];
+            semantics = args[3];
+            logLevel = args[4];
 
-            i = 4; // index of -o argument
+            i = 5; // index of -o argument
             while (!args[++i].Equals("-r"))
                 operation.Add(args[i]);
 
@@ -112,8 +114,8 @@ namespace Replica {
             port = int.Parse(urlspli.getPort(replicasUrl[replicaIndex]));
 
             //FIXME just for debug
-            System.Console.WriteLine("VARS.. PuppetMasterUrl: {0}\n\t routing: {1} \n\t semantics: {2}\n\t logLevel: {3}\n\t replicaIndex: {4}\n\t  port: {5}\n\t operation: {6}\n\t replicasUrl: {7}\n\t outputs: {8} \n\t inputs: {9}"
-                    , PuppetMasterUrl, routing, semantics, logLevel, replicaIndex, port ,string.Join(",\n\t", operation),string.Join(",\n\t", replicasUrl), string.Join(",\n\t", outputs), string.Join(",\n\t", inputs));
+            System.Console.WriteLine("VARS.. PuppetMasterUrl: {0}\n\t routing: {1} \n\t semantics: {2}\n\t logLevel: {3}\n\t replicaIndex: {4}\n\t  port: {5}\n\t operation: {6}\n\t replicasUrl: {7}\n\t outputs: {8} \n\t inputs: {9} \n\t incomingRouting {10}"
+                    , PuppetMasterUrl, routing, semantics, logLevel, replicaIndex, port ,string.Join(",\n\t", operation),string.Join(",\n\t", replicasUrl), string.Join(",\n\t", outputs), string.Join(",\n\t", inputs), incomingRouting);
 
             //############ creating an operator of the wanted type ############
 
@@ -160,11 +162,13 @@ namespace Replica {
 
             foreach (string input in inputs)
                 if (input.EndsWith(".dat") || input.EndsWith(".data")){
-                    tupleFileReader fr = new tupleFileReader(consumingOperator, input);
-                    ThreadStart tstart = new ThreadStart(fr.feedBuffer);
-                    Thread th = new Thread(tstart);
-                    th.Start();
-                    fileReaders.Add(th);
+                    if (replicaIndex == 0) {
+                        tupleFileReader fr = new tupleFileReader(consumingOperator, input, incomingRouting, semantics, replicasUrl);
+                        ThreadStart tstart = new ThreadStart(fr.feedBuffer);
+                        Thread th = new Thread(tstart);
+                        th.Start();
+                        fileReaders.Add(th);
+                    }
                 }
 
             Console.WriteLine("5-Start processing tuples");

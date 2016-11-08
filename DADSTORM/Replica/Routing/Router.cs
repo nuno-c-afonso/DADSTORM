@@ -42,6 +42,7 @@ namespace Replica {
 
                 semantics.sendTuple(replica, tuple);
             }
+            //ELSE can write on file
         }
 
         // To be implemented by subclasses
