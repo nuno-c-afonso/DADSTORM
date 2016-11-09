@@ -143,8 +143,7 @@ namespace PuppetMasterGUI {
                     incomingRouting = operatorsInfo.getMyIncomingRouting(opb.Name);
                     output = operatorsInfo.getOuputAddressesListOfOP(opb.Name);
                     input = operatorsInfo.getInputAddressesListOfOP(opb.Name);
-                }
-                catch (LastOperatorException e) {
+                } catch (LastOperatorException e) {
                     routing = "primary";
                     incomingRouting = "primary";
                     output = new List<string>();
@@ -248,8 +247,8 @@ namespace PuppetMasterGUI {
             Debug.WriteLine(DateTime.Now.ToString("HH:mm:ss tt") +"- "+ time + " ms, on wait");
             Thread.Sleep(time);
             Debug.WriteLine(DateTime.Now.ToString("HH:mm:ss tt") + "- " + time + " ms, after wait");
-            canUseCommands = true;
             shell.Waiting = 0;
+            canUseCommands = true;
         }
 
 
