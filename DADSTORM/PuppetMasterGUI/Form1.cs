@@ -195,7 +195,7 @@ namespace PuppetMasterGUI {
                         address);
         }
 
-        //Run One Command
+
         private void ChangeTextBoxesLines()
         {
             string[] delimiter = { "\r\n" };
@@ -218,13 +218,8 @@ namespace PuppetMasterGUI {
 
                     if (shell.Waiting > 0)
                         await Task.Run(() => waitOnPuppetMaster(shell.Waiting));
-                    Debug.WriteLine("===did I WAIT");
-                    Debug.WriteLine("===did I WAIT");
-                    Debug.WriteLine("===did I WAIT");
-                    Debug.WriteLine("===did I WAIT");
 
-
-                    _form.Invoke(new EditTextBoxes(_form.ChangeTextBoxesLines)); // thread-safe access to form
+                    Invoke(new EditTextBoxes(ChangeTextBoxesLines)); // thread-safe access to form
 
                     Debug.WriteLine("calling shell for commmand");
 
@@ -234,65 +229,38 @@ namespace PuppetMasterGUI {
             }
         }
 
+        //Run One Command
         private void button1_Click(object sender, EventArgs e) {
             runNextLine();
         }
 
         private async void asyncRunNextLine()
         {
-            Debug.WriteLine("on asyncRunNextLine  ");
             await Task.Run(() => runNextLine());
-            Debug.WriteLine("after Run asyncRunNextLine  ");
             if (!textBox2.Text.Equals(""))
             {
-                Debug.WriteLine("calling next asyncRunNextLine  ");
                 await Task.Run(() => Thread.Sleep(100));
-                
-                Debug.WriteLine("slept");
-
                 asyncRunNextLine();
             }
-            else
-                Debug.WriteLine("== its over asyncRunNextLine  ");
-
-
         }
 
         private async void waitOnPuppetMaster(int time)
         {
             canUseCommands = false;
-            Debug.WriteLine(time + " ms, on wait    " + DateTime.Now.ToString("h:mm:ss tt"));
+            Debug.WriteLine(DateTime.Now.ToString("HH:mm:ss tt") +"- "+ time + " ms, on wait");
             Thread.Sleep(time);
-            Debug.WriteLine(time + " ms, after wait " + DateTime.Now.ToString("h:mm:ss tt"));
+            Debug.WriteLine(DateTime.Now.ToString("HH:mm:ss tt") + "- " + time + " ms, after wait");
             canUseCommands = true;
             shell.Waiting = 0;
         }
+
 
         //Run All Commands
         private void button2_Click(object sender, EventArgs e) {
             asyncRunNextLine();
         }
-        /*
-         && canUseCommands
-                    for (int i = 0; i < lines.Length; i++)
-                    {
-                        string line = lines[i];
-                        if (shell.Waiting > 0)
-                            waitOnPuppetMaster(shell.Waiting);
 
-                        AddMsgToLog(line);
-                        new Thread(() => shell.run(line)).Start();
 
-                    }
-        */
-        /*
-        private async void waitOnPuppetMasterAllCommands(int time, string line)
-        {
-            await Task.Run(() => waitHelperFunction(time));
-            AddMsgToLog(line);
-            new Thread(() => shell.run(line)).Start();
-        }
-        */
         private void button3_Click(object sender, EventArgs e) {
             if (openFileDialog1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 importConfigFile(openFileDialog1.FileName);
@@ -323,14 +291,16 @@ namespace PuppetMasterGUI {
         }
 
 
-        public void AddMsgToLog(string args, bool replaceWithTabs = false)
+        public void AddMsgToLog(string arg, bool replaceWithTabs = false)
         {
             if (replaceWithTabs)
-                args = args.Replace(" ", "\t");
+                arg = arg.Replace(" ", "\t");
 
-            logMessages.Add("time| " + args);
-            ConsoleBox.AppendText(args + "\r\n");
-            Debug.WriteLine("in form DEBUG LOG " + args);
+            string changedMsg = DateTime.Now.ToString("HH:mm:ss tt") + "  " + arg;
+
+            logMessages.Add(changedMsg);
+            ConsoleBox.AppendText(changedMsg + "\r\n");
+            Debug.WriteLine("AddMsgToLog " + changedMsg);
 
         }
 
