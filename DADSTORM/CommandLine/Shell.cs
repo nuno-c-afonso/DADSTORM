@@ -107,16 +107,16 @@ namespace CommandLine
                 try {
                     c.execute(commandArgs(arg));
                 }
-                catch (WrongNumberOfArgsException wna) {
+                catch (WrongNumberOfArgsException) {
                     Console.WriteLine("The number of the given arguments is wrong. Please try again.");
                 }
-                catch (WrongTypeOfArgException wta) {
+                catch (WrongTypeOfArgException) {
                     Console.WriteLine("The type of the given arguments is wrong. Please try again.");
                 }
-                catch (WrongOperatorException wo) {
+                catch (WrongOperatorException) {
                     Console.WriteLine("The name of the given operator is wrong. Please try again.");
                 }
-                catch (IndexOutOfBoundsException iob) {
+                catch (IndexOutOfBoundsException) {
                     Console.WriteLine("The index of the given operator is wrong. Please try again.");
                 }
             }

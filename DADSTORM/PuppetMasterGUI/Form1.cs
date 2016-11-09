@@ -68,7 +68,7 @@ namespace PuppetMasterGUI {
                     WellKnownObjectMode.Singleton);
 
             }
-            catch (RemotingException ex){}
+            catch (RemotingException){}
 
             importConfigFile(DEFAULT_CONFIG_PATH);
 
@@ -146,7 +146,7 @@ namespace PuppetMasterGUI {
                     incomingRouting = operatorsInfo.getMyIncomingRouting(opb.Name);
                     output = operatorsInfo.getOuputAddressesListOfOP(opb.Name);
                     input = operatorsInfo.getInputAddressesListOfOP(opb.Name);
-                } catch (LastOperatorException e) {
+                } catch (LastOperatorException) {
                     routing = "primary";
                     incomingRouting = "primary";
                     output = new List<string>();

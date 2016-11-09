@@ -48,7 +48,6 @@
     <Compile Include="Operations\OutputOperation.cs" />
     <Compile Include="Semantics\AtLeastOnceSemantics.cs" />
     <Compile Include="Semantics\AtMostOnceSemantics.cs" />
-    <Compile Include="Consumer.cs" />
     <Compile Include="Operations\CountOperation.cs" />
     <Compile Include="Operations\CustomOperation.cs" />
     <Compile Include="Operations\DupOperation.cs" />

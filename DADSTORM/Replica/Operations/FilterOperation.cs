@@ -9,7 +9,6 @@ namespace Replica
     public class FilterOperation : Operation
     {
         int fieldNumber;
-        string condition;
         string value;
         delegate bool checkcondition(string tupValue, string value);
         checkcondition conditionCheck;
