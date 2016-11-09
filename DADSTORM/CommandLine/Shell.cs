@@ -7,8 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace CommandLine
-{
+namespace CommandLine {
     public class Shell {
         private Dictionary<string, Command> commands;
         private OperatorsInfo operatorInfo;
@@ -36,11 +35,6 @@ namespace CommandLine
 
         public Shell(OperatorsInfo opi) {
             init(opi);
-        }
-
-        public Shell(OperatorsInfo opi, Dictionary<string, Command> newCommands) {
-            init(opi);
-            commands = commands.Concat(newCommands).ToDictionary(k => k.Key, v => v.Value);
         }
 
         private void init(OperatorsInfo opi) {
@@ -76,22 +70,6 @@ namespace CommandLine
             s = (arg.Length == 0) ? "" : arg[0];
 
             return commandsNames.Contains(s);
-        }
-
-        public void execute() {
-            string prompt = "> ";
-            string line;
-
-            commands.Add("exit", new ExitCommand(this));
-            Console.WriteLine("Puppet Master Shell ('exit' to leave)");
-
-            while (!leave) {
-                Thread.Sleep(waiting);
-                Console.Write(prompt);
-                line = Console.ReadLine();
-                line.ToLower();
-                run(line);
-            }
         }
 
         public void run(string line) {

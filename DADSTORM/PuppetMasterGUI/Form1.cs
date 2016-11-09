@@ -185,15 +185,6 @@ namespace PuppetMasterGUI {
             }
         }
 
-        private CommonClasses.ReplicaInterface getRemoteObject(string opName, int replicaIndex = 0) {
-            var opInfo = operatorsInfo.getOpInfo(opName);
-            string address = opInfo.Addresses[replicaIndex];
-
-            return (CommonClasses.ReplicaInterface)Activator.GetObject(
-                        typeof(CommonClasses.ReplicaInterface),
-                        address);
-        }
-
         //Run One Command
         private void button1_Click(object sender, EventArgs e) {
             runNextLine();
@@ -327,16 +318,6 @@ namespace PuppetMasterGUI {
             logMessages.Add(changedMsg);
             ConsoleBox.AppendText(changedMsg + "\r\n");
             Debug.WriteLine("AddMsgToLog " + changedMsg);
-
-        }
-
-        public void testReplica(string address) {
-            // test status 
-            CommonClasses.ReplicaInterface obj3 = (CommonClasses.ReplicaInterface)Activator.GetObject(typeof(CommonClasses.ReplicaInterface),
-            address);
-
-            Debug.WriteLine("OH WOW ");
-            //obj3.Status();
 
         }
     }

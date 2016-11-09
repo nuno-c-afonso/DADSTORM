@@ -4,10 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Replica
-{
-    public class FilterOperation : Operation
-    {
+namespace Replica {
+    public class FilterOperation : Operation {
         int fieldNumber;
         string value;
         delegate bool checkcondition(string tupValue, string value);
