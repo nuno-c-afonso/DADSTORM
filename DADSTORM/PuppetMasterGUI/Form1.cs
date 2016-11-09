@@ -21,7 +21,6 @@ using System.Windows;
 
 namespace PuppetMasterGUI {
     public partial class Form1 : Form {
-        public static Form1 _form;
         private ReadFileByLineFiltered lineParser;
         CommonClasses.UrlSpliter urlsplitter = new CommonClasses.UrlSpliter();
         OperatorsInfo operatorsInfo = new OperatorsInfo();
@@ -47,7 +46,6 @@ namespace PuppetMasterGUI {
             this.FormClosing += new FormClosingEventHandler(formClosing);
 
             PuppetMasterLog.form = this;
-            Form1._form = this;
 
             logMessages = new List<string>();
 
@@ -195,7 +193,7 @@ namespace PuppetMasterGUI {
                         address);
         }
 
-
+        // needed for changing text of form in threads
         private void ChangeTextBoxesLines()
         {
             string[] delimiter = { "\r\n" };
