@@ -39,6 +39,7 @@ namespace PuppetMasterGUI {
         const int LOGGING_PORT = 10001;
         private IPAddress puppetMasterIPAddress = IPAddresses.LocalIPAddress();
         private Shell shell;
+        private bool canUseCommands = true;
 
         public Form1() {
             InitializeComponent();
@@ -193,16 +194,18 @@ namespace PuppetMasterGUI {
 
         //Run One Command
         private void button1_Click(object sender, EventArgs e) {
-            if ((textBox2.Text != null || !textBox2.Text.Equals("")) && alreadyRunConfigCommands) {
+            if ((textBox2.Text != null || !textBox2.Text.Equals("")) && alreadyRunConfigCommands && canUseCommands) {
                 string[] delimiter = { "\r\n" };
                 string[] lines = textBox2.Text.Split(delimiter, StringSplitOptions.RemoveEmptyEntries);
 
                 if (lines.Length > 0) {
+
+                    if (shell.Waiting > 0)
+                        waitOnPuppetMaster(shell.Waiting);
+
                     textBox1.Text = lines[0];
                     textBox2.Text = string.Join("\r\n", lines.Skip(1));
 
-                    Thread.Sleep(shell.Waiting);
-                    shell.Waiting = 0;
                     AddMsgToLog(lines[0]);
                     new Thread(() => shell.run(lines[0])).Start();
                     //shell.run(line);
@@ -210,9 +213,25 @@ namespace PuppetMasterGUI {
             }
         }
 
+
+        private async void waitOnPuppetMaster(int time)
+        {
+            await Task.Run(() => waitHelperFunction(time));
+        }
+
+        private async void waitHelperFunction(int time)
+        {
+            canUseCommands = false;
+            Debug.WriteLine(time + " ms, on wait    " + DateTime.Now.ToString("h:mm:ss tt"));
+            Thread.Sleep(time);
+            Debug.WriteLine(time + " ms, after wait " + DateTime.Now.ToString("h:mm:ss tt"));
+            canUseCommands = true;
+            shell.Waiting = 0;
+        }
+
         //Run All Commands
         private void button2_Click(object sender, EventArgs e) {
-            if ((textBox2.Text != null || !textBox2.Text.Equals("")) && alreadyRunConfigCommands) {
+            if ((textBox2.Text != null || !textBox2.Text.Equals("")) && alreadyRunConfigCommands && canUseCommands) {
                 string[] delimiter = { "\r\n" };
                 string[] lines = textBox2.Text.Split(delimiter, StringSplitOptions.RemoveEmptyEntries);
 
@@ -222,11 +241,12 @@ namespace PuppetMasterGUI {
 
                     foreach (string line in lines)
                     {
+                        if (shell.Waiting > 0)
+                            waitOnPuppetMaster(shell.Waiting);
+
                         AddMsgToLog(line);
-                        Thread.Sleep(shell.Waiting);
-                        shell.Waiting = 0;
                         new Thread(() => shell.run(line)).Start();
-                        ;
+                        
                     }
                     
                 }
@@ -284,9 +304,7 @@ namespace PuppetMasterGUI {
             //obj3.Status();
 
         }
-
-
-
+        
         public void closeAllReplicas()
         {
             List<string> replicasNames = operatorsInfo.OperatorNames;
@@ -320,6 +338,7 @@ namespace PuppetMasterGUI {
         {
             closeAllReplicas();
         }
+
     }
 
     delegate void CallCommands(string line);
