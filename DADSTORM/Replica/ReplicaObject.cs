@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
@@ -133,7 +134,9 @@ namespace Replica {
         //Command to simulate a program crash
         //USED BY:PuppetMaster 
         public void Crash() {
-            consumer.Abort();
+            Console.WriteLine("-->CRASH comand received");
+            Process.GetCurrentProcess().Kill();
+            //consumer.Abort();
         }
 
         //Command used to simulate slow server

@@ -285,21 +285,40 @@ namespace PuppetMasterGUI {
 
         }
 
+
+
+        public void closeAllReplicas()
+        {
+            List<string> replicasNames = operatorsInfo.OperatorNames;
+            List<Task> TaskList = new List<Task>();
+            foreach (string name in replicasNames)
+            {
+                OperatorBuilder ob = operatorsInfo.getOpInfo(name);
+                int repFactor = ob.RepFactor;
+                for (int i = 0; i < repFactor; i++)
+                {
+                    string crashLine = "crash " + name + " " + i;
+                    AddMsgToLog(crashLine);
+                    //await Task.Run(() => shell.run("crash " + name + " " + i));
+                    
+                    var LastTask = new Task(() => shell.run(crashLine));
+                    LastTask.Start();
+                    TaskList.Add(LastTask);
+                }
+            }
+            Task.WaitAll(TaskList.ToArray());
+
+        }
+
         private void FormPuppetMaster_Load(object sender, EventArgs e)
         {
 
         }
 
         // To intercept the closing command
-        private void formClosing(object sender, FormClosingEventArgs e) {
-            List<string> replicasNames = operatorsInfo.OperatorNames;
-
-            foreach(string name in replicasNames) {
-                OperatorBuilder ob = operatorsInfo.getOpInfo(name);
-                int repFactor = ob.RepFactor;
-                for(int i = 0; i < repFactor; i++)
-                    shell.run("crash " + name + " " + i);
-            }            
+        private async void formClosing(object sender, FormClosingEventArgs e)
+        {
+            closeAllReplicas();
         }
     }
 

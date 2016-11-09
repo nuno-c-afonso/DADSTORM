@@ -44,7 +44,7 @@
             // button1
             // 
             this.button1.Location = new System.Drawing.Point(181, 40);
-            this.button1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.button1.Margin = new System.Windows.Forms.Padding(2);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(111, 19);
             this.button1.TabIndex = 0;
@@ -55,7 +55,7 @@
             // button2
             // 
             this.button2.Location = new System.Drawing.Point(297, 40);
-            this.button2.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.button2.Margin = new System.Windows.Forms.Padding(2);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(111, 19);
             this.button2.TabIndex = 1;
@@ -79,7 +79,7 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.ConsoleBox.Location = new System.Drawing.Point(417, 64);
-            this.ConsoleBox.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.ConsoleBox.Margin = new System.Windows.Forms.Padding(2);
             this.ConsoleBox.Multiline = true;
             this.ConsoleBox.Name = "ConsoleBox";
             this.ConsoleBox.ReadOnly = true;
@@ -113,7 +113,7 @@
             | System.Windows.Forms.AnchorStyles.Left)));
             this.textBox2.Cursor = System.Windows.Forms.Cursors.IBeam;
             this.textBox2.Location = new System.Drawing.Point(8, 116);
-            this.textBox2.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.textBox2.Margin = new System.Windows.Forms.Padding(2);
             this.textBox2.Multiline = true;
             this.textBox2.Name = "textBox2";
             this.textBox2.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
@@ -206,7 +206,7 @@
             this.Controls.Add(this.label1);
             this.Controls.Add(this.button2);
             this.Controls.Add(this.button1);
-            this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "Form1";
             this.Text = "Puppet Master";
             this.Load += new System.EventHandler(this.FormPuppetMaster_Load);
