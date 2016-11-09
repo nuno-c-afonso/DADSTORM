@@ -41,11 +41,17 @@ namespace PuppetMasterGUI {
         private Shell shell;
         private bool canUseCommands = true;
 
+
+        private CancellationTokenSource tokenSource2;
+        private CancellationToken cancelToken;
+
         public Form1() {
             InitializeComponent();
             this.FormClosing += new FormClosingEventHandler(formClosing);
 
             PuppetMasterLog.form = this;
+            tokenSource2 = new CancellationTokenSource();
+            cancelToken = tokenSource2.Token;
 
             logMessages = new List<string>();
 
@@ -215,7 +221,7 @@ namespace PuppetMasterGUI {
                 {
 
                     if (shell.Waiting > 0)
-                        await Task.Run(() => waitOnPuppetMaster(shell.Waiting));
+                        await Task.Run(() => waitOnPuppetMaster(shell.Waiting), cancelToken);
 
                     Invoke(new EditTextBoxes(ChangeTextBoxesLines)); // thread-safe access to form
 
@@ -234,10 +240,10 @@ namespace PuppetMasterGUI {
 
         private async void asyncRunNextLine()
         {
-            await Task.Run(() => runNextLine());
+            await Task.Run(() => runNextLine(), cancelToken);
             if (!textBox2.Text.Equals(""))
             {
-                await Task.Run(() => Thread.Sleep(100));
+                await Task.Run(() => Thread.Sleep(100), cancelToken);
                 asyncRunNextLine();
             }
         }
@@ -312,21 +318,23 @@ namespace PuppetMasterGUI {
             //obj3.Status();
 
         }
-        
+
         public void closeAllReplicas()
         {
+            tokenSource2.Cancel();
             List<string> replicasNames = operatorsInfo.OperatorNames;
             List<Task> TaskList = new List<Task>();
             foreach (string name in replicasNames)
             {
                 OperatorBuilder ob = operatorsInfo.getOpInfo(name);
                 int repFactor = ob.RepFactor;
+                
                 for (int i = 0; i < repFactor; i++)
                 {
                     string crashLine = "crash " + name + " " + i;
                     AddMsgToLog(crashLine);
                     //await Task.Run(() => shell.run("crash " + name + " " + i));
-                    
+
                     var LastTask = new Task(() => shell.run(crashLine));
                     LastTask.Start();
                     TaskList.Add(LastTask);
