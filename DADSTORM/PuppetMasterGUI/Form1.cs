@@ -46,6 +46,7 @@ namespace PuppetMasterGUI {
             this.FormClosing += new FormClosingEventHandler(formClosing);
 
             PuppetMasterLog.form = this;
+
             logMessages = new List<string>();
 
             TcpChannel channel = new TcpChannel(LOGGING_PORT);
@@ -192,66 +193,71 @@ namespace PuppetMasterGUI {
                         address);
         }
 
-        //Run One Command
-        private void button1_Click(object sender, EventArgs e) {
-            if ((textBox2.Text != null || !textBox2.Text.Equals("")) && alreadyRunConfigCommands && canUseCommands) {
+        // needed for changing text of form in threads
+        private void ChangeTextBoxesLines()
+        {
+            string[] delimiter = { "\r\n" };
+            string[] lines = textBox2.Text.Split(delimiter, StringSplitOptions.RemoveEmptyEntries);
+            textBox1.Text = lines[0];
+            textBox2.Text = string.Join("\r\n", lines.Skip(1));
+
+            AddMsgToLog(lines[0]);
+        }
+
+        private async void runNextLine()
+        {
+            if ((textBox2.Text != null || !textBox2.Text.Equals("")) && alreadyRunConfigCommands && canUseCommands)
+            {
                 string[] delimiter = { "\r\n" };
                 string[] lines = textBox2.Text.Split(delimiter, StringSplitOptions.RemoveEmptyEntries);
 
-                if (lines.Length > 0) {
+                if (lines.Length > 0)
+                {
 
                     if (shell.Waiting > 0)
-                        waitOnPuppetMaster(shell.Waiting);
+                        await Task.Run(() => waitOnPuppetMaster(shell.Waiting));
 
-                    textBox1.Text = lines[0];
-                    textBox2.Text = string.Join("\r\n", lines.Skip(1));
+                    Invoke(new EditTextBoxes(ChangeTextBoxesLines)); // thread-safe access to form
 
-                    AddMsgToLog(lines[0]);
+                    Debug.WriteLine("calling shell for commmand");
+
                     new Thread(() => shell.run(lines[0])).Start();
                     //shell.run(line);
                 }
             }
         }
 
+        //Run One Command
+        private void button1_Click(object sender, EventArgs e) {
+            runNextLine();
+        }
+
+        private async void asyncRunNextLine()
+        {
+            await Task.Run(() => runNextLine());
+            if (!textBox2.Text.Equals(""))
+            {
+                await Task.Run(() => Thread.Sleep(100));
+                asyncRunNextLine();
+            }
+        }
 
         private async void waitOnPuppetMaster(int time)
         {
-            await Task.Run(() => waitHelperFunction(time));
-        }
-
-        private async void waitHelperFunction(int time)
-        {
             canUseCommands = false;
-            Debug.WriteLine(time + " ms, on wait    " + DateTime.Now.ToString("h:mm:ss tt"));
+            Debug.WriteLine(DateTime.Now.ToString("HH:mm:ss tt") +"- "+ time + " ms, on wait");
             Thread.Sleep(time);
-            Debug.WriteLine(time + " ms, after wait " + DateTime.Now.ToString("h:mm:ss tt"));
+            Debug.WriteLine(DateTime.Now.ToString("HH:mm:ss tt") + "- " + time + " ms, after wait");
             canUseCommands = true;
             shell.Waiting = 0;
         }
 
+
         //Run All Commands
         private void button2_Click(object sender, EventArgs e) {
-            if ((textBox2.Text != null || !textBox2.Text.Equals("")) && alreadyRunConfigCommands && canUseCommands) {
-                string[] delimiter = { "\r\n" };
-                string[] lines = textBox2.Text.Split(delimiter, StringSplitOptions.RemoveEmptyEntries);
-
-                if (lines.Length > 0) {
-                    textBox1.Text = lines[lines.Length - 1];
-                    textBox2.Text = "";
-
-                    foreach (string line in lines)
-                    {
-                        if (shell.Waiting > 0)
-                            waitOnPuppetMaster(shell.Waiting);
-
-                        AddMsgToLog(line);
-                        new Thread(() => shell.run(line)).Start();
-                        
-                    }
-                    
-                }
-            }
+            asyncRunNextLine();
         }
+
 
         private void button3_Click(object sender, EventArgs e) {
             if (openFileDialog1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
@@ -283,14 +289,16 @@ namespace PuppetMasterGUI {
         }
 
 
-        public void AddMsgToLog(string args, bool replaceWithTabs = false)
+        public void AddMsgToLog(string arg, bool replaceWithTabs = false)
         {
             if (replaceWithTabs)
-                args = args.Replace(" ", "\t");
+                arg = arg.Replace(" ", "\t");
 
-            logMessages.Add("time| " + args);
-            ConsoleBox.AppendText(args + "\r\n");
-            Debug.WriteLine("in form DEBUG LOG " + args);
+            string changedMsg = DateTime.Now.ToString("HH:mm:ss tt") + "  " + arg;
+
+            logMessages.Add(changedMsg);
+            ConsoleBox.AppendText(changedMsg + "\r\n");
+            Debug.WriteLine("AddMsgToLog " + changedMsg);
 
         }
 
@@ -340,6 +348,9 @@ namespace PuppetMasterGUI {
         }
 
     }
+
+    delegate void EditTextBoxes();
+
 
     delegate void CallCommands(string line);
     delegate void DelAddMsg(string mensagem, bool replace);
