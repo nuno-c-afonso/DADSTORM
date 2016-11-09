@@ -21,6 +21,7 @@ using System.Windows;
 
 namespace PuppetMasterGUI {
     public partial class Form1 : Form {
+        public static Form1 _form;
         private ReadFileByLineFiltered lineParser;
         CommonClasses.UrlSpliter urlsplitter = new CommonClasses.UrlSpliter();
         OperatorsInfo operatorsInfo = new OperatorsInfo();
@@ -46,6 +47,8 @@ namespace PuppetMasterGUI {
             this.FormClosing += new FormClosingEventHandler(formClosing);
 
             PuppetMasterLog.form = this;
+            Form1._form = this;
+
             logMessages = new List<string>();
 
             TcpChannel channel = new TcpChannel(LOGGING_PORT);
@@ -193,33 +196,69 @@ namespace PuppetMasterGUI {
         }
 
         //Run One Command
-        private void button1_Click(object sender, EventArgs e) {
-            if ((textBox2.Text != null || !textBox2.Text.Equals("")) && alreadyRunConfigCommands && canUseCommands) {
+        private void ChangeTextBoxesLines()
+        {
+            string[] delimiter = { "\r\n" };
+            string[] lines = textBox2.Text.Split(delimiter, StringSplitOptions.RemoveEmptyEntries);
+            textBox1.Text = lines[0];
+            textBox2.Text = string.Join("\r\n", lines.Skip(1));
+
+            AddMsgToLog(lines[0]);
+        }
+
+        private async void runNextLine()
+        {
+            if ((textBox2.Text != null || !textBox2.Text.Equals("")) && alreadyRunConfigCommands && canUseCommands)
+            {
                 string[] delimiter = { "\r\n" };
                 string[] lines = textBox2.Text.Split(delimiter, StringSplitOptions.RemoveEmptyEntries);
 
-                if (lines.Length > 0) {
+                if (lines.Length > 0)
+                {
 
                     if (shell.Waiting > 0)
-                        waitOnPuppetMaster(shell.Waiting);
+                        await Task.Run(() => waitOnPuppetMaster(shell.Waiting));
+                    Debug.WriteLine("===did I WAIT");
+                    Debug.WriteLine("===did I WAIT");
+                    Debug.WriteLine("===did I WAIT");
+                    Debug.WriteLine("===did I WAIT");
 
-                    textBox1.Text = lines[0];
-                    textBox2.Text = string.Join("\r\n", lines.Skip(1));
 
-                    AddMsgToLog(lines[0]);
+                    _form.Invoke(new EditTextBoxes(_form.ChangeTextBoxesLines)); // thread-safe access to form
+
+                    Debug.WriteLine("calling shell for commmand");
+
                     new Thread(() => shell.run(lines[0])).Start();
                     //shell.run(line);
                 }
             }
         }
 
-
-        private async void waitOnPuppetMaster(int time)
-        {
-            await Task.Run(() => waitHelperFunction(time));
+        private void button1_Click(object sender, EventArgs e) {
+            runNextLine();
         }
 
-        private async void waitHelperFunction(int time)
+        private async void asyncRunNextLine()
+        {
+            Debug.WriteLine("on asyncRunNextLine  ");
+            await Task.Run(() => runNextLine());
+            Debug.WriteLine("after Run asyncRunNextLine  ");
+            if (!textBox2.Text.Equals(""))
+            {
+                Debug.WriteLine("calling next asyncRunNextLine  ");
+                await Task.Run(() => Thread.Sleep(100));
+                
+                Debug.WriteLine("slept");
+
+                asyncRunNextLine();
+            }
+            else
+                Debug.WriteLine("== its over asyncRunNextLine  ");
+
+
+        }
+
+        private async void waitOnPuppetMaster(int time)
         {
             canUseCommands = false;
             Debug.WriteLine(time + " ms, on wait    " + DateTime.Now.ToString("h:mm:ss tt"));
@@ -231,28 +270,29 @@ namespace PuppetMasterGUI {
 
         //Run All Commands
         private void button2_Click(object sender, EventArgs e) {
-            if ((textBox2.Text != null || !textBox2.Text.Equals("")) && alreadyRunConfigCommands && canUseCommands) {
-                string[] delimiter = { "\r\n" };
-                string[] lines = textBox2.Text.Split(delimiter, StringSplitOptions.RemoveEmptyEntries);
-
-                if (lines.Length > 0) {
-                    textBox1.Text = lines[lines.Length - 1];
-                    textBox2.Text = "";
-
-                    foreach (string line in lines)
+            asyncRunNextLine();
+        }
+        /*
+         && canUseCommands
+                    for (int i = 0; i < lines.Length; i++)
                     {
+                        string line = lines[i];
                         if (shell.Waiting > 0)
                             waitOnPuppetMaster(shell.Waiting);
 
                         AddMsgToLog(line);
                         new Thread(() => shell.run(line)).Start();
-                        
-                    }
-                    
-                }
-            }
-        }
 
+                    }
+        */
+        /*
+        private async void waitOnPuppetMasterAllCommands(int time, string line)
+        {
+            await Task.Run(() => waitHelperFunction(time));
+            AddMsgToLog(line);
+            new Thread(() => shell.run(line)).Start();
+        }
+        */
         private void button3_Click(object sender, EventArgs e) {
             if (openFileDialog1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 importConfigFile(openFileDialog1.FileName);
@@ -340,6 +380,9 @@ namespace PuppetMasterGUI {
         }
 
     }
+
+    delegate void EditTextBoxes();
+
 
     delegate void CallCommands(string line);
     delegate void DelAddMsg(string mensagem, bool replace);
