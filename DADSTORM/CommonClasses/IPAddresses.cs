@@ -6,14 +6,10 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CommonClasses
-{
-    public class IPAddresses
-    {
-        public static IPAddress LocalIPAddress()
-        {
-            if (!System.Net.NetworkInformation.NetworkInterface.GetIsNetworkAvailable())
-            {
+namespace CommonClasses {
+    public class IPAddresses {
+        public static IPAddress LocalIPAddress() {
+            if (!System.Net.NetworkInformation.NetworkInterface.GetIsNetworkAvailable()) {
                 return null;
             }
 

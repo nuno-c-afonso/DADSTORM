@@ -7,22 +7,19 @@ using CommandLine;
 using System.Diagnostics;
 
 namespace FileManipulator {
-    // diferenciar configCommands e operatorCommands
-
-
-    public class ReadFileByLineFiltered {
-        private string[] lines;
-        private int currentLine = 0;
+    
+    // To differentiate between configCommands and operatorCommands
+    public class ReadFileByLineFiltered : ReadFileByLine {
         private int operatorCommandFirstLine = 0;
 
-        public ReadFileByLineFiltered(string filepath) {
+        public ReadFileByLineFiltered(string filepath) : base(filepath) {
             int i;
-            lines = System.IO.File.ReadAllLines(filepath);
-            lines = lines.Where(line => (line.Length > 0 && line[0] != '%')).ToArray();
+
+            Lines = Lines.Where(line => (line.Length > 0 && line[0] != '%')).ToArray();
 
             // find where operatorCommands start
-            for (i = 0; i < lines.Length; i++) {
-                if (Shell.doesCommandExist(lines[i])) {
+            for (i = 0; i < Lines.Length; i++) {
+                if (Shell.doesCommandExist(Lines[i])) {
                     break;
                 }
             }
@@ -30,40 +27,28 @@ namespace FileManipulator {
             operatorCommandFirstLine = i;
         }
 
-        public string nextLine() {
-            if (currentLine < lines.Length)
-                return lines[currentLine++];
-            throw new EOFException();
-        }
-
-        public List<string> linesBetweenIndexes(int lower, int max)
-        {
+        public List<string> linesBetweenIndexes(int lower, int max) {
             List<string> l = new List<string>();
-            for (int i = lower; i < max; i++)
-            {
-                l.Add(lines[i]);
+            for (int i = lower; i < max; i++) {
+                l.Add(Lines[i]);
             }
             return l;
         }
 
-        public List<string> remainingLines()
-        {
-            return linesBetweenIndexes(currentLine, lines.Length);
+        public List<string> remainingLines() {
+            return linesBetweenIndexes(CurrentLine, Lines.Length);
         }
 
-        public List<string> getConfigCommandsLines()
-        {
+        public List<string> getConfigCommandsLines() {
             //should the line change be here ? #TODO
-            if (currentLine < operatorCommandFirstLine)
-                currentLine = operatorCommandFirstLine;
+            if (CurrentLine < operatorCommandFirstLine)
+                CurrentLine = operatorCommandFirstLine;
 
             return linesBetweenIndexes(0, operatorCommandFirstLine);
         }
 
-        public List<string> getOperatorsCommandsLines()
-        {
-
-            return linesBetweenIndexes(operatorCommandFirstLine, lines.Length);
+        public List<string> getOperatorsCommandsLines() {
+            return linesBetweenIndexes(operatorCommandFirstLine, Lines.Length);
         }
 
 

@@ -23,23 +23,15 @@ namespace CommonClasses {
 
             // Building the arguments for the main
             process.StartInfo.Arguments =  masterURL + " " + routing + " " + incomingRouting + " " + semantics + " " + logLevel;
-            string operationS = ""; 
+            string operations = ""; 
             foreach(string s in op) {
-                operationS += s.Replace("\"", "\\\"").Replace(" ", "\\ ") + " " ;
+                operations += s.Replace("\"", "\\\"").Replace(" ", "\\ ") + " " ;
             }
-            process.StartInfo.Arguments += " -op " + operationS;
-            /*foreach (string s in op)
-                process.StartInfo.Arguments += " " + s;*/
-                        Console.Write(" " + process.StartInfo.Arguments);
+            process.StartInfo.Arguments += " -op " + operations;
             process.StartInfo.Arguments += " -r " + repIndex + " " + string.Join(" ", replicas);
-            process.StartInfo.Arguments += " -o " + string.Join(" ", output); //#FIXME if output is empty "-op " is sent alst space may cause problems
+            process.StartInfo.Arguments += " -o " + string.Join(" ", output); //#FIXME if output is empty "-op " is sent and space may cause problems
             process.StartInfo.Arguments += " -i " + string.Join(" ", input);
             process.Start();
-        }
-
-        private void addListString(List<string> l, string final) {
-            foreach (string s in l)
-                final += " " + s;
         }
     }
 }
