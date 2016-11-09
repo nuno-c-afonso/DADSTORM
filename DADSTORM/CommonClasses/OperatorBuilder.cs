@@ -51,10 +51,6 @@ namespace CommonClasses {
             OperatorType = words[index++].ToUpper();
             for (; index < words.Count; index++)
                 SpecificParameters.Add(words[index]);
-
-            Debug.WriteLine("OP: {0}\n\t input: {1} \n\t rep_factor: {2}\n\t routing: {3}\n\t addresses: {4}\n\t  Type: {5}\n\t specific paremeters: {6}"
-, Name, string.Join(",", Input), RepFactor, PreviousRouting, string.Join(",", Addresses), OperatorType, string.Join(",", SpecificParameters));//TODO can add more information
-
         }
 
         

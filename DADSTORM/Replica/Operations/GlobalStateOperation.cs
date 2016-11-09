@@ -24,7 +24,6 @@ namespace Replica {
             }
         }
 
-        // TODO: Check if is possible to do this without the channel closing
         protected ReplicaInterface getGeneralReplica(string url) {
             ReplicaInterface obj = null;
 

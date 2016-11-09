@@ -11,13 +11,6 @@ namespace CommonClasses {
         public void createReplica(string masterURL, string routing, string incomingRouting, string semantics, string logLevel,
             int repIndex, List<string> op, List<string> replicas, List<string> output, List<string> input) {
 
-
-            foreach (string s in  op)
-                Console.Write(" " + s);//FIXME REMOVE DIOGO
-           Console.WriteLine("");
-            
-
-
             Process process = new Process();
             process.StartInfo.FileName = "..\\..\\..\\Replica\\bin\\Debug\\Replica.exe";
 

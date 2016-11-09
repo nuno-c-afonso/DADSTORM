@@ -13,7 +13,7 @@ namespace ProcessCreationService {
             const int PCS_RESERVED_PORT = 10000;
 
             TcpChannel channel = new TcpChannel(PCS_RESERVED_PORT);
-            ChannelServices.RegisterChannel(channel, false);        // TODO: Check if it needs to be 'true'
+            ChannelServices.RegisterChannel(channel, false);
 
             RemotingConfiguration.RegisterWellKnownServiceType(typeof(CommonClasses.ProcessCreator),
                 "ProcessCreator", WellKnownObjectMode.Singleton);

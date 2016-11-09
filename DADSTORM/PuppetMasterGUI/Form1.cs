@@ -59,16 +59,12 @@ namespace PuppetMasterGUI {
 
             TcpChannel channel = new TcpChannel(LOGGING_PORT);
 
-            // #TODO The code below was generating a weird exception, must investigate it
-            try
-            {
+            try {
                 ChannelServices.RegisterChannel(channel, false);
                 RemotingConfiguration.RegisterWellKnownServiceType(
                     typeof(PuppetMasterLog), "log",
                     WellKnownObjectMode.Singleton);
-
-            }
-            catch (RemotingException){}
+            } catch (RemotingException){ }
 
             importConfigFile(DEFAULT_CONFIG_PATH);
 
@@ -113,7 +109,6 @@ namespace PuppetMasterGUI {
                         loggingLevel = ln.Words[1];
                         break;
                     default:
-                        //# TODO Call create replica here
                         OperatorBuilder opb = new OperatorBuilder(ln.Words.ToList());
 
                         //Use Name and Input to create a graph/map to know the next node  **step 1
@@ -161,9 +156,6 @@ namespace PuppetMasterGUI {
                     Console.WriteLine("- Replica number " + i);
                     Console.WriteLine("Machine Address: {0}\t port: {1}", urlsplitter.getAddress(opb.Addresses[i]), urlsplitter.getPort(opb.Addresses[i]));
 
-                    // TODO FIXME pcsAddress should be urlsplitter.getAdress(opb.Addresses[i])
-                    // but for now i can only create on localhost, not sure how to use addresses from configfile i do not control
-                    //string pcsAddress = "localhost";
                     string address = urlsplitter.getAddress(opb.Addresses[i]);
                     Console.WriteLine("Calling PCS on address " + address);
 
@@ -171,11 +163,8 @@ namespace PuppetMasterGUI {
                         CommonClasses.IProcessCreator obj = (CommonClasses.IProcessCreator)Activator.GetObject(typeof(CommonClasses.IProcessCreator),
                         "tcp://" + address + ":" + PCS_RESERVED_PORT + "/ProcessCreator");
 
-                        // TODO FIXME first argument being sent should be the puppetMasterUrl, it's still not
                         obj.createReplica("tcp://" + puppetMasterIPAddress.ToString() + ":" + LOGGING_PORT.ToString(),
                             routing, incomingRouting, semantics, loggingLevel, i, operation, opb.Addresses, output, input);
-
-                        //testReplica(opb.Addresses[i]);
                     }
                     catch (System.Net.Sockets.SocketException e) {
                         Console.WriteLine("Error with host " + address);

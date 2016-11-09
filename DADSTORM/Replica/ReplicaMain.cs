@@ -17,12 +17,6 @@ namespace Replica {
 
         public static void Main(string[] args) {
 
-            //TODO remove
-            System.Console.WriteLine("Program args:\n" + string.Join(" ", args));
-
-            for (int xcd = 0; xcd < args.Length; xcd++)
-                System.Console.WriteLine(args[xcd]);
-
             /*  This information will be recovered from the Main arguments
              *  Structure:
              *  <PuppetMasterUrl> <routing> <semantics> <logLevel> -op <operation>
@@ -84,10 +78,6 @@ namespace Replica {
 
             UrlSpliter urlspli = new UrlSpliter();
             port = int.Parse(urlspli.getPort(replicasUrl[replicaIndex]));
-
-            //FIXME just for debug
-            System.Console.WriteLine("VARS.. PuppetMasterUrl: {0}\n\t routing: {1} \n\t semantics: {2}\n\t logLevel: {3}\n\t replicaIndex: {4}\n\t  port: {5}\n\t operation: {6}\n\t replicasUrl: {7}\n\t outputs: {8} \n\t inputs: {9} \n\t incomingRouting {10}"
-                    , PuppetMasterUrl, routing, semantics, logLevel, replicaIndex, port ,string.Join(",\n\t", operation),string.Join(",\n\t", replicasUrl), string.Join(",\n\t", outputs), string.Join(",\n\t", inputs), incomingRouting);
 
             //############ creating an operator of the wanted type ############
 
