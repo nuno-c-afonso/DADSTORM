@@ -40,10 +40,12 @@ namespace PuppetMasterGUI {
         private IPAddress puppetMasterIPAddress = IPAddresses.LocalIPAddress();
         private Shell shell;
         private bool canUseCommands = true;
-
+        private Task lastCommand = null;
 
         private CancellationTokenSource tokenSource2;
         private CancellationToken cancelToken;
+
+        private void FormPuppetMaster_Load(object sender, EventArgs e) { }
 
         public Form1() {
             InitializeComponent();
@@ -73,19 +75,14 @@ namespace PuppetMasterGUI {
 
         }
         private void importConfigFile(string path) {
-            //incase the input file is not on .\input\dadstorm.config at the start of GUI
+            
+            // In case the input file is not on .\input\dadstorm.config at the start of GUI
             try {
-                //string text = System.IO.File.ReadAllText(path);
-
-                //textBox2.Text = text;
-                //textBox1.Text = text.Replace("\n", Environment.NewLine);
-
                 lineParser = new ReadFileByLineFiltered(path);
                 textBox2.Text = string.Join("\r\n", lineParser.remainingLines());
                 textBox3.Text = path.Split('\\').Last();
 
-                // shouldn't run more than once even if we load another config file #TODO
-                
+                // shouldn't run more than once
                 runConfigCommands(lineParser.getConfigCommandsLines());
 
                 textBox2.Text = string.Join("\r\n", lineParser.remainingLines());
@@ -188,8 +185,7 @@ namespace PuppetMasterGUI {
             }
         }
 
-        private CommonClasses.ReplicaInterface getRemoteObject(string opName, int replicaIndex = 0)
-        {
+        private CommonClasses.ReplicaInterface getRemoteObject(string opName, int replicaIndex = 0) {
             var opInfo = operatorsInfo.getOpInfo(opName);
             string address = opInfo.Addresses[replicaIndex];
 
@@ -198,77 +194,23 @@ namespace PuppetMasterGUI {
                         address);
         }
 
-        // needed for changing text of form in threads
-        private void ChangeTextBoxesLines()
-        {
-            string[] delimiter = { "\r\n" };
-            string[] lines = textBox2.Text.Split(delimiter, StringSplitOptions.RemoveEmptyEntries);
-            textBox1.Text = lines[0];
-            textBox2.Text = string.Join("\r\n", lines.Skip(1));
-
-            AddMsgToLog(lines[0]);
-        }
-
-        private async void runNextLine()
-        {
-            if ((textBox2.Text != null || !textBox2.Text.Equals("")) && alreadyRunConfigCommands && canUseCommands)
-            {
-                string[] delimiter = { "\r\n" };
-                string[] lines = textBox2.Text.Split(delimiter, StringSplitOptions.RemoveEmptyEntries);
-
-                if (lines.Length > 0)
-                {
-
-                    if (shell.Waiting > 0)
-                        await Task.Run(() => waitOnPuppetMaster(shell.Waiting), cancelToken);
-
-                    Invoke(new EditTextBoxes(ChangeTextBoxesLines)); // thread-safe access to form
-
-                    Debug.WriteLine("calling shell for commmand");
-
-                    new Thread(() => shell.run(lines[0])).Start();
-                    //shell.run(line);
-                }
-            }
-        }
-
         //Run One Command
         private void button1_Click(object sender, EventArgs e) {
             runNextLine();
         }
-
-        private async void asyncRunNextLine()
-        {
-            await Task.Run(() => runNextLine(), cancelToken);
-            if (!textBox2.Text.Equals(""))
-            {
-                await Task.Run(() => Thread.Sleep(100), cancelToken);
-                asyncRunNextLine();
-            }
-        }
-
-        private async void waitOnPuppetMaster(int time)
-        {
-            canUseCommands = false;
-            Debug.WriteLine(DateTime.Now.ToString("HH:mm:ss tt") +"- "+ time + " ms, on wait");
-            Thread.Sleep(time);
-            Debug.WriteLine(DateTime.Now.ToString("HH:mm:ss tt") + "- " + time + " ms, after wait");
-            shell.Waiting = 0;
-            canUseCommands = true;
-        }
-
 
         //Run All Commands
         private void button2_Click(object sender, EventArgs e) {
             asyncRunNextLine();
         }
 
-
+        // To load the configuration file
         private void button3_Click(object sender, EventArgs e) {
             if (openFileDialog1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 importConfigFile(openFileDialog1.FileName);
         }
 
+        // To load the script file
         private void scriptButton_Click(object sender, EventArgs e) {
             OpenFileDialog openFileDialog2 = new OpenFileDialog();
 
@@ -281,10 +223,11 @@ namespace PuppetMasterGUI {
                 try {
                     while (true) {
                         string command = rfbl.nextLine();
-                        if(Shell.doesCommandExist(command))
+                        if (Shell.doesCommandExist(command))
                             toAdd += command + "\r\n";
                     }
-                } catch(EOFException) { }
+                }
+                catch (EOFException) { }
 
                 if (!textBox2.Text.EndsWith("\r\n") && textBox2.Text.Length > 0)
                     textBox2.Text += "\r\n" + toAdd;
@@ -293,6 +236,86 @@ namespace PuppetMasterGUI {
             }
         }
 
+        // To intercept the closing command
+        private async void formClosing(object sender, FormClosingEventArgs e) {
+            closeAllReplicas();
+        }
+
+
+        /*************************************************************************************
+         *  These are the functions that allow running the desired operations asynchronously *
+         ************************************************************************************/
+
+
+        private async void runNextLine() {
+            if ((textBox2.Text != null || !textBox2.Text.Equals("")) && alreadyRunConfigCommands && canUseCommands) {
+                string[] delimiter = { "\r\n" };
+                string[] lines = textBox2.Text.Split(delimiter, StringSplitOptions.RemoveEmptyEntries);
+
+                if (lines.Length > 0) {
+
+                    if (shell.Waiting > 0)
+                        await Task.Run(() => waitOnPuppetMaster(shell.Waiting), cancelToken);
+
+                    Invoke(new EditTextBoxes(ChangeTextBoxesLines)); // thread-safe access to form
+
+                    Debug.WriteLine("calling shell for command");
+
+                    if (lastCommand != null)
+                        lastCommand.Wait();
+                    lastCommand = new Task(() => shell.run(lines[0]));
+                    lastCommand.Start();
+                }
+            }
+        }
+
+        private async void asyncRunNextLine() {
+            await Task.Run(() => runNextLine(), cancelToken);
+            if (!textBox2.Text.Equals("")) {
+                await Task.Run(() => Thread.Sleep(100), cancelToken);
+                asyncRunNextLine();
+            }
+        }
+
+        private async void waitOnPuppetMaster(int time) {
+            canUseCommands = false;
+            Debug.WriteLine(DateTime.Now.ToString("HH:mm:ss tt") +"- "+ time + " ms, on wait");
+            Thread.Sleep(time);
+            Debug.WriteLine(DateTime.Now.ToString("HH:mm:ss tt") + "- " + time + " ms, after wait");
+            shell.Waiting = 0;
+            canUseCommands = true;
+        }
+
+        // needed for changing text of form in threads
+        private void ChangeTextBoxesLines() {
+            string[] delimiter = { "\r\n" };
+            string[] lines = textBox2.Text.Split(delimiter, StringSplitOptions.RemoveEmptyEntries);
+            textBox1.Text = lines[0];
+            textBox2.Text = string.Join("\r\n", lines.Skip(1));
+
+            AddMsgToLog(lines[0]);
+        }
+
+        public void closeAllReplicas() {
+            tokenSource2.Cancel();
+            List<string> replicasNames = operatorsInfo.OperatorNames;
+            List<Task> TaskList = new List<Task>();
+            foreach (string name in replicasNames) {
+                OperatorBuilder ob = operatorsInfo.getOpInfo(name);
+                int repFactor = ob.RepFactor;
+
+                for (int i = 0; i < repFactor; i++) {
+                    string crashLine = "crash " + name + " " + i;
+                    AddMsgToLog(crashLine);
+
+                    var LastTask = new Task(() => shell.run(crashLine));
+                    LastTask.Start();
+                    TaskList.Add(LastTask);
+                }
+            }
+            Task.WaitAll(TaskList.ToArray());
+
+        }
 
         public void AddMsgToLog(string arg, bool replaceWithTabs = false)
         {
@@ -307,8 +330,7 @@ namespace PuppetMasterGUI {
 
         }
 
-        public void testReplica(string address)
-        {
+        public void testReplica(string address) {
             // test status 
             CommonClasses.ReplicaInterface obj3 = (CommonClasses.ReplicaInterface)Activator.GetObject(typeof(CommonClasses.ReplicaInterface),
             address);
@@ -317,60 +339,19 @@ namespace PuppetMasterGUI {
             //obj3.Status();
 
         }
-
-        public void closeAllReplicas()
-        {
-            tokenSource2.Cancel();
-            List<string> replicasNames = operatorsInfo.OperatorNames;
-            List<Task> TaskList = new List<Task>();
-            foreach (string name in replicasNames)
-            {
-                OperatorBuilder ob = operatorsInfo.getOpInfo(name);
-                int repFactor = ob.RepFactor;
-                
-                for (int i = 0; i < repFactor; i++)
-                {
-                    string crashLine = "crash " + name + " " + i;
-                    AddMsgToLog(crashLine);
-                    //await Task.Run(() => shell.run("crash " + name + " " + i));
-
-                    var LastTask = new Task(() => shell.run(crashLine));
-                    LastTask.Start();
-                    TaskList.Add(LastTask);
-                }
-            }
-            Task.WaitAll(TaskList.ToArray());
-
-        }
-
-        private void FormPuppetMaster_Load(object sender, EventArgs e)
-        {
-
-        }
-
-        // To intercept the closing command
-        private async void formClosing(object sender, FormClosingEventArgs e)
-        {
-            closeAllReplicas();
-        }
-
     }
 
     delegate void EditTextBoxes();
-
-
     delegate void CallCommands(string line);
     delegate void DelAddMsg(string mensagem, bool replace);
 
 
-    public class PuppetMasterLog : MarshalByRefObject, IPuppetMasterLog
-    {
+    public class PuppetMasterLog : MarshalByRefObject, IPuppetMasterLog {
         public static Form1 form;
 
         public PuppetMasterLog() { }
 
-        public string Log(string args)
-        {
+        public string Log(string args) {
             Debug.WriteLine("LOG was called " + args);
 
             //form.AddMsgToLog(args);
