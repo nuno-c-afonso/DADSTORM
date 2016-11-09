@@ -97,20 +97,19 @@ namespace Replica {
         //Command to start working
         //USED BY:PuppetMaster
         public void Start() {
-            Console.WriteLine("-->START comand received");
+            Console.WriteLine("-->START command received");
             start = true;
         }
 
-        //Command  to set the time to wait betwen tuple processing
+        //Command  to set the time to wait between tuple processing
         //USED BY:PuppetMaster
         public void Interval(int time) {
-            Console.WriteLine("-->Interva comand received time={0}",time);
+            Console.WriteLine("-->Interval comand received time={0}",time);
             waitingTime = time;
         }
 
         private void testLog() {
             try {
-                //log.Log("Status " + operationName + " " + replicaAddress); //  + " " + IPAddresses.LocalIPAddress()
                 Console.WriteLine("Replica Address: " + replicaAddress + "\r\nOperation: " +
                     operationName + "\r\nFLAGS\r\nStart: " + start + "\r\nWaiting: " +
                     waitingTime + "\r\nFreezed: " + freezed);
@@ -125,16 +124,12 @@ namespace Replica {
             Console.WriteLine("-->STATUS command received");
 
             new Thread(() => testLog()).Start();
-            //Thread t = new Thread(() => testLog());
-            //t.Start();
-            //Console.WriteLine("after thread\n-----------");
-            //testLog();
         }
 
         //Command to simulate a program crash
         //USED BY:PuppetMaster 
         public void Crash() {
-            Console.WriteLine("-->CRASH comand received");
+            Console.WriteLine("-->CRASH command received");
             Process.GetCurrentProcess().Kill();
             //consumer.Abort();
         }
@@ -142,15 +137,15 @@ namespace Replica {
         //Command used to simulate slow server
         //USED BY:PuppetMaster
         public void Freeze() {
-            Console.WriteLine("-->FREEZE comand received");
+            Console.WriteLine("-->FREEZE command received");
             freezed = true;
         }
 
         //Command used to end the slow server simulation
         //USED BY:PuppetMaster
         public void Unfreeze() {
-            Console.WriteLine("-->UNFREEZE comand received");
-                freezed = false;
+            Console.WriteLine("-->UNFREEZE command received");
+            freezed = false;
         }
 
 
@@ -166,7 +161,7 @@ namespace Replica {
 
         // To be used in the consumer thread
         public void Operate() {
-            Console.WriteLine("6-Waiting for START comand");
+            Console.WriteLine("6-Waiting for START command");
             while (!start)
                 Thread.Sleep(100);
 

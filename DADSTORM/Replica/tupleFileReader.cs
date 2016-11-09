@@ -6,16 +6,13 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Replica
-{
-    public class tupleFileReader
-    {
+namespace Replica {
+    public class TupleFileReader {
         private ReplicaObject buffer;
         private string[] lines;
         private Router router;
 
-        public tupleFileReader(ReplicaObject buffer, string filepath, string routing, string semantics, List<string> replicas)
-        {
+        public TupleFileReader(ReplicaObject buffer, string filepath, string routing, string semantics, List<string> replicas) {
             this.buffer = buffer;
 
             string routingLower = routing.ToLower();
@@ -33,7 +30,7 @@ namespace Replica
             lines = lines.Where(line => (line.Length > 0 && line[0] != '%')).ToArray();
         } 
 
-        public void feedBuffer(){
+        public void feedBuffer() {
             string[] tuple;
             while (!buffer.Started)
                 Thread.Sleep(100);

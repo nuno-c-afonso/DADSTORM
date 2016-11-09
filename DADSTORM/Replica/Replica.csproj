@@ -65,7 +65,7 @@
     <Compile Include="Routing\Router.cs" />
     <Compile Include="Semantics\Semantics.cs" />
     <Compile Include="Operations\UniqOperation.cs" />
-    <Compile Include="tupleFileReader.cs" />
+    <Compile Include="TupleFileReader.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

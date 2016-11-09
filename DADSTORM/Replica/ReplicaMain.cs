@@ -135,7 +135,7 @@ namespace Replica {
             foreach (string input in inputs)
                 if (input.EndsWith(".dat") || input.EndsWith(".data")){
                     if (replicaIndex == 0) {
-                        tupleFileReader fr = new tupleFileReader(consumingOperator, input, incomingRouting, semantics, replicasUrl);
+                        TupleFileReader fr = new TupleFileReader(consumingOperator, input, incomingRouting, semantics, replicasUrl);
                         ThreadStart tstart = new ThreadStart(fr.feedBuffer);
                         Thread th = new Thread(tstart);
                         th.Start();
