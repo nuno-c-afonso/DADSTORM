@@ -122,7 +122,7 @@
             // textBox1
             // 
             this.textBox1.Location = new System.Drawing.Point(11, 79);
-            this.textBox1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.textBox1.Margin = new System.Windows.Forms.Padding(4);
             this.textBox1.Multiline = true;
             this.textBox1.Name = "textBox1";
             this.textBox1.ReadOnly = true;
@@ -145,7 +145,7 @@
             // button3
             // 
             this.button3.Location = new System.Drawing.Point(276, 7);
-            this.button3.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.button3.Margin = new System.Windows.Forms.Padding(4);
             this.button3.Name = "button3";
             this.button3.Size = new System.Drawing.Size(100, 25);
             this.button3.TabIndex = 10;
@@ -156,7 +156,7 @@
             // textBox3
             // 
             this.textBox3.Location = new System.Drawing.Point(135, 9);
-            this.textBox3.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.textBox3.Margin = new System.Windows.Forms.Padding(4);
             this.textBox3.Name = "textBox3";
             this.textBox3.Size = new System.Drawing.Size(132, 22);
             this.textBox3.TabIndex = 11;
@@ -173,7 +173,7 @@
             // scriptTextBox
             // 
             this.scriptTextBox.Location = new System.Drawing.Point(629, 11);
-            this.scriptTextBox.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.scriptTextBox.Margin = new System.Windows.Forms.Padding(4);
             this.scriptTextBox.Name = "scriptTextBox";
             this.scriptTextBox.Size = new System.Drawing.Size(132, 22);
             this.scriptTextBox.TabIndex = 13;
@@ -181,7 +181,7 @@
             // scriptButton
             // 
             this.scriptButton.Location = new System.Drawing.Point(771, 7);
-            this.scriptButton.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.scriptButton.Margin = new System.Windows.Forms.Padding(4);
             this.scriptButton.Name = "scriptButton";
             this.scriptButton.Size = new System.Drawing.Size(100, 27);
             this.scriptButton.TabIndex = 14;
@@ -193,7 +193,7 @@
             // 
             this.queueCmdBox.BackColor = System.Drawing.SystemColors.Control;
             this.queueCmdBox.Location = new System.Drawing.Point(495, 79);
-            this.queueCmdBox.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.queueCmdBox.Margin = new System.Windows.Forms.Padding(4);
             this.queueCmdBox.Multiline = true;
             this.queueCmdBox.Name = "queueCmdBox";
             this.queueCmdBox.ReadOnly = true;
@@ -206,9 +206,9 @@
             this.labelQueued.AutoSize = true;
             this.labelQueued.Location = new System.Drawing.Point(495, 54);
             this.labelQueued.Name = "labelQueued";
-            this.labelQueued.Size = new System.Drawing.Size(133, 17);
+            this.labelQueued.Size = new System.Drawing.Size(131, 17);
             this.labelQueued.TabIndex = 16;
-            this.labelQueued.Text = "Queued Commands";
+            this.labelQueued.Text = "Queued commands";
             // 
             // Form1
             // 
