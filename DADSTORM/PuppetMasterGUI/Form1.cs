@@ -176,11 +176,13 @@ namespace PuppetMasterGUI {
         private void runCommands() {
             while (true) {
                 string command = takeCommand();
-                if (shell.Waiting > 0)
-                    waitOnPuppetMaster();
 
                 Object[] arg = { command };
                 Invoke(new EditLog(runningCommand), arg); // thread-safe access to form
+
+                if (shell.Waiting > 0)
+                    waitOnPuppetMaster();
+
                 shell.run(command);
             }
         }
