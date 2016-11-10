@@ -40,7 +40,6 @@ namespace PuppetMasterGUI {
         const int LOGGING_PORT = 10001;
         private IPAddress puppetMasterIPAddress = IPAddresses.LocalIPAddress();
         private Shell shell;
-        private bool canUseCommands = true;
 
         Queue commandsToRun = new Queue();
         Thread consumer;
@@ -173,16 +172,15 @@ namespace PuppetMasterGUI {
         }
 
         // To be run by a consumer thread
-        private void runCommands()
-        {
-            while (true)
-            {
+        private void runCommands() {
+            while (true) {
                 string command = takeCommand();
                 if (shell.Waiting > 0)
                     waitOnPuppetMaster();
 
                 Object[] arg = { command };
                 Invoke(new EditLog(runningCommand), arg); // thread-safe access to form
+                Invoke(new QueuedCommands(updateQueueInfo));
                 shell.run(command);
             }
         }
@@ -244,7 +242,7 @@ namespace PuppetMasterGUI {
             Monitor.Enter(commandsToRun.SyncRoot);
             while (commandsToRun.Count == 0)
                 Monitor.Wait(commandsToRun.SyncRoot);
-            Invoke(new QueuedCommands(() => queueCmdBox.Text = string.Join("\r\n", commandsToRun.ToArray())));
+
             string command = (string)commandsToRun.Dequeue();
             
             Monitor.PulseAll(commandsToRun.SyncRoot);
@@ -256,14 +254,13 @@ namespace PuppetMasterGUI {
         public void addCommand(string command) {
             Monitor.Enter(commandsToRun.SyncRoot);
             commandsToRun.Enqueue(command);
-
-            Invoke(new QueuedCommands(() => queueCmdBox.Text = string.Join("\r\n", commandsToRun.ToArray())));
-            Monitor.PulseAll(commandsToRun.SyncRoot);
             Monitor.Exit(commandsToRun.SyncRoot);
+
+            Invoke(new QueuedCommands(updateQueueInfo));
         }
 
         private void runNextLine() {
-            if ((textBox2.Text != null || !textBox2.Text.Equals("")) && alreadyRunConfigCommands && canUseCommands) {
+            if ((textBox2.Text != null || !textBox2.Text.Equals("")) && alreadyRunConfigCommands) {
                 string[] delimiter = { "\r\n" };
                 string[] lines = textBox2.Text.Split(delimiter, StringSplitOptions.RemoveEmptyEntries);
 
@@ -321,6 +318,13 @@ namespace PuppetMasterGUI {
             string[] delimiter = { "\r\n" };
             string[] lines = textBox2.Text.Split(delimiter, StringSplitOptions.RemoveEmptyEntries);
             textBox2.Text = string.Join("\r\n", lines.Skip(1));
+        }
+
+        private void updateQueueInfo() {
+            Monitor.Enter(commandsToRun.SyncRoot);
+            queueCmdBox.Text = string.Join("\r\n", commandsToRun.ToArray());
+            Monitor.PulseAll(commandsToRun.SyncRoot);
+            Monitor.Exit(commandsToRun.SyncRoot);
         }
 
         private void runningCommand(string command) {
