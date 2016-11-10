@@ -24,7 +24,7 @@ namespace Replica {
         
         private bool start = false;
         private int waitingTime = 0;
-        private bool froze = false;
+        private bool frozen = false;
 
         private Thread consumer;
 
@@ -112,7 +112,7 @@ namespace Replica {
             try {
                 Console.WriteLine("Replica Address: " + replicaAddress + "\r\nOperation: " +
                     operationName + "\r\nFLAGS\r\nStart: " + start + "\r\nWaiting: " +
-                    waitingTime + "\r\nFroze: " + froze);
+                    waitingTime + "\r\nFrozen: " + frozen);
             } catch (Exception ex) {
                 Console.WriteLine("second ex: " + ex);
             }
@@ -138,14 +138,14 @@ namespace Replica {
         //USED BY:PuppetMaster
         public void Freeze() {
             Console.WriteLine("-->FREEZE command received");
-            froze = true;
+            frozen = true;
         }
 
         //Command used to end the slow server simulation
         //USED BY:PuppetMaster
         public void Unfreeze() {
             Console.WriteLine("-->UNFREEZE command received");
-            froze = false;
+            frozen = false;
         }
 
 
@@ -167,7 +167,7 @@ namespace Replica {
 
             while (true) {
                 //see if it is feezed
-                while(froze == true)
+                while(frozen == true)
                     Thread.Sleep(100);
 
                 //wait the defined time between processing
