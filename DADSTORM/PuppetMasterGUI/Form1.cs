@@ -18,9 +18,12 @@ using System.Text.RegularExpressions;
 using System.Net;
 using System.Threading;
 using System.Windows;
+using System.Collections;
 
 namespace PuppetMasterGUI {
     public partial class Form1 : Form {
+        TcpChannel channel;
+
         private ReadFileByLineFiltered lineParser;
         CommonClasses.UrlSpliter urlsplitter = new CommonClasses.UrlSpliter();
         OperatorsInfo operatorsInfo = new OperatorsInfo();
@@ -42,8 +45,8 @@ namespace PuppetMasterGUI {
         private bool canUseCommands = true;
         private Task lastCommand = null;
 
-        private CancellationTokenSource tokenSource2;
-        private CancellationToken cancelToken;
+        Queue commandsToRun = new Queue();
+        Thread consumer;
 
         private void FormPuppetMaster_Load(object sender, EventArgs e) { }
 
@@ -52,12 +55,10 @@ namespace PuppetMasterGUI {
             this.FormClosing += new FormClosingEventHandler(formClosing);
 
             PuppetMasterLog.form = this;
-            tokenSource2 = new CancellationTokenSource();
-            cancelToken = tokenSource2.Token;
 
             logMessages = new List<string>();
 
-            TcpChannel channel = new TcpChannel(LOGGING_PORT);
+            channel = new TcpChannel(LOGGING_PORT);
 
             try {
                 ChannelServices.RegisterChannel(channel, false);
@@ -68,8 +69,10 @@ namespace PuppetMasterGUI {
 
             importConfigFile(DEFAULT_CONFIG_PATH);
 
-
+            consumer = new Thread(() => runCommands());
+            consumer.Start();
         }
+
         private void importConfigFile(string path) {
             
             // In case the input file is not on .\input\dadstorm.config at the start of GUI
@@ -174,6 +177,17 @@ namespace PuppetMasterGUI {
             }
         }
 
+        // To be run by a consumer thread
+        private void runCommands() {
+            while (true) {
+                string command = takeCommand();
+                if (shell.Waiting > 0)
+                    waitOnPuppetMaster();
+
+                shell.run(command);
+            }
+        }
+
         //Run One Command
         private void button1_Click(object sender, EventArgs e) {
             runNextLine();
@@ -181,7 +195,7 @@ namespace PuppetMasterGUI {
 
         //Run All Commands
         private void button2_Click(object sender, EventArgs e) {
-            asyncRunNextLine();
+            runAllLines();
         }
 
         // To load the configuration file
@@ -226,44 +240,50 @@ namespace PuppetMasterGUI {
          *  These are the functions that allow running the desired operations asynchronously *
          ************************************************************************************/
 
+        // To take a command to be run
+        public string takeCommand() {
+            Monitor.Enter(commandsToRun.SyncRoot);
+            while (commandsToRun.Count == 0)
+                Monitor.Wait(commandsToRun.SyncRoot);
+            string command = (string)commandsToRun.Dequeue();
+            Monitor.PulseAll(commandsToRun.SyncRoot);
+            Monitor.Exit(commandsToRun.SyncRoot);
 
-        private async void runNextLine() {
+            return command;
+        }
+
+        // To add a to be run command
+        public void addCommand(string command) {
+            Monitor.Enter(commandsToRun.SyncRoot);
+            commandsToRun.Enqueue(command);
+            Monitor.PulseAll(commandsToRun.SyncRoot);
+            Monitor.Exit(commandsToRun.SyncRoot);
+        }
+
+        private void runNextLine() {
             if ((textBox2.Text != null || !textBox2.Text.Equals("")) && alreadyRunConfigCommands && canUseCommands) {
                 string[] delimiter = { "\r\n" };
                 string[] lines = textBox2.Text.Split(delimiter, StringSplitOptions.RemoveEmptyEntries);
 
                 if (lines.Length > 0) {
-
-                    if (shell.Waiting > 0)
-                        await Task.Run(() => waitOnPuppetMaster(shell.Waiting), cancelToken);
-
                     Invoke(new EditTextBoxes(ChangeTextBoxesLines)); // thread-safe access to form
-
-                    Debug.WriteLine("calling shell for command");
-
-                    if (lastCommand != null)
-                        lastCommand.Wait();
-                    lastCommand = new Task(() => shell.run(lines[0]));
-                    lastCommand.Start();
+                    addCommand(lines[0]);
                 }
             }
         }
 
-        private async void asyncRunNextLine() {
-            await Task.Run(() => runNextLine(), cancelToken);
+        private void runAllLines() {
             if (!textBox2.Text.Equals("")) {
-                await Task.Run(() => Thread.Sleep(100), cancelToken);
-                asyncRunNextLine();
+                runNextLine();
+                runAllLines();
             }
         }
 
-        private async void waitOnPuppetMaster(int time) {
-            canUseCommands = false;
-            Debug.WriteLine(DateTime.Now.ToString("HH:mm:ss tt") +"- "+ time + " ms, on wait");
-            Thread.Sleep(time);
-            Debug.WriteLine(DateTime.Now.ToString("HH:mm:ss tt") + "- " + time + " ms, after wait");
+        private void waitOnPuppetMaster() {
+            Debug.WriteLine(DateTime.Now.ToString("HH:mm:ss tt") +"- "+ shell.Waiting + " ms, on wait");
+            Thread.Sleep(shell.Waiting);
+            Debug.WriteLine(DateTime.Now.ToString("HH:mm:ss tt") + "- " + shell.Waiting + " ms, after wait");
             shell.Waiting = 0;
-            canUseCommands = true;
         }
 
         // needed for changing text of form in threads
@@ -277,9 +297,15 @@ namespace PuppetMasterGUI {
         }
 
         public void closeAllReplicas() {
-            tokenSource2.Cancel();
             List<string> replicasNames = operatorsInfo.OperatorNames;
             List<Task> TaskList = new List<Task>();
+
+            // To prevent the execution of the remaining commands
+            Monitor.Enter(commandsToRun.SyncRoot);
+            commandsToRun.Clear();
+            Monitor.PulseAll(commandsToRun.SyncRoot);
+            Monitor.Exit(commandsToRun.SyncRoot);
+
             foreach (string name in replicasNames) {
                 OperatorBuilder ob = operatorsInfo.getOpInfo(name);
                 int repFactor = ob.RepFactor;
@@ -294,11 +320,11 @@ namespace PuppetMasterGUI {
                 }
             }
             Task.WaitAll(TaskList.ToArray());
-
+            
+            consumer.Abort();
         }
 
-        public void AddMsgToLog(string arg, bool replaceWithTabs = false)
-        {
+        public void AddMsgToLog(string arg, bool replaceWithTabs = false) {
             if (replaceWithTabs)
                 arg = arg.Replace(" ", "\t");
 
@@ -307,7 +333,6 @@ namespace PuppetMasterGUI {
             logMessages.Add(changedMsg);
             ConsoleBox.AppendText(changedMsg + "\r\n");
             Debug.WriteLine("AddMsgToLog " + changedMsg);
-
         }
     }
 
