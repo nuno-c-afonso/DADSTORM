@@ -39,11 +39,13 @@
             this.label4 = new System.Windows.Forms.Label();
             this.scriptTextBox = new System.Windows.Forms.TextBox();
             this.scriptButton = new System.Windows.Forms.Button();
+            this.queueCmdBox = new System.Windows.Forms.TextBox();
+            this.labelQueued = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(181, 40);
+            this.button1.Location = new System.Drawing.Point(138, 40);
             this.button1.Margin = new System.Windows.Forms.Padding(2);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(111, 19);
@@ -54,7 +56,7 @@
             // 
             // button2
             // 
-            this.button2.Location = new System.Drawing.Point(297, 40);
+            this.button2.Location = new System.Drawing.Point(253, 40);
             this.button2.Margin = new System.Windows.Forms.Padding(2);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(111, 19);
@@ -78,19 +80,19 @@
             this.ConsoleBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.ConsoleBox.Location = new System.Drawing.Point(417, 64);
+            this.ConsoleBox.Location = new System.Drawing.Point(491, 64);
             this.ConsoleBox.Margin = new System.Windows.Forms.Padding(2);
             this.ConsoleBox.Multiline = true;
             this.ConsoleBox.Name = "ConsoleBox";
             this.ConsoleBox.ReadOnly = true;
             this.ConsoleBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.ConsoleBox.Size = new System.Drawing.Size(516, 219);
+            this.ConsoleBox.Size = new System.Drawing.Size(442, 219);
             this.ConsoleBox.TabIndex = 4;
             // 
             // Output
             // 
             this.Output.AutoSize = true;
-            this.Output.Location = new System.Drawing.Point(416, 44);
+            this.Output.Location = new System.Drawing.Point(494, 43);
             this.Output.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.Output.Name = "Output";
             this.Output.Size = new System.Drawing.Size(25, 13);
@@ -117,7 +119,7 @@
             this.textBox2.Multiline = true;
             this.textBox2.Name = "textBox2";
             this.textBox2.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.textBox2.Size = new System.Drawing.Size(400, 167);
+            this.textBox2.Size = new System.Drawing.Size(356, 167);
             this.textBox2.TabIndex = 7;
             // 
             // textBox1
@@ -126,7 +128,7 @@
             this.textBox1.Multiline = true;
             this.textBox1.Name = "textBox1";
             this.textBox1.ReadOnly = true;
-            this.textBox1.Size = new System.Drawing.Size(400, 31);
+            this.textBox1.Size = new System.Drawing.Size(356, 31);
             this.textBox1.TabIndex = 8;
             // 
             // label2
@@ -187,11 +189,33 @@
             this.scriptButton.UseVisualStyleBackColor = true;
             this.scriptButton.Click += new System.EventHandler(this.scriptButton_Click);
             // 
+            // queueCmdBox
+            // 
+            this.queueCmdBox.BackColor = System.Drawing.SystemColors.Control;
+            this.queueCmdBox.Enabled = false;
+            this.queueCmdBox.Location = new System.Drawing.Point(371, 64);
+            this.queueCmdBox.Multiline = true;
+            this.queueCmdBox.Name = "queueCmdBox";
+            this.queueCmdBox.Size = new System.Drawing.Size(115, 219);
+            this.queueCmdBox.TabIndex = 15;
+            // 
+            // labelQueued
+            // 
+            this.labelQueued.AutoSize = true;
+            this.labelQueued.Location = new System.Drawing.Point(371, 44);
+            this.labelQueued.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.labelQueued.Name = "labelQueued";
+            this.labelQueued.Size = new System.Drawing.Size(100, 13);
+            this.labelQueued.TabIndex = 16;
+            this.labelQueued.Text = "Queued Commands";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(944, 298);
+            this.Controls.Add(this.labelQueued);
+            this.Controls.Add(this.queueCmdBox);
             this.Controls.Add(this.scriptButton);
             this.Controls.Add(this.scriptTextBox);
             this.Controls.Add(this.label4);
@@ -232,6 +256,8 @@
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.TextBox scriptTextBox;
         private System.Windows.Forms.Button scriptButton;
+        private System.Windows.Forms.TextBox queueCmdBox;
+        private System.Windows.Forms.Label labelQueued;
     }
 }
 

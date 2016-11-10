@@ -173,16 +173,16 @@ namespace PuppetMasterGUI {
         }
 
         // To be run by a consumer thread
-        private void runCommands() {
-            while (true) {
+        private void runCommands()
+        {
+            while (true)
+            {
                 string command = takeCommand();
-
-                Object[] arg = { command };
-                Invoke(new EditLog(runningCommand), arg); // thread-safe access to form
-
                 if (shell.Waiting > 0)
                     waitOnPuppetMaster();
 
+                Object[] arg = { command };
+                Invoke(new EditLog(runningCommand), arg); // thread-safe access to form
                 shell.run(command);
             }
         }
@@ -244,10 +244,11 @@ namespace PuppetMasterGUI {
             Monitor.Enter(commandsToRun.SyncRoot);
             while (commandsToRun.Count == 0)
                 Monitor.Wait(commandsToRun.SyncRoot);
+            Invoke(new QueuedCommands(() => queueCmdBox.Text = string.Join("\r\n", commandsToRun.ToArray())));
             string command = (string)commandsToRun.Dequeue();
+            
             Monitor.PulseAll(commandsToRun.SyncRoot);
             Monitor.Exit(commandsToRun.SyncRoot);
-
             return command;
         }
 
@@ -255,6 +256,8 @@ namespace PuppetMasterGUI {
         public void addCommand(string command) {
             Monitor.Enter(commandsToRun.SyncRoot);
             commandsToRun.Enqueue(command);
+
+            Invoke(new QueuedCommands(() => queueCmdBox.Text = string.Join("\r\n", commandsToRun.ToArray())));
             Monitor.PulseAll(commandsToRun.SyncRoot);
             Monitor.Exit(commandsToRun.SyncRoot);
         }
@@ -335,6 +338,8 @@ namespace PuppetMasterGUI {
             Debug.WriteLine("AddMsgToLog " + changedMsg);
         }
     }
+
+    delegate void QueuedCommands();
 
     delegate void EditTextBoxes();
     delegate void EditLog(string command);
