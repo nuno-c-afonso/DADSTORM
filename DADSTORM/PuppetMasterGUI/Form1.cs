@@ -43,7 +43,6 @@ namespace PuppetMasterGUI {
         private IPAddress puppetMasterIPAddress = IPAddresses.LocalIPAddress();
         private Shell shell;
         private bool canUseCommands = true;
-        private Task lastCommand = null;
 
         Queue commandsToRun = new Queue();
         Thread consumer;
