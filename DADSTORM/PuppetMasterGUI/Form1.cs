@@ -36,8 +36,6 @@ namespace PuppetMasterGUI {
 
         string DEFAULT_CONFIG_PATH = @".\input\dadstorm.config";
 
-        private List<string> logMessages;
-
         const int PCS_RESERVED_PORT = 10000;
         const int LOGGING_PORT = 10001;
         private IPAddress puppetMasterIPAddress = IPAddresses.LocalIPAddress();
@@ -54,8 +52,6 @@ namespace PuppetMasterGUI {
             this.FormClosing += new FormClosingEventHandler(formClosing);
 
             PuppetMasterLog.form = this;
-
-            logMessages = new List<string>();
 
             channel = new TcpChannel(LOGGING_PORT);
 
@@ -183,6 +179,8 @@ namespace PuppetMasterGUI {
                 if (shell.Waiting > 0)
                     waitOnPuppetMaster();
 
+                Object[] arg = { command };
+                Invoke(new EditLog(runningCommand), arg); // thread-safe access to form
                 shell.run(command);
             }
         }
@@ -265,7 +263,7 @@ namespace PuppetMasterGUI {
                 string[] lines = textBox2.Text.Split(delimiter, StringSplitOptions.RemoveEmptyEntries);
 
                 if (lines.Length > 0) {
-                    Invoke(new EditTextBoxes(ChangeTextBoxesLines)); // thread-safe access to form
+                    Invoke(new EditTextBoxes(ChangeTextBoxLines)); // thread-safe access to form
                     addCommand(lines[0]);
                 }
             }
@@ -283,16 +281,6 @@ namespace PuppetMasterGUI {
             Thread.Sleep(shell.Waiting);
             Debug.WriteLine(DateTime.Now.ToString("HH:mm:ss tt") + "- " + shell.Waiting + " ms, after wait");
             shell.Waiting = 0;
-        }
-
-        // needed for changing text of form in threads
-        private void ChangeTextBoxesLines() {
-            string[] delimiter = { "\r\n" };
-            string[] lines = textBox2.Text.Split(delimiter, StringSplitOptions.RemoveEmptyEntries);
-            textBox1.Text = lines[0];
-            textBox2.Text = string.Join("\r\n", lines.Skip(1));
-
-            AddMsgToLog(lines[0]);
         }
 
         public void closeAllReplicas() {
@@ -323,21 +311,32 @@ namespace PuppetMasterGUI {
             consumer.Abort();
         }
 
+        // needed for changing text of form in threads
+        private void ChangeTextBoxLines() {
+            string[] delimiter = { "\r\n" };
+            string[] lines = textBox2.Text.Split(delimiter, StringSplitOptions.RemoveEmptyEntries);
+            textBox2.Text = string.Join("\r\n", lines.Skip(1));
+        }
+
+        private void runningCommand(string command) {
+            textBox1.Text = command;
+            AddMsgToLog(command);
+        }
+
         public void AddMsgToLog(string arg, bool replaceWithTabs = false) {
             if (replaceWithTabs)
                 arg = arg.Replace(" ", "\t");
 
             string changedMsg = DateTime.Now.ToString("HH:mm:ss tt") + "  " + arg;
 
-            logMessages.Add(changedMsg);
             ConsoleBox.AppendText(changedMsg + "\r\n");
             Debug.WriteLine("AddMsgToLog " + changedMsg);
         }
     }
 
     delegate void EditTextBoxes();
-    delegate void CallCommands(string line);
-    delegate void DelAddMsg(string mensagem, bool replace);
+    delegate void EditLog(string command);
+    delegate void DelAddMsg(string mesage, bool replace);
 
 
     public class PuppetMasterLog : MarshalByRefObject, IPuppetMasterLog {
