@@ -46,12 +46,20 @@ namespace CommandLine {
         }
 
         private void callAllReplicas(OperatorBuilder opb) {
-            for (int i = 0; i < opb.Addresses.Count; i++)
+            List<Task> taskList = new List<Task>();
+            for (int i = 0; i < opb.Addresses.Count; i++) {
+                //Task lastTask = new Task(() => callSpecificReplica(opb, i));
+                //lastTask.Start();
+                //taskList.Add(lastTask);
                 callSpecificReplica(opb, i);
+            }
+            //Task.WaitAll(taskList.ToArray());
         }
 
+        // TODO: End this!!!
         private void callAllOperators() {
             foreach (string name in operatorsInfo.OperatorNames)
+
                     callAllReplicas(operatorsInfo.getOpInfo(name));
         }
     }
