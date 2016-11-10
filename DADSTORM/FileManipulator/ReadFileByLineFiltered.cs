@@ -40,7 +40,6 @@ namespace FileManipulator {
         }
 
         public List<string> getConfigCommandsLines() {
-            //should the line change be here ? #TODO
             if (CurrentLine < operatorCommandFirstLine)
                 CurrentLine = operatorCommandFirstLine;
 

@@ -22,7 +22,7 @@ namespace CommonClasses {
             }
             process.StartInfo.Arguments += " -op " + operations;
             process.StartInfo.Arguments += " -r " + repIndex + " " + string.Join(" ", replicas);
-            process.StartInfo.Arguments += " -o " + string.Join(" ", output); //#FIXME if output is empty "-op " is sent and space may cause problems
+            process.StartInfo.Arguments += " -o " + string.Join(" ", output);
             process.StartInfo.Arguments += " -i " + string.Join(" ", input);
             process.Start();
         }
