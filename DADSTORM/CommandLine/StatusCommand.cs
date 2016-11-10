@@ -30,7 +30,8 @@ namespace CommandLine {
                     if (!(repIndex < opb.Addresses.Count && repIndex >= 0))
                         throw new IndexOutOfBoundsException();
 
-                    callSpecificReplica(opb, repIndex);
+                    string address = opb.Addresses[repIndex];
+                    callSpecificReplica(address);
                 }
                 else
                     callAllReplicas(opb);
@@ -39,8 +40,8 @@ namespace CommandLine {
                 callAllOperators();
         }
 
-        private void callSpecificReplica(OperatorBuilder opb, int index) {
-            ReplicaInterface obj = (ReplicaInterface)Activator.GetObject(typeof(ReplicaInterface), opb.Addresses[index]);
+        private void callSpecificReplica(string address) {
+            ReplicaInterface obj = (ReplicaInterface)Activator.GetObject(typeof(ReplicaInterface), address);
             RemoteAsyncDelegate RemoteDel = new RemoteAsyncDelegate(obj.Status);
             IAsyncResult RemAr = RemoteDel.BeginInvoke(null, obj);
         }
@@ -48,19 +49,23 @@ namespace CommandLine {
         private void callAllReplicas(OperatorBuilder opb) {
             List<Task> taskList = new List<Task>();
             for (int i = 0; i < opb.Addresses.Count; i++) {
-                //Task lastTask = new Task(() => callSpecificReplica(opb, i));
-                //lastTask.Start();
-                //taskList.Add(lastTask);
-                callSpecificReplica(opb, i);
+                string address = opb.Addresses[i];
+                Task lastTask = new Task(() => callSpecificReplica(address));
+                lastTask.Start();
+                taskList.Add(lastTask);
             }
-            //Task.WaitAll(taskList.ToArray());
+            Task.WaitAll(taskList.ToArray());
         }
 
-        // TODO: End this!!!
         private void callAllOperators() {
-            foreach (string name in operatorsInfo.OperatorNames)
-
-                    callAllReplicas(operatorsInfo.getOpInfo(name));
+            List<Task> taskList = new List<Task>();
+            foreach (string name in operatorsInfo.OperatorNames) {
+                OperatorBuilder opb = operatorsInfo.getOpInfo(name);
+                Task lastTask = new Task(() => callAllReplicas(opb));
+                lastTask.Start();
+                taskList.Add(lastTask);
+            }
+            Task.WaitAll(taskList.ToArray());
         }
     }
 }
