@@ -24,7 +24,7 @@ namespace Replica {
         
         private bool start = false;
         private int waitingTime = 0;
-        private bool freezed = false;
+        private bool froze = false;
 
         private Thread consumer;
 
@@ -104,7 +104,7 @@ namespace Replica {
         //Command  to set the time to wait between tuple processing
         //USED BY:PuppetMaster
         public void Interval(int time) {
-            Console.WriteLine("-->Interval comand received time={0}",time);
+            Console.WriteLine("-->Interval command received time={0}",time);
             waitingTime = time;
         }
 
@@ -112,7 +112,7 @@ namespace Replica {
             try {
                 Console.WriteLine("Replica Address: " + replicaAddress + "\r\nOperation: " +
                     operationName + "\r\nFLAGS\r\nStart: " + start + "\r\nWaiting: " +
-                    waitingTime + "\r\nFreezed: " + freezed);
+                    waitingTime + "\r\nFroze: " + froze);
             } catch (Exception ex) {
                 Console.WriteLine("second ex: " + ex);
             }
@@ -138,14 +138,14 @@ namespace Replica {
         //USED BY:PuppetMaster
         public void Freeze() {
             Console.WriteLine("-->FREEZE command received");
-            freezed = true;
+            froze = true;
         }
 
         //Command used to end the slow server simulation
         //USED BY:PuppetMaster
         public void Unfreeze() {
             Console.WriteLine("-->UNFREEZE command received");
-            freezed = false;
+            froze = false;
         }
 
 
@@ -167,7 +167,7 @@ namespace Replica {
 
             while (true) {
                 //see if it is feezed
-                while(freezed == true)
+                while(froze == true)
                     Thread.Sleep(100);
 
                 //wait the defined time between processing
