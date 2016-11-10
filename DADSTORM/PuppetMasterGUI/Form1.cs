@@ -80,7 +80,7 @@ namespace PuppetMasterGUI {
 
                 textBox2.Text = string.Join("\r\n", lineParser.remainingLines());
             }
-            catch (System.IO.DirectoryNotFoundException) {
+            catch (System.IO.IOException) {
 
             }
 
