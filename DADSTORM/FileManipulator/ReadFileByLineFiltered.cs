@@ -14,17 +14,8 @@ namespace FileManipulator {
 
         public ReadFileByLineFiltered(string filepath) : base(filepath) {
             int i;
-            
-            // To ignore lines with only space chars
-            List<string> filteredLines = new List<string>();
-            foreach(string line in Lines) {
-                string s = line.Trim();
 
-                if (s.Length > 0 && s[0] != '%')
-                    filteredLines.Add(s);
-            }
-
-            Lines = filteredLines.ToArray();
+            Lines = Lines.Where(line => (line.Trim().Length > 0 && line[0] != '%')).ToArray();
 
             // find where operatorCommands start
             for (i = 0; i < Lines.Length; i++) {
