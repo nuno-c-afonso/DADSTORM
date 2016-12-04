@@ -51,6 +51,7 @@
     <Compile Include="Operations\CountOperation.cs" />
     <Compile Include="Operations\CustomOperation.cs" />
     <Compile Include="Operations\DupOperation.cs" />
+    <Compile Include="Semantics\CouldNotSendTupleException.cs" />
     <Compile Include="Semantics\ExactlyOnceSemantics.cs" />
     <Compile Include="Operations\FilterOperation.cs" />
     <Compile Include="Operations\GlobalStateOperation.cs" />

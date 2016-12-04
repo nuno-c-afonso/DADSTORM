@@ -40,7 +40,18 @@ namespace Replica {
                     Console.WriteLine(e);
                 }
 
-                semantics.sendTuple(replica, tuple);
+                try {
+                    semantics.sendTuple(replica, tuple);
+                } catch(CouldNotSendTupleException) {
+
+                    //TODO: Check if we really need to remove the unresponsive replica
+                    //TODO: Check if we need to recheck the state of the unresponsive replica
+                    nextOperator.Remove(outputReplica);
+
+                    if(nextOperator.Count > 0) {
+                        sendToNext(tuple);
+                    }
+                }
             }
             //ELSE can write on file
         }
