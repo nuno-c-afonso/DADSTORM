@@ -67,6 +67,7 @@
     <Compile Include="Semantics\Semantics.cs" />
     <Compile Include="Operations\UniqOperation.cs" />
     <Compile Include="TupleFileReader.cs" />
+    <Compile Include="TupleWrapper.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
