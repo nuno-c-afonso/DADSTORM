@@ -12,7 +12,7 @@ namespace CommonClasses {
 
         public int[] ID {
             get {
-                return ID;
+                return id;
             }
         }
 
