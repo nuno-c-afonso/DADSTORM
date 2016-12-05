@@ -38,7 +38,7 @@ namespace Replica {
             int counter = 0;
             foreach(string line in lines){
                 tuple = getTupleFromLine(line);
-                TupleWrapper t = new TupleWrapper(new int[0], counter++, tuple);
+                TupleWrapper t = new TupleWrapper("", "" + counter++, tuple);
                 router.sendToNext(t);
                 //buffer.addTuple(tuple);
             }

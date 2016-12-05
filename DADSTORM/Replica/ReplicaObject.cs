@@ -182,8 +182,7 @@ namespace Replica {
                 if (result != null) {
                     foreach (string[] outTuple in result){
                         Console.WriteLine("sending tuple");
-
-                        TupleWrapper t = new TupleWrapper(tuple.ID, counter++, outTuple);
+                        TupleWrapper t = new TupleWrapper(tuple.ID, "" + counter++ + ":" + replicaAddress, outTuple);
                         router.sendToNext(t);
 
                         if (logLevel)

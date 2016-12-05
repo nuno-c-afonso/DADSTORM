@@ -7,30 +7,19 @@ using System.Threading.Tasks;
 namespace CommonClasses {
     [Serializable]
     public class TupleWrapper {
-        private int[] id;
+        private string id;
         private string[] tuple;
 
         // TODO: Include the replica's index in the ID
         public static bool operator ==(TupleWrapper t1, TupleWrapper t2) {
-            int size = t1.ID.Length;
-
-            if (size == t2.ID.Length) {
-                for (int i = 0; i < size; i++) {
-                    if (t1.ID[i] != t2.ID[i])
-                        return false;
-                }
-
-                return true;
-            }
-
-            return false;
+            return t1.ID.Equals(t2.ID);
         }
 
         public static bool operator !=(TupleWrapper t1, TupleWrapper t2) {
             return !(t1 == t2);
         }
 
-        public int[] ID {
+        public string ID {
             get {
                 return id;
             }
@@ -42,11 +31,8 @@ namespace CommonClasses {
             }
         }
 
-        public TupleWrapper(int[] previousID, int replicaID, string[] tuple) {
-            int previousSize = previousID.Length;
-            id = new int[previousSize + 1];
-            previousID.CopyTo(id, 0);
-            id[previousSize] = replicaID;
+        public TupleWrapper(string previousID, string replicaID, string[] tuple) {
+            id = previousID + replicaID + "|";
             this.tuple = tuple;
         }
     }
