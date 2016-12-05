@@ -28,8 +28,6 @@ namespace Replica {
         private bool frozen = false;
         private bool once;
 
-        private Thread consumer;
-
         public bool Started {
             get { return start; }
         }
@@ -37,6 +35,7 @@ namespace Replica {
         public ReplicaObject(string PuppetMasterUrl, string routing, string semantics,
             string logLevel, Operation operation, List<string> output, string replicaAddress, string operationName) {
             tupleQueue = new Queue();
+            receivingQueue = new Queue();
 
             this.PuppetMasterUrl = PuppetMasterUrl;
             this.logLevel = logLevel.Equals("full");
@@ -71,15 +70,11 @@ namespace Replica {
             }
         }
 
-        public void addThread(Thread t) {
-            consumer = t;
-        }
-
         //method used to send tuples to the owner of this buffer
         //USED BY: other replicas, input file reader
         public void addTuple(TupleWrapper tuple) {
             Console.WriteLine("addTuple({0})", tuple.Tuple);
-            addToQueue(tuple, tupleQueue);
+            addToQueue(tuple, receivingQueue);
         }
 
         //USED BY: Thread that checks duplicate tuples
