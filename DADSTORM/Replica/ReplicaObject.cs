@@ -72,8 +72,8 @@ namespace Replica {
 
         //method used to send tuples to the owner of this buffer
         //USED BY: other replicas, input file reader
-        public void addTuple(string[] tuple) {
-            Console.WriteLine("addTuple({0})", tuple);
+        public void addTuple(TupleWrapper tuple) {
+            Console.WriteLine("addTuple({0})", tuple.Tuple);
             Monitor.Enter(tupleQueue.SyncRoot);
             tupleQueue.Enqueue(tuple);
             Monitor.PulseAll(tupleQueue.SyncRoot);
@@ -82,12 +82,12 @@ namespace Replica {
 
         //method used to get tuples from the buffer
         //USED BY: owner(replica)
-        public string[] getTuple() {
+        public TupleWrapper getTuple() {
             Console.WriteLine("getTuple()");
             Monitor.Enter(tupleQueue.SyncRoot);
             while(tupleQueue.Count == 0)
                     Monitor.Wait(tupleQueue.SyncRoot);
-            string[] result = (String[]) tupleQueue.Dequeue();
+            TupleWrapper result = (TupleWrapper) tupleQueue.Dequeue();
             Console.WriteLine("         GOT tuple");
             Monitor.Pulse(tupleQueue.SyncRoot);
             Monitor.Exit(tupleQueue.SyncRoot);
@@ -162,6 +162,8 @@ namespace Replica {
         // To be used in the consumer thread
         public void Operate() {
             Console.WriteLine("6-Waiting for START command");
+            int counter = 0;
+
             while (!start)
                 Thread.Sleep(100);
 
@@ -174,13 +176,15 @@ namespace Replica {
                 Thread.Sleep(waitingTime);
 
                 //get tuple from the buffer
-                string[] tuple = getTuple();
+                TupleWrapper tuple = getTuple();
 
-                List<string[]> result = operation.Operate(tuple);
+                List<string[]> result = operation.Operate(tuple.Tuple);
                 if (result != null) {
                     foreach (string[] outTuple in result){
                         Console.WriteLine("sending tuple");
-                        router.sendToNext(outTuple);
+
+                        TupleWrapper t = new TupleWrapper(tuple.ID, counter++, outTuple);
+                        router.sendToNext(t);
 
                         if (logLevel)
                             log.Log("tuple " + operationName + " " + replicaAddress + " <" + string.Join(" - ", outTuple) + ">" );

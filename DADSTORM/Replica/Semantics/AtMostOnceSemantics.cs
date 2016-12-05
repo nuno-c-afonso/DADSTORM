@@ -8,7 +8,7 @@ using System.Runtime.Remoting.Messaging;
 
 namespace Replica {
     public class AtMostOnceSemantics : Semantics {
-        public override void sendTuple(ReplicaInterface replica, string[] tuple) {
+        public override void sendTuple(ReplicaInterface replica, TupleWrapper tuple) {
             RemoteAsyncDelegate RemoteDel = new RemoteAsyncDelegate(replica.addTuple);
             IAsyncResult RemAr = RemoteDel.BeginInvoke(tuple, null, replica);
         }

@@ -11,8 +11,8 @@ namespace Replica {
         public static int TIMEOUT_VALUE = 2000;
 
         // Used for the asynchronous calls
-        public delegate void RemoteAsyncDelegate(string[] tuple);
+        public delegate void RemoteAsyncDelegate(TupleWrapper tuple);
 
-        public abstract void sendTuple(ReplicaInterface replica, string[] tuple);
+        public abstract void sendTuple(ReplicaInterface replica, TupleWrapper tuple);
     }
 }

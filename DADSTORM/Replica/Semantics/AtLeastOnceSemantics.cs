@@ -4,7 +4,7 @@ using System.Threading;
 
 namespace Replica {
     public class AtLeastOnceSemantics : Semantics {
-        public override void sendTuple(ReplicaInterface replica, string[] tuple) {
+        public override void sendTuple(ReplicaInterface replica, TupleWrapper tuple) {
             RemoteAsyncDelegate RemoteDel = new RemoteAsyncDelegate(replica.addTuple);
             IAsyncResult RemAr = RemoteDel.BeginInvoke(tuple, null, replica);
 

@@ -34,9 +34,12 @@ namespace Replica {
             string[] tuple;
             while (!buffer.Started)
                 Thread.Sleep(100);
+
+            int counter = 0;
             foreach(string line in lines){
                 tuple = getTupleFromLine(line);
-                router.sendToNext(tuple);
+                TupleWrapper t = new TupleWrapper(new int[0], counter++, tuple);
+                router.sendToNext(t);
                 //buffer.addTuple(tuple);
             }
 

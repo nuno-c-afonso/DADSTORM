@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace CommonClasses {
     public interface ReplicaInterface {
-        void addTuple(string[] tuple);
+        void addTuple(TupleWrapper tuple);
         void Start();
         void Interval(int time);
         void Status();

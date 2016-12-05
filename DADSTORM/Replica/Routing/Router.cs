@@ -28,10 +28,10 @@ namespace Replica {
                 this.semantics = new ExactlyOnceSemantics();
         }
 
-        public void sendToNext(string[] tuple) {
+        public void sendToNext(TupleWrapper tuple) {
             if (nextOperator.Count != 0) {
                 ReplicaInterface replica = null;
-                string outputReplica = calculateNext(tuple);
+                string outputReplica = calculateNext(tuple.Tuple);
 
                 try {
                     replica = (ReplicaInterface)Activator.GetObject(typeof(ReplicaInterface), outputReplica);
