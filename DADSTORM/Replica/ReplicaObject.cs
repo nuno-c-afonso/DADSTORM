@@ -16,6 +16,7 @@ namespace Replica {
         private Router router;  
         private bool logLevel;  // full = true, light = false
         private Operation operation;
+        private Queue receivingQueue;
         private Queue tupleQueue;
         private string PuppetMasterUrl;
 
@@ -25,6 +26,7 @@ namespace Replica {
         private bool start = false;
         private int waitingTime = 0;
         private bool frozen = false;
+        private bool once;
 
         private Thread consumer;
 
@@ -45,6 +47,9 @@ namespace Replica {
             string routingLower = routing.ToLower();
             char[] delimiters = { '(', ')' };
             string[] splitted = routingLower.Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
+
+            once = semantics.Equals("exactly-once");
+
             if (splitted[0].Equals("primary"))
                 router = new PrimaryRouter(output, semantics);
             else if (splitted[0].Equals("random"))
@@ -74,24 +79,29 @@ namespace Replica {
         //USED BY: other replicas, input file reader
         public void addTuple(TupleWrapper tuple) {
             Console.WriteLine("addTuple({0})", tuple.Tuple);
-            Monitor.Enter(tupleQueue.SyncRoot);
-            tupleQueue.Enqueue(tuple);
-            Monitor.PulseAll(tupleQueue.SyncRoot);
-            Monitor.Exit(tupleQueue.SyncRoot);
+            addToQueue(tuple, tupleQueue);
+        }
+
+        //USED BY: Thread that checks duplicate tuples
+        public void checkUniqueness() {
+            while (true) {
+                TupleWrapper t = takeFromQueue(receivingQueue);
+
+                if (once) {
+                    // TODO: Check if it is unique
+                }
+
+                addToQueue(t, tupleQueue);
+            }
         }
 
         //method used to get tuples from the buffer
         //USED BY: owner(replica)
         public TupleWrapper getTuple() {
             Console.WriteLine("getTuple()");
-            Monitor.Enter(tupleQueue.SyncRoot);
-            while(tupleQueue.Count == 0)
-                    Monitor.Wait(tupleQueue.SyncRoot);
-            TupleWrapper result = (TupleWrapper) tupleQueue.Dequeue();
+            TupleWrapper t = takeFromQueue(tupleQueue);
             Console.WriteLine("         GOT tuple");
-            Monitor.Pulse(tupleQueue.SyncRoot);
-            Monitor.Exit(tupleQueue.SyncRoot);
-            return result;
+            return t;
         }
 
         //Command to start working
@@ -190,6 +200,26 @@ namespace Replica {
                     }
                 }
             }
+        }
+
+        /*****************
+         * AUX FUNCTIONS * 
+         ****************/
+        public void addToQueue(TupleWrapper t, Queue q) {
+            Monitor.Enter(q.SyncRoot);
+            q.Enqueue(t);
+            Monitor.PulseAll(q.SyncRoot);
+            Monitor.Exit(q.SyncRoot);
+        }
+
+        public TupleWrapper takeFromQueue(Queue q) {
+            Monitor.Enter(q.SyncRoot);
+            while (q.Count == 0)
+                Monitor.Wait(q.SyncRoot);
+            TupleWrapper result = (TupleWrapper)q.Dequeue();
+            Monitor.Pulse(q.SyncRoot);
+            Monitor.Exit(q.SyncRoot);
+            return result;
         }
     }
 }
