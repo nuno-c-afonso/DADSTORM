@@ -4,7 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Replica {
+namespace CommonClasses {
+    [Serializable]
     public class TupleWrapper {
         private int[] id;
         private string[] tuple;
