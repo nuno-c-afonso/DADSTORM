@@ -8,12 +8,11 @@ namespace Replica {
             RemoteAsyncDelegate RemoteDel = new RemoteAsyncDelegate(replica.addTuple);
             IAsyncResult RemAr = RemoteDel.BeginInvoke(tuple, null, replica);
 
-            // TODO: Check if this can used
-            bool completed = false;
-            for (int counter = 0; counter < TIMEOUT_VALUE && !(completed = RemAr.IsCompleted); counter++)
+            int counter;
+            for (counter = 0; counter < TIMEOUT_VALUE && !RemAr.IsCompleted; counter++)
                 Thread.Sleep(1);
 
-            if (!completed)
+            if (counter == TIMEOUT_VALUE)
                 throw new CouldNotSendTupleException();
         }
     }
