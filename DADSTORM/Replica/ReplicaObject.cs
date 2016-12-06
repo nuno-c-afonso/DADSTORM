@@ -26,7 +26,9 @@ namespace Replica {
         private bool start = false;
         private int waitingTime = 0;
         private bool frozen = false;
+
         private bool once;
+        private HashSet<TupleWrapper> seenTuples = new HashSet<TupleWrapper>();
 
         public bool Started {
             get { return start; }
@@ -83,7 +85,13 @@ namespace Replica {
                 TupleWrapper t = takeFromQueue(receivingQueue);
 
                 if (once) {
-                    // TODO: Check if it is unique
+                    // TODO: Test if this returns the right result
+                    // TODO: Request the other replica's seen values (or ask if anyone saw this tuple)
+                    if (!seenTuples.Contains(t)) {
+                        seenTuples.Add(t);
+                    }
+                    else
+                        continue;
                 }
 
                 addToQueue(t, tupleQueue);

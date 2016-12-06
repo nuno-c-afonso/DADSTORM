@@ -11,12 +11,21 @@ namespace CommonClasses {
         private string[] tuple;
 
         // TODO: Check when the replica reads from a file and these tuples are new!!!
-        public static bool operator ==(TupleWrapper t1, TupleWrapper t2) {
-            return t1.ID.Equals(t2.ID);
+        public override bool Equals(Object obj) {
+            if (obj == null || GetType() != obj.GetType())
+                return false;
+
+            TupleWrapper t = (TupleWrapper) obj;
+            return this.id.Equals(t.id);
         }
 
-        public static bool operator !=(TupleWrapper t1, TupleWrapper t2) {
-            return !(t1 == t2);
+        public override int GetHashCode() {
+            int INIT_FACTOR = 23;
+            int MUL_FACTOR = 41;
+
+            int hash = INIT_FACTOR;
+            hash = hash * MUL_FACTOR + id.GetHashCode();
+            return hash * MUL_FACTOR + tuple.GetHashCode();
         }
 
         public string ID {
