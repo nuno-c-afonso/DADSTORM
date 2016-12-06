@@ -27,7 +27,8 @@ namespace Replica {
         private bool frozen = false;
 
         private bool once;
-        private HashSet<TupleWrapper> seenTuples = new HashSet<TupleWrapper>();
+        private HashSet<string> seenTuples = new HashSet<string>();
+
 
         public bool Started {
             get { return start; }
@@ -75,14 +76,17 @@ namespace Replica {
         public void addTuple(TupleWrapper tuple) {
             Console.WriteLine("addTuple({0})", tuple.Tuple);
 
+            // TODO: Check with other replicas
             if(once) {
-                if (seenTuples.Contains(tuple))
+                if (seenTuples.Contains(tuple.ID))
                     return;
 
-                seenTuples.Add(tuple);
+                seenTuples.Add(tuple.ID);
             }
 
             addToQueue(tuple, tupleQueue);
+
+            // End when tuple is in all replicas
         }
 
         //method used to get tuples from the buffer
@@ -192,8 +196,26 @@ namespace Replica {
             }
         }
 
+        /***************************
+         * FAULT-TOLERANCE METHODS *
+         **************************/
+        public void arrivedTuple(TupleWrapper t, string url) {
+            //TODO: implement
+            throw new NotImplementedException();
+        }
+
+        public void finishedProcessing(string tupleID, List<TupleWrapper> result, string url) {
+            //TODO: implement
+            throw new NotImplementedException();
+        }
+
+        public void finishedSending(string tupleID, string url) {
+            //TODO: implement
+            throw new NotImplementedException();
+        }
+
         /*****************
-         * AUX FUNCTIONS * 
+         * AUX FUNCTIONS *
          ****************/
         public void addToQueue(TupleWrapper t, Queue q) {
             Monitor.Enter(q.SyncRoot);

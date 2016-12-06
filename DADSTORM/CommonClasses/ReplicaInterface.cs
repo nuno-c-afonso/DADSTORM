@@ -15,7 +15,12 @@ namespace CommonClasses {
         void Unfreeze();
 
         bool wasElementSeen(string s);
-
         int numberOfProcessedTuples();
+
+        // Used in fault-tolerance
+        void arrivedTuple(TupleWrapper t, string url);
+        void finishedProcessing(string tupleID, List<TupleWrapper> result, string url);
+        void finishedSending(string tupleID, string url);
+        
     }
 }
