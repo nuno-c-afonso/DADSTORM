@@ -16,7 +16,6 @@ namespace Replica {
         private Router router;  
         private bool logLevel;  // full = true, light = false
         private Operation operation;
-        private Queue receivingQueue;
         private Queue tupleQueue;
         private string PuppetMasterUrl;
 
@@ -37,7 +36,6 @@ namespace Replica {
         public ReplicaObject(string PuppetMasterUrl, string routing, string semantics,
             string logLevel, Operation operation, List<string> output, string replicaAddress, string operationName) {
             tupleQueue = new Queue();
-            receivingQueue = new Queue();
 
             this.PuppetMasterUrl = PuppetMasterUrl;
             this.logLevel = logLevel.Equals("full");
@@ -76,26 +74,15 @@ namespace Replica {
         //USED BY: other replicas, input file reader
         public void addTuple(TupleWrapper tuple) {
             Console.WriteLine("addTuple({0})", tuple.Tuple);
-            addToQueue(tuple, receivingQueue);
-        }
 
-        //USED BY: Thread that checks duplicate tuples
-        public void checkUniqueness() {
-            while (true) {
-                TupleWrapper t = takeFromQueue(receivingQueue);
+            if(once) {
+                if (seenTuples.Contains(tuple))
+                    return;
 
-                if (once) {
-                    // TODO: Test if this returns the right result
-                    // TODO: Request the other replica's seen values (or ask if anyone saw this tuple)
-                    if (!seenTuples.Contains(t)) {
-                        seenTuples.Add(t);
-                    }
-                    else
-                        continue;
-                }
-
-                addToQueue(t, tupleQueue);
+                seenTuples.Add(tuple);
             }
+
+            addToQueue(tuple, tupleQueue);
         }
 
         //method used to get tuples from the buffer

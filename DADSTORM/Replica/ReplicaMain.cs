@@ -136,13 +136,10 @@ namespace Replica {
             Console.WriteLine("5-Start processing tuples");
 
             //############ Start processing tuples ###################//CHECK
-            ThreadStart ts1 = new ThreadStart(consumingOperator.Operate);
-            ThreadStart ts2 = new ThreadStart(consumingOperator.checkUniqueness);
-            Thread t1 = new Thread(ts1);
-            Thread t2 = new Thread(ts2);
-            t2.Start();
-            t1.Start();
-            t1.Join();
+            ThreadStart ts = new ThreadStart(consumingOperator.Operate);
+            Thread t = new Thread(ts);
+            t.Start();
+            t.Join();
         }
     }
 }
