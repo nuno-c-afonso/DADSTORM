@@ -21,6 +21,7 @@ namespace Replica {
 
         private string replicaAddress;
         private string operationName;
+        private List<string> otherReplicasURL;
         
         private bool start = false;
         private int waitingTime = 0;
@@ -28,14 +29,16 @@ namespace Replica {
 
         private bool once;
         private HashSet<string> seenTuples = new HashSet<string>();
-
+        private Dictionary<string, Dictionary<string, OtherReplicaTuple>> processingOnOther =
+            new Dictionary<string, Dictionary<string, OtherReplicaTuple>>();
 
         public bool Started {
             get { return start; }
         }
 
         public ReplicaObject(string PuppetMasterUrl, string routing, string semantics,
-            string logLevel, Operation operation, List<string> output, string replicaAddress, string operationName) {
+            string logLevel, Operation operation, List<string> output, string replicaAddress, string operationName,
+            List<string> otherAdresses) {
             tupleQueue = new Queue();
 
             this.PuppetMasterUrl = PuppetMasterUrl;
@@ -43,6 +46,7 @@ namespace Replica {
             this.operation = operation;
             this.replicaAddress = replicaAddress;
             this.operationName = operationName;
+            otherReplicasURL = otherAdresses;
 
             string routingLower = routing.ToLower();
             char[] delimiters = { '(', ')' };
@@ -56,6 +60,11 @@ namespace Replica {
                 router = new RandomRouter(output, semantics);
             else
                 router = new HashRouter(output, semantics, int.Parse(splitted[1]));
+
+            // Starts the structure needed for replication
+            foreach(string addr in otherAdresses) {
+                processingOnOther.Add(addr, new Dictionary<string, OtherReplicaTuple>());
+            }
 
             // Assuming that the service is in: tcp://<PuppetMasterIP>:10001/log
             string testpuppetAddress = PuppetMasterUrl + "/log";
@@ -200,18 +209,21 @@ namespace Replica {
          * FAULT-TOLERANCE METHODS *
          **************************/
         public void arrivedTuple(TupleWrapper t, string url) {
-            //TODO: implement
-            throw new NotImplementedException();
+            processingOnOther[url].Add(t.ID, new OtherReplicaTuple(t));
+
+            // TODO: Use reliable multicast to transmit the message to other replicas!!!
         }
 
         public void finishedProcessing(string tupleID, List<TupleWrapper> result, string url) {
-            //TODO: implement
-            throw new NotImplementedException();
+            Dictionary<string, OtherReplicaTuple> t = processingOnOther[url];
+            t[tupleID].finishedProcessing(result);
         }
 
         public void finishedSending(string tupleID, string url) {
-            //TODO: implement
-            throw new NotImplementedException();
+            seenTuples.Add(tupleID);
+
+            Dictionary<string, OtherReplicaTuple> t = processingOnOther[url];
+            t.Remove(tupleID);
         }
 
         /*****************
