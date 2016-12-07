@@ -18,7 +18,7 @@ namespace CommonClasses {
         int numberOfProcessedTuples();
 
         // Used in fault-tolerance
-        void arrivedTuple(TupleWrapper t, string url);
+        bool arrivedTuple(TupleWrapper t, string url);
         void finishedProcessing(string tupleID, List<TupleWrapper> result, string url);
         void finishedSending(string tupleID, string url);
         

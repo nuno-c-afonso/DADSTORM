@@ -87,8 +87,22 @@ namespace Replica {
 
             // TODO: Check with other replicas
             if(once) {
+
+                // TODO: Check other replicas
                 if (seenTuples.Contains(tuple.ID))
                     return;
+
+                foreach(string otherReplica in otherReplicasURL) {
+                    ReplicaInterface r;
+                    if ((r = getReplica(otherReplica)) == null)
+                        continue;
+
+                    // The tuple was received by other replica when it was executing this
+                    if (!r.arrivedTuple(tuple, replicaAddress)) {
+                        seenTuples.Add(tuple.ID);
+                        return;
+                    }
+                }
 
                 seenTuples.Add(tuple.ID);
             }
@@ -208,10 +222,12 @@ namespace Replica {
         /***************************
          * FAULT-TOLERANCE METHODS *
          **************************/
-        public void arrivedTuple(TupleWrapper t, string url) {
-            processingOnOther[url].Add(t.ID, new OtherReplicaTuple(t));
+        public bool arrivedTuple(TupleWrapper t, string url) {
+            if (seenTuples.Contains(t.ID))
+                return false;
 
-            // TODO: Use reliable multicast to transmit the message to other replicas!!!
+            processingOnOther[url].Add(t.ID, new OtherReplicaTuple(t));
+            return true;
         }
 
         public void finishedProcessing(string tupleID, List<TupleWrapper> result, string url) {
@@ -244,6 +260,19 @@ namespace Replica {
             Monitor.Pulse(q.SyncRoot);
             Monitor.Exit(q.SyncRoot);
             return result;
+        }
+
+        private ReplicaInterface getReplica(string url) {
+            try {
+                ReplicaInterface ri = (ReplicaInterface) Activator.GetObject(typeof(ReplicaInterface), url);
+                return ri;
+            }
+            catch (System.Net.Sockets.SocketException e) {
+                Console.WriteLine("Error with host " + url);
+                Console.WriteLine(e);
+            }
+
+            return null;
         }
     }
 }
