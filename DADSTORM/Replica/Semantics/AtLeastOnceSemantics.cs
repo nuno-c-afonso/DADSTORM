@@ -4,14 +4,37 @@ using System.Threading;
 
 namespace Replica {
     public class AtLeastOnceSemantics : Semantics {
-        public override void sendTuple(ReplicaInterface replica, TupleWrapper tuple) { 
-            Thread t = new Thread(() => replica.addTuple(tuple));
-            t.Start();
-            if (!t.Join(TimeSpan.FromSeconds(TIMEOUT_VALUE))) {
-                t.Abort();
+        public override void sendTuple(ReplicaInterface replica, TupleWrapper tuple) {
+
+            Console.WriteLine("\n Inside sendTuple");
+            Exception exception = null;
+            var thread = new Thread(() =>
+            {
+                try
+                {
+                    replica.addTuple(tuple);
+                }
+                catch (Exception e)
+                {
+                    exception = e;
+                }
+            });
+            thread.Start();
+            var completed = thread.Join(5000);
+            if (!completed)
+            {
+                Console.WriteLine("####### didnt finish call in 5 seconds");
+
+                thread.Abort();
+                //throw new TimeoutException();
                 throw new CouldNotSendTupleException();
             }
-           
+
+            if (exception != null)
+            {
+                throw exception;
+            }
+
         }
     }
 }
