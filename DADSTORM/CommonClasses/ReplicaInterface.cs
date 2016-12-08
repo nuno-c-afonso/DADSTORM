@@ -19,7 +19,8 @@ namespace CommonClasses {
 
         // Used in fault-tolerance
         void arrivedTuple(TupleWrapper t);
-        DecisionStructure confirmProcessingReplica(TupleWrapper t, string url);
+        bool tryElectionOfProcessingReplica(TupleWrapper t, string url);
+        void confirmElection(TupleWrapper t);
         void finishedProcessing(string tupleID, List<TupleWrapper> result, string url);
         void finishedSending(string tupleID, string url);
         
