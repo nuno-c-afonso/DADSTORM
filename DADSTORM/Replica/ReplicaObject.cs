@@ -319,6 +319,7 @@ namespace Replica {
             }
 
             // TODO: Share the result with all replicas
+            // TODO: Move the tuple to the other correct structure
         }
 
         /*****************
