@@ -31,7 +31,9 @@ namespace Replica {
         private HashSet<string> seenTuples = new HashSet<string>();
         private Dictionary<string, Dictionary<string, OtherReplicaTuple>> processingOnOther =
             new Dictionary<string, Dictionary<string, OtherReplicaTuple>>();
-        private Dictionary<TupleWrapper, string> deciding = new Dictionary<TupleWrapper, string>();
+        private Dictionary<TupleWrapper, DecisionStructure> deciding = new Dictionary<TupleWrapper, DecisionStructure>();
+
+        private Dictionary<TupleWrapper, DateTime> allTuples = new Dictionary<TupleWrapper, DateTime>();
 
         public bool Started {
             get { return start; }
@@ -83,69 +85,38 @@ namespace Replica {
 
         //method used to send tuples to the owner of this buffer
         //USED BY: other replicas, input file
-        /* Previous method
-        public void addTuple(TupleWrapper tuple) {
-            Console.WriteLine("addTuple({0})", tuple.Tuple);
-
-            // TODO: Check with other replicas
-            if(once) {
-
-                // TODO: Check other replicas
-                if (seenTuples.Contains(tuple.ID))
-                    return;
-
-                foreach(string otherReplica in otherReplicasURL) {
-                    ReplicaInterface r;
-                    if ((r = getReplica(otherReplica)) == null)
-                        continue;
-
-                    // The tuple was received by other replica when it was executing this
-                    if (!r.arrivedTuple(tuple, replicaAddress)) {
-                        seenTuples.Add(tuple.ID);
-                        return;
-                    }
-                }
-
-                seenTuples.Add(tuple.ID);
-            }
-
-            addToQueue(tuple, tupleQueue);
-        }
-        */
-
-        //method used to send tuples to the owner of this buffer
-        //USED BY: other replicas, input file
         public void addTuple(TupleWrapper tuple) {
             Console.WriteLine("addTuple({0})", tuple.Tuple);
 
             // TODO: Check with other replicas
             // TODO: Check on the other structures
+            // TODO: Must start as the same stuff as when it's new
+            // TODO: Return a string, saying if it was decided or if it is final
+            // TODO: See the behavior when it was decided, but the replica crashed
             if (once) {
-                Monitor.Enter(deciding);
-                if (deciding.ContainsKey(tuple)) {
-                    Monitor.Pulse(deciding);
-                    Monitor.Exit(deciding);
-                    return;
-                }
+                Monitor.Enter(allTuples);
+                if (!allTuples.ContainsKey(tuple))
+                    allTuples.Add(tuple, new DateTime());
+                else
+                    allTuples[tuple] = new DateTime();
+                Monitor.Pulse(allTuples);
+                Monitor.Exit(allTuples);
 
-                deciding.Add(tuple, replicaAddress);
-                Monitor.Pulse(deciding);
-                Monitor.Exit(deciding);
-
-                Dictionary<string, string> alsoReceivedUrls = new Dictionary<string, string>();
-                alsoReceivedUrls.Add(replicaAddress, replicaAddress);
+                int counter = 1; // To be used for calculating the minimum required number of working replicas
+                object o = new object();
                 foreach (string otherReplica in otherReplicasURL) {
-                    ReplicaInterface r;
-
-                    // TODO: Confirm if this will be a problem!!!
-                    if ((r = getReplica(otherReplica)) == null)
-                        continue;
-
-                    // Receives all the information from other replicas
-                    alsoReceivedUrls.Add(otherReplica, r.arrivedTuple(tuple, replicaAddress));
+                    Thread t = new Thread(() => broadcastTuple(tuple, otherReplica, ref counter, ref o));
                 }
 
-                Thread thread = new Thread(() => chooseProcessingReplica(alsoReceivedUrls));
+                int x = ((otherReplicasURL.Count + 1) / 2) + 1;
+                while (true) {
+                    lock(o) {
+                        if (counter == x)
+                            break;
+                    }
+                }
+
+                Thread thread = new Thread(() => chooseProcessingReplica(tuple));
                 thread.Start();
                 return;
             }
@@ -263,20 +234,39 @@ namespace Replica {
         /***************************
          * FAULT-TOLERANCE METHODS *
          **************************/
-        public string arrivedTuple(TupleWrapper t, string url) {
-            // TODO: Check in other places
-            Monitor.Enter(deciding);
-            if (deciding.ContainsKey(t)) {
-                string s = deciding[t];
-                Monitor.Pulse(deciding);
-                Monitor.Exit(deciding);
-                return s;
-            }
 
-            deciding.Add(t, url);
-            Monitor.Pulse(deciding);
-            Monitor.Exit(deciding);
-            return url;
+        // To be used locally
+        private void broadcastTuple(TupleWrapper t, string url, ref int counter, ref object o) {
+            ReplicaInterface r;
+            if ((r = getReplica(url)) != null) {
+                try {
+                    r.arrivedTuple(t);
+                    lock (o) {
+                        counter++;
+                    }
+                } catch(System.Net.Sockets.SocketException) { }
+            }
+        }
+        
+        public void arrivedTuple(TupleWrapper t) {
+            Monitor.Enter(allTuples);
+            if (!allTuples.ContainsKey(t))
+                allTuples.Add(t, new DateTime());
+            else
+                allTuples[t] = new DateTime();
+            Monitor.Pulse(allTuples);
+            Monitor.Exit(allTuples);
+        }
+
+        public DecisionStructure confirmProcessingReplica(TupleWrapper t, string url) {
+            DecisionStructure ds = deciding[t];
+
+            if(ds.IsFinal)
+                return ds;
+
+            ds.IsFinal = true;
+            ds.URL = url;
+            return null;
         }
 
         public void finishedProcessing(string tupleID, List<TupleWrapper> result, string url) {
@@ -294,7 +284,26 @@ namespace Replica {
         /********************
          * AGREEMENT THREAD *
          *******************/
-         private void chooseProcessingReplica(Dictionary<string, string> d) {
+
+        /*
+                Dictionary<string, string> alsoReceivedUrls = new Dictionary<string, string>();
+                alsoReceivedUrls.Add(replicaAddress, replicaAddress);
+
+                // TODO: Copy the tuple to the majority of replicas, in order to have shared memory
+                foreach (string otherReplica in otherReplicasURL) {
+                    ReplicaInterface r;
+
+                    // TODO: Confirm if this will be a problem!!!
+                    if ((r = getReplica(otherReplica)) == null)
+                        continue;
+
+                    // Receives all the information from other replicas
+                    alsoReceivedUrls.Add(otherReplica, r.arrivedTuple(tuple, replicaAddress));
+                }
+        */
+
+        private void chooseProcessingReplica(TupleWrapper t) {
+            /*
             Dictionary<string, int> countingResult = new Dictionary<string, int>();
             foreach (KeyValuePair<string, string> entry in d) {
                 if (countingResult.ContainsKey(entry.Value))
@@ -319,7 +328,10 @@ namespace Replica {
             }
 
             // TODO: Share the result with all replicas
+
+
             // TODO: Move the tuple to the other correct structure
+            */
         }
 
         /*****************
