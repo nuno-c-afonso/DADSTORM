@@ -30,12 +30,13 @@ namespace Replica {
         private bool frozen = false;
 
         private bool once;
+        private Dictionary<TupleWrapper, DateTime> allTuples = new Dictionary<TupleWrapper, DateTime>();
         private HashSet<string> seenTuples = new HashSet<string>();
+        private Dictionary<TupleWrapper, DecisionStructure> deciding = new Dictionary<TupleWrapper, DecisionStructure>();
+        private List<TupleWrapper> processingOnMe = new List<TupleWrapper>();
         private Dictionary<string, Dictionary<string, OtherReplicaTuple>> processingOnOther =
             new Dictionary<string, Dictionary<string, OtherReplicaTuple>>();
-        private Dictionary<TupleWrapper, DecisionStructure> deciding = new Dictionary<TupleWrapper, DecisionStructure>();
 
-        private Dictionary<TupleWrapper, DateTime> allTuples = new Dictionary<TupleWrapper, DateTime>();
 
         public bool Started {
             get { return start; }
@@ -88,6 +89,10 @@ namespace Replica {
         //method used to send tuples to the owner of this buffer
         //USED BY: other replicas, input file
         public void addTuple(TupleWrapper tuple) {
+
+            //while (frozen)
+            //    Thread.Sleep(1);
+
             Console.WriteLine("addTuple({0})", tuple.Tuple);
 
             // TODO: Check with other replicas
@@ -260,15 +265,56 @@ namespace Replica {
             Monitor.Exit(allTuples);
         }
 
-        public DecisionStructure confirmProcessingReplica(TupleWrapper t, string url) {
-            DecisionStructure ds = deciding[t];
+        public bool tryElectionOfProcessingReplica(TupleWrapper t, string url) {
+            Monitor.Enter(deciding);
+            if (deciding.ContainsKey(t)) {
+                Monitor.Pulse(deciding);
+                Monitor.Exit(deciding);
+                return false;
+            }
 
-            if(ds.IsFinal)
-                return ds;
+            deciding.Add(t, new DecisionStructure(url));
+            Monitor.Pulse(deciding);
+            Monitor.Exit(deciding);
+            return true;
+        }
 
-            ds.IsFinal = true;
-            ds.URL = url;
-            return null;
+        public void confirmElection(TupleWrapper t) {
+
+            // Remove from deciding pile
+            Monitor.Enter(deciding);
+            string replica = deciding[t].URL;
+            deciding.Remove(t);
+            Monitor.Pulse(deciding);
+            Monitor.Exit(deciding);
+
+            // Remove from allTuples
+            Monitor.Enter(allTuples);
+            allTuples.Remove(t);
+            Monitor.Pulse(allTuples);
+            Monitor.Exit(allTuples);
+
+            // Add to the respective processing pile
+            if (replica.Equals(replicaAddress)) {
+                Monitor.Enter(tupleQueue.SyncRoot);
+                tupleQueue.Enqueue(t);
+                Monitor.Pulse(tupleQueue.SyncRoot);
+                Monitor.Exit(tupleQueue.SyncRoot);
+
+                Monitor.Enter(processingOnMe);
+                processingOnMe.Add(t);
+                Monitor.Pulse(processingOnMe);
+                Monitor.Exit(processingOnMe);
+            }
+
+            else {
+                Monitor.Enter(processingOnOther);
+                if (!processingOnOther.ContainsKey(replica))
+                    processingOnOther.Add(replica, new Dictionary<string, OtherReplicaTuple>());
+                processingOnOther[replica].Add(t.ID, new OtherReplicaTuple(t));
+                Monitor.Pulse(tupleQueue.SyncRoot);
+                Monitor.Exit(tupleQueue.SyncRoot);
+            }
         }
 
         public void finishedProcessing(string tupleID, List<TupleWrapper> result, string url) {
@@ -304,54 +350,33 @@ namespace Replica {
         /********************
          * AGREEMENT THREAD *
          *******************/
-
-        /*
-                Dictionary<string, string> alsoReceivedUrls = new Dictionary<string, string>();
-                alsoReceivedUrls.Add(replicaAddress, replicaAddress);
-
-                // TODO: Copy the tuple to the majority of replicas, in order to have shared memory
-                foreach (string otherReplica in otherReplicasURL) {
-                    ReplicaInterface r;
-
-                    // TODO: Confirm if this will be a problem!!!
-                    if ((r = getReplica(otherReplica)) == null)
-                        continue;
-
-                    // Receives all the information from other replicas
-                    alsoReceivedUrls.Add(otherReplica, r.arrivedTuple(tuple, replicaAddress));
-                }
-        */
-
         private void chooseProcessingReplica(TupleWrapper t) {
-            /*
-            Dictionary<string, int> countingResult = new Dictionary<string, int>();
-            foreach (KeyValuePair<string, string> entry in d) {
-                if (countingResult.ContainsKey(entry.Value))
-                    countingResult[entry.Value]++;
-                else
-                    countingResult[entry.Value] = 1;
-            }
+            List<string> toConfirm = new List<string>();
 
-            string chosen = null;
-            int value = 0;
-            foreach (KeyValuePair<string, int> entry in countingResult) {
-                if(chosen == null) {
-                    chosen = entry.Key;
-                    value = entry.Value;
+            // TODO: Include the current replica's URL in the list 
+            // TODO: Use the majority of the replicas
+            foreach (string url in otherReplicasURL) {
+                ReplicaInterface r;
+
+                // TODO: Confirm if this will be a problem!!!
+                if ((r = getReplica(url)) == null)
                     continue;
-                }
 
-                if(entry.Value > value || (entry.Value == value && String.Compare(chosen, entry.Key) > 0)) {
-                    chosen = entry.Key;
-                    value = entry.Value;
-                }
+                if (!r.tryElectionOfProcessingReplica(t, replicaAddress))
+                    return;
+
+                toConfirm.Add(url);
             }
 
-            // TODO: Share the result with all replicas
+            foreach(string replica in toConfirm) {
+                ReplicaInterface r;
 
+                // TODO: Confirm if this will be a problem!!!
+                if ((r = getReplica(replica)) == null)
+                    continue;
 
-            // TODO: Move the tuple to the other correct structure
-            */
+                r.confirmElection(t);
+            }
         }
 
         /*****************

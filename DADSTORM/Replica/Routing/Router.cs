@@ -43,14 +43,18 @@ namespace Replica {
                 try {
                     semantics.sendTuple(replica, tuple);
                 } catch(System.Net.Sockets.SocketException) { // The replica is dead
+                    Console.WriteLine("  ##!! "+ outputReplica + " was down, removed from nextOperator list. Resending !!##\n");
+
                     nextOperator.Remove(outputReplica);
                     sendToNext(tuple);
                 } catch(CouldNotSendTupleException) { // The replica is alive, but slow
                     //TODO: Check if we need to recheck the state of the unresponsive replica
+                    Console.WriteLine("  ##!! " + outputReplica + " did not respond in time. Resending !!##\n");
                     sendToNext(tuple);
                 }
             }
             //ELSE can write on file
+
         }
 
         // To be implemented by subclasses
