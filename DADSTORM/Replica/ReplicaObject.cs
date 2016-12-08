@@ -22,7 +22,9 @@ namespace Replica {
         private string replicaAddress;
         private string operationName;
         private List<string> otherReplicasURL;
-        
+        private Dictionary<string, short> failedPings;
+
+
         private bool start = false;
         private int waitingTime = 0;
         private bool frozen = false;
@@ -289,6 +291,23 @@ namespace Replica {
 
             Dictionary<string, OtherReplicaTuple> t = processingOnOther[url];
             t.Remove(tupleID);
+        }
+
+        public bool ping(string originUrl,bool sameLayer) {
+            if (sameLayer) {
+                if (!otherReplicasURL.Contains(originUrl)) 
+                    otherReplicasURL.Add(originUrl);
+            }
+            return true;
+        }
+
+        public void failureDetector() {
+           /* Thread t = new Thread(() => replica.addTuple(tuple));
+            t.Start();
+            if (!t.Join(TimeSpan.FromSeconds(TIMEOUT_VALUE))) {
+                t.Abort();
+                throw new CouldNotSendTupleException();
+            }*/
         }
 
         /********************
