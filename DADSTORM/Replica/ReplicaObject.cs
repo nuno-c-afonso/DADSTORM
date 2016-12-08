@@ -31,6 +31,7 @@ namespace Replica {
         private HashSet<string> seenTuples = new HashSet<string>();
         private Dictionary<string, Dictionary<string, OtherReplicaTuple>> processingOnOther =
             new Dictionary<string, Dictionary<string, OtherReplicaTuple>>();
+        private Dictionary<TupleWrapper, string> deciding = new Dictionary<TupleWrapper, string>();
 
         public bool Started {
             get { return start; }
@@ -81,7 +82,8 @@ namespace Replica {
         }
 
         //method used to send tuples to the owner of this buffer
-        //USED BY: other replicas, input file reader
+        //USED BY: other replicas, input file
+        /* Previous method
         public void addTuple(TupleWrapper tuple) {
             Console.WriteLine("addTuple({0})", tuple.Tuple);
 
@@ -108,8 +110,47 @@ namespace Replica {
             }
 
             addToQueue(tuple, tupleQueue);
+        }
+        */
 
-            // End when tuple is in all replicas
+        //method used to send tuples to the owner of this buffer
+        //USED BY: other replicas, input file
+        public void addTuple(TupleWrapper tuple) {
+            Console.WriteLine("addTuple({0})", tuple.Tuple);
+
+            // TODO: Check with other replicas
+            // TODO: Check on the other structures
+            if (once) {
+                Monitor.Enter(deciding);
+                if (deciding.ContainsKey(tuple)) {
+                    Monitor.Pulse(deciding);
+                    Monitor.Exit(deciding);
+                    return;
+                }
+
+                deciding.Add(tuple, replicaAddress);
+                Monitor.Pulse(deciding);
+                Monitor.Exit(deciding);
+
+                Dictionary<string, string> alsoReceivedUrls = new Dictionary<string, string>();
+                alsoReceivedUrls.Add(replicaAddress, replicaAddress);
+                foreach (string otherReplica in otherReplicasURL) {
+                    ReplicaInterface r;
+
+                    // TODO: Confirm if this will be a problem!!!
+                    if ((r = getReplica(otherReplica)) == null)
+                        continue;
+
+                    // Receives all the information from other replicas
+                    alsoReceivedUrls.Add(otherReplica, r.arrivedTuple(tuple, replicaAddress));
+                }
+
+                Thread thread = new Thread(() => chooseProcessingReplica(alsoReceivedUrls));
+                thread.Start();
+                return;
+            }
+
+            addToQueue(tuple, tupleQueue);
         }
 
         //method used to get tuples from the buffer
@@ -222,12 +263,20 @@ namespace Replica {
         /***************************
          * FAULT-TOLERANCE METHODS *
          **************************/
-        public bool arrivedTuple(TupleWrapper t, string url) {
-            if (seenTuples.Contains(t.ID))
-                return false;
+        public string arrivedTuple(TupleWrapper t, string url) {
+            // TODO: Check in other places
+            Monitor.Enter(deciding);
+            if (deciding.ContainsKey(t)) {
+                string s = deciding[t];
+                Monitor.Pulse(deciding);
+                Monitor.Exit(deciding);
+                return s;
+            }
 
-            processingOnOther[url].Add(t.ID, new OtherReplicaTuple(t));
-            return true;
+            deciding.Add(t, url);
+            Monitor.Pulse(deciding);
+            Monitor.Exit(deciding);
+            return url;
         }
 
         public void finishedProcessing(string tupleID, List<TupleWrapper> result, string url) {
@@ -240,6 +289,36 @@ namespace Replica {
 
             Dictionary<string, OtherReplicaTuple> t = processingOnOther[url];
             t.Remove(tupleID);
+        }
+
+        /********************
+         * AGREEMENT THREAD *
+         *******************/
+         private void chooseProcessingReplica(Dictionary<string, string> d) {
+            Dictionary<string, int> countingResult = new Dictionary<string, int>();
+            foreach (KeyValuePair<string, string> entry in d) {
+                if (countingResult.ContainsKey(entry.Value))
+                    countingResult[entry.Value]++;
+                else
+                    countingResult[entry.Value] = 1;
+            }
+
+            string chosen = null;
+            int value = 0;
+            foreach (KeyValuePair<string, int> entry in countingResult) {
+                if(chosen == null) {
+                    chosen = entry.Key;
+                    value = entry.Value;
+                    continue;
+                }
+
+                if(entry.Value > value || (entry.Value == value && String.Compare(chosen, entry.Key) > 0)) {
+                    chosen = entry.Key;
+                    value = entry.Value;
+                }
+            }
+
+            // TODO: Share the result with all replicas
         }
 
         /*****************

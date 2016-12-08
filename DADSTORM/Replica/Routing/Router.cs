@@ -42,14 +42,12 @@ namespace Replica {
 
                 try {
                     semantics.sendTuple(replica, tuple);
-                } catch(CouldNotSendTupleException) {
-
-                    //TODO: Check if we really need to remove the unresponsive replica
-                    //TODO: Check if we need to recheck the state of the unresponsive replica
+                } catch(System.Net.Sockets.SocketException) { // The replica is dead
                     nextOperator.Remove(outputReplica);
-                    if(nextOperator.Count > 0) {
-                        sendToNext(tuple);
-                    }
+                    sendToNext(tuple);
+                } catch(CouldNotSendTupleException) { // The replica is alive, but slow
+                    //TODO: Check if we need to recheck the state of the unresponsive replica
+                    sendToNext(tuple);
                 }
             }
             //ELSE can write on file
