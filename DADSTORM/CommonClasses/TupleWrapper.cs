@@ -16,7 +16,7 @@ namespace CommonClasses {
                 return false;
 
             TupleWrapper t = (TupleWrapper) obj;
-            return this.id.Equals(t.id);
+            return id.Equals(t.ID);
         }
 
         public override int GetHashCode() {
