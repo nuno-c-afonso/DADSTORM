@@ -12,6 +12,11 @@ using System.Threading.Tasks;
 
 namespace Replica {
     public class ReplicaObject : MarshalByRefObject, ReplicaInterface {
+        private static int OK =0;
+        private static int SLOW = 1;
+        private static int CRASHED = 1;
+
+
         private IPuppetMasterLog log;
         private Router router;  
         private bool logLevel;  // full = true, light = false
@@ -20,6 +25,7 @@ namespace Replica {
         private string PuppetMasterUrl;
 
         private string replicaAddress;
+        private Dictionary<string, int> replicasState;
         private string operationName;
         private List<string> allReplicasURL;
         private Dictionary<string, int> failedPings;
@@ -55,9 +61,14 @@ namespace Replica {
             this.operationName = operationName;
             allReplicasURL = allAdresses;
             failedPings = new Dictionary<string, int>();
-            foreach (string s in allReplicasURL)
-                if(!s.Equals(replicaAddress))
+            replicasState = new Dictionary<string, int>();
+
+            foreach (string s in allReplicasURL) {
+                if (!s.Equals(replicaAddress)) {
                     failedPings.Add(s, 0);
+                    replicasState.Add(s, OK);
+                }
+            }
 
             string routingLower = routing.ToLower();
             char[] delimiters = { '(', ')' };
@@ -459,6 +470,7 @@ Console.WriteLine("\t\tKEY RECEIVED: " + url);
             Monitor.Exit(processingOnOther);
         }
 
+        /// <summary>Used to see if the replica is ok</summary>
         public bool ping(string originUrl,bool sameLayer) {
 
             while (frozen) {
@@ -473,6 +485,7 @@ Console.WriteLine("\t\tKEY RECEIVED: " + url);
             return true;
         }
 
+        /// <summary>Infinit cicle  for checking the state of other replicas ant take mesures</summary>
         public void failureDetector() {
             while (true) {
                 Thread.Sleep(5000);
@@ -489,7 +502,19 @@ Console.WriteLine("\t\tKEY RECEIVED: " + url);
                             } catch (Exception e) { exception = e; }
                         });
                         thread.Start();
-                        var completed = thread.Join(5000);
+                        var completed = thread.Join(500);
+                        if (!completed) {
+                            completed = thread.Join(500);
+                            if (!completed) {
+                                completed = thread.Join(1000);
+                                if (!completed) {
+                                    completed = thread.Join(1000);
+                                    if (!completed) {
+                                        completed = thread.Join(2000);
+                                    }
+                                }
+                            }
+                        }
                         if (!completed) {
                             Console.WriteLine("!!!ping to {0} failed", url);
                             failedPings[url] = failedPings[url] + 1;
@@ -509,17 +534,60 @@ Console.WriteLine("\t\tKEY RECEIVED: " + url);
             }
         }
 
+        /// <summary>Handles the crash of the replica specified in the arg:url</summary>
         private void handleCrashedReplica(string url) {
             Console.WriteLine("!!!handleCrashedReplica({0})", url);
-            lock (allReplicasURL) {
-                allReplicasURL.Remove(url);//TODO CHECK if we can do this !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            }
+            lock (allReplicasURL) {  allReplicasURL.Remove(url); }//TODO CHECK if we can do this !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            string responsable = consensusForHandleCrash(url);
+            if (responsable.Equals(replicaAddress)) 
+                changeToMe(url);
+            else
+                changeOwner(url, responsable); 
+        }
 
-
-        }//TODO
+        /// <summary>Handles the Slow of the replica specified in the arg:url</summary>
         private void handleSlowReplica(string url) {
             Console.WriteLine("!!!handleSlowReplica({0})", url);
                 }//TODO
+
+
+        /// <summary>Decide wich replica will be resplonsable to do the work of the crashed replica specified in the arg:url</summary>
+        private string consensusForHandleCrash(string url) {
+            //TODO make consensus to chosse who is going to handle the crashed
+            //string consensusWiner = replicaAddress;
+            string consensusWiner = "xxx";
+
+
+            return consensusWiner;
+        }
+
+        /// <summary>Change the owner of the tuples from oldOwner to newOwner</summary>
+        private void changeOwner(string oldOwner,string newOwner) {
+            Dictionary<string, OtherReplicaTuple> oldtuples = processingOnOther[oldOwner];
+            foreach(string tupleid in oldtuples.Keys) {
+                processingOnOther[newOwner].Add(tupleid, processingOnOther[oldOwner][tupleid]);
+                processingOnOther[oldOwner].Remove(tupleid);
+            }//TODO devolver uma lista com todos os tuplos que tem para o caso de o;
+        }
+
+        /// <summary>Change the owner of the tuples from oldOwner to this replica</summary>
+        private void changeToMe(string oldOwner) {
+            //TODO make locks
+            Dictionary<string, OtherReplicaTuple> oldtuples = processingOnOther[oldOwner];
+            foreach (string tupleid in oldtuples.Keys) {
+                if (processingOnOther[oldOwner][tupleid].isProcessed()) {
+                    processingOnOther[replicaAddress].Add(tupleid, processingOnOther[oldOwner][tupleid]);
+                    processingOnOther[oldOwner].Remove(tupleid);
+                }
+                else {
+                    TupleWrapper t = processingOnOther[oldOwner][tupleid].getTuple();
+                    processingOnMe.Add(t);
+                    addToQueue(t, tupleQueue);
+                    processingOnOther[oldOwner].Remove(tupleid);
+                }
+            }//TODO devolver uma lista com todos os tuplos que tem para o caso de o;
+            //TODO
+        }
 
 
         /********************
