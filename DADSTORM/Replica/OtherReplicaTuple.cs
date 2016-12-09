@@ -22,5 +22,15 @@ namespace Replica {
             result = l;
             state = PROCESSED;
         }
+        public bool isProcessed() {
+            return state == PROCESSED;
+        }
+
+        public TupleWrapper getTuple() {
+            return tuple;
+        }
+        public List<TupleWrapper> getResult() {
+            return result;
+        }
     }
 }
