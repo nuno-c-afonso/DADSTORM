@@ -19,9 +19,10 @@ namespace Replica {
                     exception = e;
                 }
             });
+
             thread.Start();
-            var completed = thread.Join(5000);
-            if (!completed)
+
+            if (!thread.Join(TIMEOUT_VALUE))
             {
                 Console.WriteLine("####### didnt finish call in 5 seconds");
 
