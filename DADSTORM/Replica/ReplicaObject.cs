@@ -112,14 +112,25 @@ namespace Replica {
 
             Console.WriteLine("addTuple({0})", tuple.Tuple);
 
-            // TODO: Check with other replicas
-            // TODO: Check on the other structures
-            // TODO: Must start as the same stuff as when it's new
-            // TODO: Return a string, saying if it was decided or if it is final
-            // TODO: See the behavior when it was decided, but the replica crashed
             if (once) {
                 int majority = (int)((allReplicasURL.Count) / 2) + 1;
 
+                if (isOnDeciding(tuple))
+                    return;
+
+                if (isOnProcessingOnMe(tuple))
+                    return;
+
+                if (isOnProcessingOnMe(tuple))
+                    return;
+
+                if (isOnProcessingOnOther(tuple))
+                    return;
+
+                if (isOnSeenTuples(tuple))
+                    return;
+
+                // ALL TUPLES
                 Monitor.Enter(allTuples);
                 if (!allTuples.ContainsKey(tuple))
                     allTuples.Add(tuple, new DateTime());
@@ -602,7 +613,7 @@ namespace Replica {
                     try {
                         tryElectionOfProcessingReplicaRelay(t, r, replicaAddress);
                     }
-                    catch (AlreadyVotedException e) {
+                    catch (AlreadyVotedException) {
                         exception = 0;
                     }
                     catch(Exception) { }
@@ -689,5 +700,71 @@ namespace Replica {
 
             return null;
         }
+
+        public bool isOnDeciding(TupleWrapper t) {
+            Monitor.Enter(deciding);
+            if (deciding.ContainsKey(t)) {
+                Monitor.Pulse(deciding);
+                Monitor.Exit(deciding);
+                return true;
+            }
+            Monitor.Pulse(deciding);
+            Monitor.Exit(deciding);
+            return false;
+        }
+
+        public bool isOnProcessingOnMe(TupleWrapper t) {
+            Monitor.Enter(processingOnMe);
+            if (processingOnMe.Contains(t)) {
+                Monitor.Pulse(processingOnMe);
+                Monitor.Exit(processingOnMe);
+                return true;
+            }
+            Monitor.Pulse(processingOnMe);
+            Monitor.Exit(processingOnMe);
+            return false;
+        }
+
+        public bool isOnProcessingOnOther(TupleWrapper t) {
+            Monitor.Enter(processingOnOther);
+            foreach (KeyValuePair<string, Dictionary<string, OtherReplicaTuple>> entry in processingOnOther) {
+                foreach (Dictionary<string, OtherReplicaTuple> entry2 in processingOnOther.Values) {
+                    foreach (KeyValuePair<string, OtherReplicaTuple> entry3 in entry2) {
+                        if (t.Equals(entry3.Value.getTuple())) {
+                            Monitor.Pulse(processingOnOther);
+                            Monitor.Exit(processingOnOther);
+                            return true;
+                        }
+                    }
+                }
+            }
+            Monitor.Pulse(processingOnOther);
+            Monitor.Exit(processingOnOther);
+            return false;
+        }
+
+        public bool isOnSeenTuples(TupleWrapper t) {
+            Monitor.Enter(seenTuples);
+            if (seenTuples.Contains(t.ID)) {
+                Monitor.Pulse(seenTuples);
+                Monitor.Exit(seenTuples);
+                return true;
+            }
+            Monitor.Pulse(seenTuples);
+            Monitor.Exit(seenTuples);
+            return false;
+        }
+
+        public bool isOnAllTuples(TupleWrapper t) {
+            Monitor.Enter(allTuples);
+            if (allTuples.ContainsKey(t)) {
+                Monitor.Pulse(allTuples);
+                Monitor.Exit(allTuples);
+                return true;
+            }
+            Monitor.Pulse(allTuples);
+            Monitor.Exit(allTuples);
+            return false;
+        }        
     }
 }
