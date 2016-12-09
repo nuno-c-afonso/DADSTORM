@@ -19,8 +19,8 @@ namespace CommonClasses {
 
         // Used in fault-tolerance
         void arrivedTuple(TupleWrapper t);
-        bool tryElectionOfProcessingReplica(TupleWrapper t, string url);
-        void confirmElection(TupleWrapper t);
+        void tryElectionOfProcessingReplica(TupleWrapper t, string url);
+        void confirmElection(TupleWrapper t, string url);
         void finishedProcessing(string tupleID, List<TupleWrapper> result, string url);
         void finishedSending(string tupleID, string url);
         bool ping(string originUrl, bool sameLayer);

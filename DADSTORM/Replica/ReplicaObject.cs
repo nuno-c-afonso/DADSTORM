@@ -29,7 +29,7 @@ namespace Replica {
         private string operationName;
         private List<string> allReplicasURL;
         private Dictionary<string, int> failedPings;
-
+        private int majority;
 
         private bool start = false;
         private int waitingTime = 0;
@@ -53,13 +53,13 @@ namespace Replica {
             string logLevel, Operation operation, List<string> output, string replicaAddress, string operationName,
             List<string> allAdresses) {
             tupleQueue = new Queue();
-
             this.PuppetMasterUrl = PuppetMasterUrl;
             this.logLevel = logLevel.Equals("full");
             this.operation = operation;
             this.replicaAddress = replicaAddress;
             this.operationName = operationName;
             allReplicasURL = allAdresses;
+            majority = (int) ((allReplicasURL.Count) / 2) + 1;
             failedPings = new Dictionary<string, int>();
             replicasState = new Dictionary<string, int>();
 
@@ -137,10 +137,9 @@ namespace Replica {
                     }
                 }
 
-                int x = ((allReplicasURL.Count) / 2) + 1;
                 while (true) {
                     lock(o) {
-                        if (counter == x)
+                        if (counter >= majority)
                             break;
                     }
                     Thread.Sleep(1);
@@ -274,10 +273,9 @@ namespace Replica {
                             }
                         }
 
-                        int x = ((allReplicasURL.Count) / 2) + 1;
                         while (true) {
                             lock (o) {
-                                if (n == x)
+                                if (n >= majority)
                                     break;
                             }
                             Thread.Sleep(1);
@@ -312,10 +310,9 @@ namespace Replica {
                             }
                         }
 
-                        int x = ((allReplicasURL.Count) / 2) + 1;
                         while (true) {
                             lock (o) {
-                                if (n == x)
+                                if (n >= majority)
                                     break;
                             }
                             Thread.Sleep(1);
@@ -385,7 +382,7 @@ namespace Replica {
             Monitor.Exit(allTuples);
         }
 
-        public bool tryElectionOfProcessingReplica(TupleWrapper t, string url) {
+        public void tryElectionOfProcessingReplica(TupleWrapper t, string url) {
             while (frozen)
                 Thread.Sleep(1);
 
@@ -393,23 +390,22 @@ namespace Replica {
             if (deciding.ContainsKey(t)) {
                 Monitor.Pulse(deciding);
                 Monitor.Exit(deciding);
-                return false;
+                throw new AlreadyVotedException();
             }
 
             deciding.Add(t, new DecisionStructure(url));
             Monitor.Pulse(deciding);
             Monitor.Exit(deciding);
-            return true;
         }
 
-        public void confirmElection(TupleWrapper t) {
+        public void confirmElection(TupleWrapper t, string url) {
             while (frozen)
                 Thread.Sleep(1);
 
             // Remove from deciding pile
             Monitor.Enter(deciding);
-            string replica = deciding[t].URL;
-            deciding.Remove(t);
+            if(deciding.ContainsKey(t))
+                deciding.Remove(t);
             Monitor.Pulse(deciding);
             Monitor.Exit(deciding);
 
@@ -420,7 +416,7 @@ namespace Replica {
             Monitor.Exit(allTuples);
 
             // Add to the respective processing pile
-            if (replica.Equals(replicaAddress)) {
+            if (url.Equals(replicaAddress)) {
                 addToQueue(t, tupleQueue);
                 Monitor.Enter(processingOnMe);
                 processingOnMe.Add(t);
@@ -429,23 +425,13 @@ namespace Replica {
             }
 
             else {
-/* TODO: Remove
-Console.WriteLine("\t\t\t\tOTHER REPLICA URL: " + replica);
-Console.WriteLine("\t\t\t\tTUPLE CONTENT: <" + string.Join(" - ", t.Tuple) + ">");
-Console.WriteLine("\t\t\t\tTUPLE ID: " + t.ID);
-*/
                 Monitor.Enter(processingOnOther);
-                if (!processingOnOther.ContainsKey(replica))
-                    processingOnOther.Add(replica, new Dictionary<string, OtherReplicaTuple>());
-                processingOnOther[replica].Add(t.ID, new OtherReplicaTuple(t));
+                if (!processingOnOther.ContainsKey(url))
+                    processingOnOther.Add(url, new Dictionary<string, OtherReplicaTuple>());
+                processingOnOther[url].Add(t.ID, new OtherReplicaTuple(t));
                 Monitor.Pulse(processingOnOther);
                 Monitor.Exit(processingOnOther);
             }
-/* TODO: Remove
-Console.WriteLine("\t\t\t\tCONFIRMED ELECTION!!!");
-Console.WriteLine("\t\t\t\tTUPLE CONTENT: <" + string.Join(" - ", t.Tuple) + ">");
-Console.WriteLine("\t\t\t\tTUPLE ID: " + t.ID);
-*/
         }
 
         public void finishedProcessing(string tupleID, List<TupleWrapper> result, string url) {
@@ -453,11 +439,6 @@ Console.WriteLine("\t\t\t\tTUPLE ID: " + t.ID);
                 Thread.Sleep(1);
 
             Monitor.Enter(processingOnOther);
-/* TODO: Remove
-foreach (KeyValuePair<string, Dictionary<string, OtherReplicaTuple>> entry in processingOnOther)
-Console.WriteLine("\t\tKEY OF OTHER REPLICA TUPLES: " + entry.Key);
-Console.WriteLine("\t\tKEY RECEIVED: " + url);
-*/
             Dictionary<string, OtherReplicaTuple> t = processingOnOther[url];
             Monitor.Pulse(processingOnOther);
             Monitor.Exit(processingOnOther);
@@ -604,31 +585,71 @@ Console.WriteLine("\t\tKEY RECEIVED: " + url);
          * AGREEMENT THREAD *
          *******************/
         private void chooseProcessingReplica(TupleWrapper t) {
-            List<string> toConfirm = new List<string>();
-
-            // TODO: Include the current replica's URL in the list 
-            // TODO: Use the majority of the replicas
-            // TODO: Include the address of the current replica in the same list, all lists of replicas should be in the same order
+            int counter = 0;
             foreach (string url in allReplicasURL) {
                 ReplicaInterface r;
 
-                // TODO: Confirm if this will be a problem!!!
                 if ((r = getReplica(url)) == null)
                     continue;
 
-                if (!r.tryElectionOfProcessingReplica(t, replicaAddress))
-                    return;
+                int exception = -1;
+                Thread thread = new Thread(() =>
+                {
+                    try {
+                        tryElectionOfProcessingReplicaRelay(t, r, replicaAddress);
+                    }
+                    catch (AlreadyVotedException e) {
+                        exception = 0;
+                    }
+                    catch(Exception) { }
+                });
 
-                toConfirm.Add(url);
+                thread.Start();
+                if (!thread.Join(3000)) {
+                    thread.Abort();
+                    if (exception == 0)
+                        return;
+                }
+
+                else
+                    counter++;
+
+                if (counter == majority)
+                    break;
             }
 
-            foreach(string replica in toConfirm) {
+            counter = 0;
+            object o = new object();
+            foreach(string replica in allReplicasURL) {
                 ReplicaInterface r;
 
-                // TODO: Confirm if this will be a problem!!!
                 if ((r = getReplica(replica)) == null)
                     continue;
-                r.confirmElection(t);
+
+                Thread thread = new Thread(() => {
+                    confirmElectionRelay(t, r, replicaAddress, ref counter, ref o);
+                });
+                thread.Start();
+            }
+
+            while (true) {
+                lock (o) {
+                    if (counter >= majority)
+                        break;
+                }
+                Thread.Sleep(1);
+            }
+        }
+
+        private void tryElectionOfProcessingReplicaRelay(TupleWrapper t, ReplicaInterface r, string replicaAddress) {
+            r.tryElectionOfProcessingReplica(t, replicaAddress);
+        }
+
+        private void confirmElectionRelay(TupleWrapper t, ReplicaInterface r, string replicaAddr, ref int counter, ref object o) {
+            r.confirmElection(t, replicaAddress);
+
+            lock(o) {
+                counter++;
             }
         }
 
