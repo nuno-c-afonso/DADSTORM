@@ -423,13 +423,11 @@ namespace Replica {
                 if (isOnDeciding(t))
                     return;
 
-                if (isOnProcessingOnMe(t))
+                if (getOnProcessingOnMe(t)!=null)
                     return;
 
-                if (isOnProcessingOnMe(t))
-                    return;
 
-                if (isOnProcessingOnOther(t))
+                if (getOnProcessingOnOther(t)!=null)
                     return;
             }
 
