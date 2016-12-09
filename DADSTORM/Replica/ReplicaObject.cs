@@ -115,6 +115,7 @@ namespace Replica {
                         if (counter == x)
                             break;
                     }
+                    Thread.Sleep(1);
                 }
 
                 Thread thread = new Thread(() => chooseProcessingReplica(tuple));
@@ -219,14 +220,53 @@ namespace Replica {
                 TupleWrapper tuple = getTuple();
 
                 List<string[]> result = operation.Operate(tuple.Tuple);
+
                 if (result != null) {
-                    foreach (string[] outTuple in result){
+                    List<TupleWrapper> convertedResult = new List<TupleWrapper>();
+
+                    foreach (string[] el in result)
+                        convertedResult.Add(new TupleWrapper(tuple.ID, "" + counter++ + ":" + replicaAddress, el));
+
+                    if (once) {
+                        int n = 1; // To be used for calculating the minimum required number of working replicas
+                        object o = new object();
+                        foreach (string otherReplica in otherReplicasURL) {
+                            Thread t = new Thread(() => broadcastResult(tuple, replicaAddress, convertedResult, ref n, ref o));
+                        }
+
+                        int x = ((otherReplicasURL.Count + 1) / 2) + 1;
+                        while (true) {
+                            lock (o) {
+                                if (n == x)
+                                    break;
+                            }
+                            Thread.Sleep(1);
+                        }
+                    }
+
+                    foreach (TupleWrapper outTuple in convertedResult){
                         Console.WriteLine("sending tuple");
-                        TupleWrapper t = new TupleWrapper(tuple.ID, "" + counter++ + ":" + replicaAddress, outTuple);
-                        router.sendToNext(t);
+                        router.sendToNext(outTuple);
 
                         if (logLevel)
-                            log.Log("tuple " + operationName + " " + replicaAddress + " <" + string.Join(" - ", outTuple) + ">" );
+                            log.Log("tuple " + operationName + " " + replicaAddress + " <" + string.Join(" - ", outTuple.Tuple) + ">" );
+                    }
+
+                    if (once) {
+                        int n = 1; // To be used for calculating the minimum required number of working replicas
+                        object o = new object();
+                        foreach (string otherReplica in otherReplicasURL) {
+                            Thread t = new Thread(() => broadcastFinished(tuple, replicaAddress, ref n, ref o));
+                        }
+
+                        int x = ((otherReplicasURL.Count + 1) / 2) + 1;
+                        while (true) {
+                            lock (o) {
+                                if (n == x)
+                                    break;
+                            }
+                            Thread.Sleep(1);
+                        }
                     }
                 }
             }
@@ -248,7 +288,37 @@ namespace Replica {
                 } catch(System.Net.Sockets.SocketException) { }
             }
         }
-        
+
+        // To be used locally
+        private void broadcastResult(TupleWrapper t, string url, List<TupleWrapper> result, ref int counter, ref object o) {
+            ReplicaInterface r;
+            if ((r = getReplica(url)) != null) {
+                try {
+                    r.finishedProcessing(t.ID, result, url);
+
+                    lock (o) {
+                        counter++;
+                    }
+                }
+                catch (System.Net.Sockets.SocketException) { }
+            }
+        }
+
+        // To be used locally
+        private void broadcastFinished(TupleWrapper t, string url, ref int counter, ref object o) {
+            ReplicaInterface r;
+            if ((r = getReplica(url)) != null) {
+                try {
+                    r.finishedSending(t.ID, url);
+
+                    lock (o) {
+                        counter++;
+                    }
+                }
+                catch (System.Net.Sockets.SocketException) { }
+            }
+        }
+
         public void arrivedTuple(TupleWrapper t) {
             Monitor.Enter(allTuples);
             if (!allTuples.ContainsKey(t))
@@ -290,10 +360,7 @@ namespace Replica {
 
             // Add to the respective processing pile
             if (replica.Equals(replicaAddress)) {
-                Monitor.Enter(tupleQueue.SyncRoot);
-                tupleQueue.Enqueue(t);
-                Monitor.Pulse(tupleQueue.SyncRoot);
-                Monitor.Exit(tupleQueue.SyncRoot);
+                addToQueue(t, tupleQueue);
 
                 Monitor.Enter(processingOnMe);
                 processingOnMe.Add(t);
