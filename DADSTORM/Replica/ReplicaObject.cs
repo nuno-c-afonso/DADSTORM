@@ -21,7 +21,7 @@ namespace Replica {
 
         private string replicaAddress;
         private string operationName;
-        private List<string> otherReplicasURL;
+        private List<string> allReplicasURL;
         private Dictionary<string, int> failedPings;
 
 
@@ -45,7 +45,7 @@ namespace Replica {
 
         public ReplicaObject(string PuppetMasterUrl, string routing, string semantics,
             string logLevel, Operation operation, List<string> output, string replicaAddress, string operationName,
-            List<string> otherAdresses) {
+            List<string> allAdresses) {
             tupleQueue = new Queue();
 
             this.PuppetMasterUrl = PuppetMasterUrl;
@@ -53,10 +53,11 @@ namespace Replica {
             this.operation = operation;
             this.replicaAddress = replicaAddress;
             this.operationName = operationName;
-            otherReplicasURL = otherAdresses;
+            allReplicasURL = allAdresses;
             failedPings = new Dictionary<string, int>();
-            foreach (string s in otherReplicasURL)
-                failedPings.Add(s, 0);
+            foreach (string s in allReplicasURL)
+                if(!s.Equals(replicaAddress))
+                    failedPings.Add(s, 0);
 
             string routingLower = routing.ToLower();
             char[] delimiters = { '(', ')' };
@@ -74,8 +75,9 @@ namespace Replica {
                 router = new HashRouter(output, semantics, int.Parse(splitted[1]));
 
             // Starts the structure needed for replication
-            foreach(string addr in otherAdresses) {
-                processingOnOther.Add(addr, new Dictionary<string, OtherReplicaTuple>());
+            foreach(string addr in allReplicasURL) {
+                if(!addr.Equals(replicaAddress))
+                    processingOnOther.Add(addr, new Dictionary<string, OtherReplicaTuple>());
             }
 
             // Assuming that the service is in: tcp://<PuppetMasterIP>:10001/log
@@ -117,12 +119,14 @@ namespace Replica {
 
                 int counter = 1; // To be used for calculating the minimum required number of working replicas
                 object o = new object();
-                foreach (string otherReplica in otherReplicasURL) {
-                    Thread t = new Thread(() => broadcastTuple(tuple, otherReplica, ref counter, ref o));
-                    t.Start();
+                foreach (string otherReplica in allReplicasURL) {
+                    if (!otherReplica.Equals(replicaAddress)) {
+                        Thread t = new Thread(() => broadcastTuple(tuple, otherReplica, ref counter, ref o));
+                        t.Start();
+                    }
                 }
 
-                int x = ((otherReplicasURL.Count + 1) / 2) + 1;
+                int x = ((allReplicasURL.Count) / 2) + 1;
                 while (true) {
                     lock(o) {
                         if (counter == x)
@@ -252,12 +256,14 @@ namespace Replica {
                     if (once) {
                         int n = 1; // To be used for calculating the minimum required number of working replicas
                         object o = new object();
-                        foreach (string otherReplica in otherReplicasURL) {
-                            Thread t = new Thread(() => broadcastResult(tuple, otherReplica, convertedResult, ref n, ref o));
-                            t.Start();
+                        foreach (string otherReplica in allReplicasURL) {
+                            if (!otherReplica.Equals(replicaAddress)) {
+                                Thread t = new Thread(() => broadcastResult(tuple, otherReplica, convertedResult, ref n, ref o));
+                                t.Start();
+                            }
                         }
 
-                        int x = ((otherReplicasURL.Count + 1) / 2) + 1;
+                        int x = ((allReplicasURL.Count) / 2) + 1;
                         while (true) {
                             lock (o) {
                                 if (n == x)
@@ -278,12 +284,14 @@ namespace Replica {
                     if (once) {
                         int n = 1; // To be used for calculating the minimum required number of working replicas
                         object o = new object();
-                        foreach (string otherReplica in otherReplicasURL) {
-                            Thread t = new Thread(() => broadcastFinished(tuple, otherReplica, ref n, ref o));
-                            t.Start();
+                        foreach (string otherReplica in allReplicasURL) {
+                            if (!otherReplica.Equals(replicaAddress)) {
+                                Thread t = new Thread(() => broadcastFinished(tuple, otherReplica, ref n, ref o));
+                                t.Start();
+                            }
                         }
 
-                        int x = ((otherReplicasURL.Count + 1) / 2) + 1;
+                        int x = ((allReplicasURL.Count) / 2) + 1;
                         while (true) {
                             lock (o) {
                                 if (n == x)
@@ -468,7 +476,8 @@ Console.WriteLine("\t\tKEY RECEIVED: " + url);
         public void failureDetector() {
             while (true) {
                 Thread.Sleep(5000);
-                List<string> otherReplicasURLcopy = otherReplicasURL.ToList();
+                List<string> otherReplicasURLcopy = allReplicasURL.ToList();
+                otherReplicasURLcopy.Remove(replicaAddress);
                 foreach (string url in otherReplicasURLcopy) {
                     Console.WriteLine("ping to {0}", url);
                     try {
@@ -502,8 +511,8 @@ Console.WriteLine("\t\tKEY RECEIVED: " + url);
 
         private void handleCrashedReplica(string url) {
             Console.WriteLine("!!!handleCrashedReplica({0})", url);
-            lock (otherReplicasURL) {
-                otherReplicasURL.Remove(url);//TODO CHECK if we can do this !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            lock (allReplicasURL) {
+                allReplicasURL.Remove(url);//TODO CHECK if we can do this !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             }
 
 
@@ -522,12 +531,7 @@ Console.WriteLine("\t\tKEY RECEIVED: " + url);
             // TODO: Include the current replica's URL in the list 
             // TODO: Use the majority of the replicas
             // TODO: Include the address of the current replica in the same list, all lists of replicas should be in the same order
-            // Must be done on himself
-            toConfirm.Add(replicaAddress);
-            if (!tryElectionOfProcessingReplica(t, replicaAddress))
-                return;
-
-            foreach (string url in otherReplicasURL) {
+            foreach (string url in allReplicasURL) {
                 ReplicaInterface r;
 
                 // TODO: Confirm if this will be a problem!!!

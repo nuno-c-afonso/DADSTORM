@@ -36,7 +36,7 @@ namespace ReadTuplesFromFile {
             int counter = 0;
             foreach (string line in lines) {
                 string[] tuple = getTupleFromLine(line);
-                TupleWrapper t = new TupleWrapper("", "" + counter++, tuple);
+                TupleWrapper t = new TupleWrapper("", filepath + ":" + string.Join(" - ", replicas) + ":" + counter++, tuple);
                 router.sendToNext(t);
             }
         }
