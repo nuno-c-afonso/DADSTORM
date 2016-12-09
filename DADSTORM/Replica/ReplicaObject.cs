@@ -236,7 +236,7 @@ namespace Replica {
                         int n = 1; // To be used for calculating the minimum required number of working replicas
                         object o = new object();
                         foreach (string otherReplica in otherReplicasURL) {
-                            Thread t = new Thread(() => broadcastResult(tuple, replicaAddress, convertedResult, ref n, ref o));
+                            Thread t = new Thread(() => broadcastResult(tuple, otherReplica, convertedResult, ref n, ref o));
                             t.Start();
                         }
 
@@ -262,7 +262,7 @@ namespace Replica {
                         int n = 1; // To be used for calculating the minimum required number of working replicas
                         object o = new object();
                         foreach (string otherReplica in otherReplicasURL) {
-                            Thread t = new Thread(() => broadcastFinished(tuple, replicaAddress, ref n, ref o));
+                            Thread t = new Thread(() => broadcastFinished(tuple, otherReplica, ref n, ref o));
                             t.Start();
                         }
 
@@ -301,7 +301,7 @@ namespace Replica {
             ReplicaInterface r;
             if ((r = getReplica(url)) != null) {
                 try {
-                    r.finishedProcessing(t.ID, result, url);
+                    r.finishedProcessing(t.ID, result, replicaAddress);
 
                     lock (o) {
                         counter++;
@@ -316,7 +316,7 @@ namespace Replica {
             ReplicaInterface r;
             if ((r = getReplica(url)) != null) {
                 try {
-                    r.finishedSending(t.ID, url);
+                    r.finishedSending(t.ID, replicaAddress);
 
                     lock (o) {
                         counter++;
@@ -376,6 +376,9 @@ namespace Replica {
             }
 
             else {
+Console.WriteLine("\t\t\t\tOTHER REPLICA URL: " + replica);
+Console.WriteLine("\t\t\t\tTUPLE CONTENT: <" + string.Join(" - ", t.Tuple) + ">");
+Console.WriteLine("\t\t\t\tTUPLE ID: " + t.ID);
                 Monitor.Enter(processingOnOther);
                 if (!processingOnOther.ContainsKey(replica))
                     processingOnOther.Add(replica, new Dictionary<string, OtherReplicaTuple>());
@@ -389,17 +392,29 @@ Console.WriteLine("\t\t\t\tTUPLE CONTENT: <" + string.Join(" - ", t.Tuple) + ">"
 Console.WriteLine("\t\t\t\tTUPLE ID: " + t.ID);
         }
 
-        // TODO: Add the necessary mutual exclusion stuff
         public void finishedProcessing(string tupleID, List<TupleWrapper> result, string url) {
+            Monitor.Enter(processingOnOther);
+foreach (KeyValuePair<string, Dictionary<string, OtherReplicaTuple>> entry in processingOnOther)
+Console.WriteLine("\t\tKEY OF OTHER REPLICA TUPLES: " + entry.Key);
+Console.WriteLine("\t\tKEY RECEIVED: " + url);
+
             Dictionary<string, OtherReplicaTuple> t = processingOnOther[url];
+            Monitor.Pulse(processingOnOther);
+            Monitor.Exit(processingOnOther);
             t[tupleID].finishedProcessing(result);
         }
 
         public void finishedSending(string tupleID, string url) {
+            Monitor.Enter(seenTuples);
             seenTuples.Add(tupleID);
+            Monitor.Pulse(seenTuples);
+            Monitor.Exit(seenTuples);
 
+            Monitor.Enter(processingOnOther);
             Dictionary<string, OtherReplicaTuple> t = processingOnOther[url];
             t.Remove(tupleID);
+            Monitor.Pulse(processingOnOther);
+            Monitor.Exit(processingOnOther);
         }
 
         /********************
@@ -410,6 +425,12 @@ Console.WriteLine("\t\t\t\tTUPLE ID: " + t.ID);
 
             // TODO: Include the current replica's URL in the list 
             // TODO: Use the majority of the replicas
+            // TODO: Include the address of the current replica in the same list, all lists of replicas should be in the same order
+            // Must be done on himself
+            toConfirm.Add(replicaAddress);
+            if (!tryElectionOfProcessingReplica(t, replicaAddress))
+                return;
+
             foreach (string url in otherReplicasURL) {
                 ReplicaInterface r;
 
