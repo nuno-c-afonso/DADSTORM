@@ -451,7 +451,7 @@ namespace Replica {
 
         // To check the threads timestamps
         private void notAssignedTuples() {
-            int TIME_INTERVAL = 10000; // measured in milliseconds
+            int TIME_INTERVAL = 20000; // measured in milliseconds
 
             while(true) {
                 Dictionary<TupleWrapper, DateTime> toAnalyze;
