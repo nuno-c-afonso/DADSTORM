@@ -23,6 +23,8 @@ namespace CommonClasses {
         void confirmElection(TupleWrapper t);
         void finishedProcessing(string tupleID, List<TupleWrapper> result, string url);
         void finishedSending(string tupleID, string url);
-        
+        bool ping(string originUrl, bool sameLayer);
+
+
     }
 }
