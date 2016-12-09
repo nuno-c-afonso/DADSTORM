@@ -87,6 +87,10 @@ namespace Replica {
         //method used to send tuples to the owner of this buffer
         //USED BY: other replicas, input file
         public void addTuple(TupleWrapper tuple) {
+
+            //while (frozen)
+            //    Thread.Sleep(1);
+
             Console.WriteLine("addTuple({0})", tuple.Tuple);
 
             // TODO: Check with other replicas
