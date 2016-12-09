@@ -6,7 +6,9 @@ using System.Runtime.Remoting.Channels.Tcp;
 
 namespace Replica {
     public abstract class Router {
+        private static int MAX_TRIES = 3;
         private List<string> nextOperator;
+        private Dictionary<string, int> counters;
         private Semantics semantics;
 
         public List<string> NextOperator {
@@ -17,7 +19,12 @@ namespace Replica {
 
         public Router(List<string> output, string semantics) {
             Console.WriteLine("3-Router Created");
+
             nextOperator = output;
+            counters = new Dictionary<string, int>();
+            foreach (string s in output)
+                counters.Add(s, 0);
+
             string lowerCase = semantics.ToLower();
 
             if (lowerCase.Equals("at-most-once"))
@@ -46,12 +53,17 @@ namespace Replica {
                     Console.WriteLine("  ##!! "+ outputReplica + " was down, removed from nextOperator list. Resending !!##\n");
 
                     nextOperator.Remove(outputReplica);
+                    counters.Remove(outputReplica);
                     sendToNext(tuple);
                 } catch(CouldNotSendTupleException) { // The replica is alive, but slow
-                    //TODO: Check if we need to recheck the state of the unresponsive replica
+                    if (++counters[outputReplica] == MAX_TRIES) {
+                        nextOperator.Remove(outputReplica);
+                        counters.Remove(outputReplica);
+                    }
+
                     Console.WriteLine("  ##!! " + outputReplica + " did not respond in time. Resending !!##\n");
                     sendToNext(tuple);
-                }
+                } catch(Exception) { }
             }
             //ELSE can write on file
 

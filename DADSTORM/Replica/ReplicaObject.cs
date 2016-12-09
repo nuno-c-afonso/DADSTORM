@@ -43,6 +43,7 @@ namespace Replica {
         private Dictionary<string, Dictionary<string, OtherReplicaTuple>> processingOnOther =
             new Dictionary<string, Dictionary<string, OtherReplicaTuple>>();
         Thread failureDetectorThread = null;
+        Thread notAssignedTuplesThread = null;
 
 
         public bool Started {
@@ -76,8 +77,11 @@ namespace Replica {
             once = semantics.Equals("exactly-once");
             atLeastOnce = semantics.Equals("at-least-once");
 
-            if (once||atLeastOnce)
-            failureDetectorThread = new Thread(() => failureDetector());//TODO check if it is use in jus exacly once or some else;
+            if (once || atLeastOnce) {
+                failureDetectorThread = new Thread(() => failureDetector());//TODO check if it is use in jus exacly once or some else;
+                notAssignedTuplesThread = new Thread(() => notAssignedTuples());
+                notAssignedTuplesThread.Start();
+            }
             
 
             if (splitted[0].Equals("primary"))
@@ -116,20 +120,22 @@ namespace Replica {
 
             Console.WriteLine("addTuple({0})", tuple.Tuple);
 
-            if (once) {
+            if (once || atLeastOnce) {
                 int majority = (int)((allReplicasURL.Count) / 2) + 1;
 
-                if (isOnDeciding(tuple))
-                    return;
+                if (once) {
+                    if (isOnDeciding(tuple))
+                        return;
 
-                if (isOnProcessingOnMe(tuple))
-                    return;
+                    if (isOnProcessingOnMe(tuple))
+                        return;
 
-                if (isOnProcessingOnMe(tuple))
-                    return;
+                    if (isOnProcessingOnMe(tuple))
+                        return;
 
-                if (isOnProcessingOnOther(tuple))
-                    return;
+                    if (isOnProcessingOnOther(tuple))
+                        return;
+                }
 
                 if (isOnSeenTuples(tuple))
                     return;
@@ -160,9 +166,11 @@ namespace Replica {
                     Thread.Sleep(1);
                 }
 
-                Thread thread = new Thread(() => chooseProcessingReplica(tuple));
-                thread.Start();
-                return;
+                if (once) {
+                    Thread thread = new Thread(() => chooseProcessingReplica(tuple));
+                    thread.Start();
+                    return;
+                }
             }
 
             addToQueue(tuple, tupleQueue);
@@ -335,6 +343,31 @@ namespace Replica {
                             Thread.Sleep(1);
                         }
                     }
+
+                    // To remove the tuples from the other lists
+                    else if (once) {
+                        Monitor.Enter(seenTuples);
+                        seenTuples.Add(tuple.ID);
+                        Monitor.Pulse(seenTuples);
+                        Monitor.Exit(seenTuples);
+
+                        int n = 1; // To be used for calculating the minimum required number of working replicas
+                        object o = new object();
+                        foreach (string otherReplica in allReplicasURL) {
+                            if (!otherReplica.Equals(replicaAddress)) {
+                                Thread t = new Thread(() => broadcastFinished(tuple, otherReplica, ref n, ref o));
+                                t.Start();
+                            }
+                        }
+
+                        while (true) {
+                            lock (o) {
+                                if (n >= majority)
+                                    break;
+                            }
+                            Thread.Sleep(1);
+                        }
+                    }
                 }
             }
         }
@@ -376,7 +409,7 @@ namespace Replica {
             ReplicaInterface r;
             if ((r = getReplica(url)) != null) {
                 try {
-                    r.finishedSending(t.ID, replicaAddress);
+                    r.finishedSending(t, replicaAddress);
 
                     lock (o) {
                         counter++;
@@ -390,6 +423,23 @@ namespace Replica {
             while (frozen)
                 Thread.Sleep(1);
 
+            if (once) {
+                if (isOnDeciding(t))
+                    return;
+
+                if (isOnProcessingOnMe(t))
+                    return;
+
+                if (isOnProcessingOnMe(t))
+                    return;
+
+                if (isOnProcessingOnOther(t))
+                    return;
+            }
+
+            if (isOnSeenTuples(t))
+                return;
+
             Monitor.Enter(allTuples);
             if (!allTuples.ContainsKey(t))
                 allTuples.Add(t, new DateTime());
@@ -397,6 +447,40 @@ namespace Replica {
                 allTuples[t] = new DateTime();
             Monitor.Pulse(allTuples);
             Monitor.Exit(allTuples);
+        }
+
+        // To check the threads timestamps
+        private void notAssignedTuples() {
+            int TIME_INTERVAL = 20000; // measured in milliseconds
+
+            while(true) {
+                Dictionary<TupleWrapper, DateTime> toAnalyze;
+                Monitor.Enter(allTuples);
+                toAnalyze = new Dictionary<TupleWrapper, DateTime>(allTuples);
+                Monitor.Pulse(allTuples);
+                Monitor.Exit(allTuples);
+
+                foreach (KeyValuePair<TupleWrapper, DateTime> entry in toAnalyze) {
+                    DateTime now = new DateTime();
+                    TimeSpan diff = now - entry.Value;
+                    bool isInsideInterval = (int) Math.Abs(diff.TotalMilliseconds) < TIME_INTERVAL;
+
+                    if (atLeastOnce && !isInsideInterval) {
+                        Monitor.Enter(allTuples);
+                        allTuples.Remove(entry.Key);
+                        Monitor.Pulse(allTuples);
+                        Monitor.Exit(allTuples);
+
+                        addToQueue(entry.Key, tupleQueue);
+                    }
+
+                    else if(once && !isInsideInterval) {
+                        // TODO: Implement consensus!!!
+                    }
+                }
+
+                Thread.Sleep(1);
+            }
         }
 
         public void tryElectionOfProcessingReplica(TupleWrapper t, string url) {
@@ -462,20 +546,29 @@ namespace Replica {
             t[tupleID].finishedProcessing(result);
         }
 
-        public void finishedSending(string tupleID, string url) {
+        public void finishedSending(TupleWrapper tuple, string url) {
             while (frozen)
                 Thread.Sleep(1);
 
             Monitor.Enter(seenTuples);
-            seenTuples.Add(tupleID);
+            seenTuples.Add(tuple.ID);
             Monitor.Pulse(seenTuples);
             Monitor.Exit(seenTuples);
 
-            Monitor.Enter(processingOnOther);
-            Dictionary<string, OtherReplicaTuple> t = processingOnOther[url];
-            t.Remove(tupleID);
-            Monitor.Pulse(processingOnOther);
-            Monitor.Exit(processingOnOther);
+            if (once) {
+                Monitor.Enter(processingOnOther);
+                Dictionary<string, OtherReplicaTuple> t = processingOnOther[url];
+                t.Remove(tuple.ID);
+                Monitor.Pulse(processingOnOther);
+                Monitor.Exit(processingOnOther);
+            }
+
+            else if(atLeastOnce) {
+                Monitor.Enter(allTuples);
+                allTuples.Remove(tuple);
+                Monitor.Pulse(processingOnOther);
+                Monitor.Exit(processingOnOther);
+            }
         }
 
         /// <summary>Used to see if the replica is ok</summary>

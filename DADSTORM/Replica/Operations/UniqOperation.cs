@@ -39,9 +39,11 @@ namespace Replica {
 
             bool wasInOther = false;
             foreach(string s in OtherReplicas) {
-                ReplicaInterface rep = getGeneralReplica(s);
-                if (wasInOther = rep.wasElementSeen(element))
-                    break;
+                try {
+                    ReplicaInterface rep = getGeneralReplica(s);
+                    if (wasInOther = rep.wasElementSeen(element))
+                        break;
+                } catch(System.Net.Sockets.SocketException) { }
             }
 
             if (wasInOther)
