@@ -106,8 +106,8 @@ namespace Replica {
         //USED BY: other replicas, input file
         public void addTuple(TupleWrapper tuple) {
 
-            //while (frozen)
-            //    Thread.Sleep(1);
+            while (frozen || !start)
+                Thread.Sleep(1);
 
             Console.WriteLine("addTuple({0})", tuple.Tuple);
 
@@ -129,6 +129,7 @@ namespace Replica {
                 object o = new object();
                 foreach (string otherReplica in otherReplicasURL) {
                     Thread t = new Thread(() => broadcastTuple(tuple, otherReplica, ref counter, ref o));
+                    t.Start();
                 }
 
                 int x = ((otherReplicasURL.Count + 1) / 2) + 1;
@@ -167,6 +168,9 @@ namespace Replica {
         //Command  to set the time to wait between tuple processing
         //USED BY:PuppetMaster
         public void Interval(int time) {
+            while (frozen)
+                Thread.Sleep(1);
+
             Console.WriteLine("-->Interval command received time={0}",time);
             waitingTime = time;
         }
@@ -184,6 +188,9 @@ namespace Replica {
         //Command to print the current status
         //USED BY:PuppetMaster
         public void Status() {
+            while (frozen)
+                Thread.Sleep(1);
+
             Console.WriteLine("-->STATUS command received");
 
             new Thread(() => testLog()).Start();
@@ -256,7 +263,8 @@ namespace Replica {
                         int n = 1; // To be used for calculating the minimum required number of working replicas
                         object o = new object();
                         foreach (string otherReplica in otherReplicasURL) {
-                            Thread t = new Thread(() => broadcastResult(tuple, replicaAddress, convertedResult, ref n, ref o));
+                            Thread t = new Thread(() => broadcastResult(tuple, otherReplica, convertedResult, ref n, ref o));
+                            t.Start();
                         }
 
                         int x = ((otherReplicasURL.Count + 1) / 2) + 1;
@@ -281,7 +289,8 @@ namespace Replica {
                         int n = 1; // To be used for calculating the minimum required number of working replicas
                         object o = new object();
                         foreach (string otherReplica in otherReplicasURL) {
-                            Thread t = new Thread(() => broadcastFinished(tuple, replicaAddress, ref n, ref o));
+                            Thread t = new Thread(() => broadcastFinished(tuple, otherReplica, ref n, ref o));
+                            t.Start();
                         }
 
                         int x = ((otherReplicasURL.Count + 1) / 2) + 1;
@@ -319,7 +328,7 @@ namespace Replica {
             ReplicaInterface r;
             if ((r = getReplica(url)) != null) {
                 try {
-                    r.finishedProcessing(t.ID, result, url);
+                    r.finishedProcessing(t.ID, result, replicaAddress);
 
                     lock (o) {
                         counter++;
@@ -334,7 +343,7 @@ namespace Replica {
             ReplicaInterface r;
             if ((r = getReplica(url)) != null) {
                 try {
-                    r.finishedSending(t.ID, url);
+                    r.finishedSending(t.ID, replicaAddress);
 
                     lock (o) {
                         counter++;
@@ -345,6 +354,9 @@ namespace Replica {
         }
 
         public void arrivedTuple(TupleWrapper t) {
+            while (frozen)
+                Thread.Sleep(1);
+
             Monitor.Enter(allTuples);
             if (!allTuples.ContainsKey(t))
                 allTuples.Add(t, new DateTime());
@@ -355,6 +367,9 @@ namespace Replica {
         }
 
         public bool tryElectionOfProcessingReplica(TupleWrapper t, string url) {
+            while (frozen)
+                Thread.Sleep(1);
+
             Monitor.Enter(deciding);
             if (deciding.ContainsKey(t)) {
                 Monitor.Pulse(deciding);
@@ -369,6 +384,8 @@ namespace Replica {
         }
 
         public void confirmElection(TupleWrapper t) {
+            while (frozen)
+                Thread.Sleep(1);
 
             // Remove from deciding pile
             Monitor.Enter(deciding);
@@ -386,7 +403,6 @@ namespace Replica {
             // Add to the respective processing pile
             if (replica.Equals(replicaAddress)) {
                 addToQueue(t, tupleQueue);
-
                 Monitor.Enter(processingOnMe);
                 processingOnMe.Add(t);
                 Monitor.Pulse(processingOnMe);
@@ -394,25 +410,55 @@ namespace Replica {
             }
 
             else {
+/* TODO: Remove
+Console.WriteLine("\t\t\t\tOTHER REPLICA URL: " + replica);
+Console.WriteLine("\t\t\t\tTUPLE CONTENT: <" + string.Join(" - ", t.Tuple) + ">");
+Console.WriteLine("\t\t\t\tTUPLE ID: " + t.ID);
+*/
                 Monitor.Enter(processingOnOther);
                 if (!processingOnOther.ContainsKey(replica))
                     processingOnOther.Add(replica, new Dictionary<string, OtherReplicaTuple>());
                 processingOnOther[replica].Add(t.ID, new OtherReplicaTuple(t));
-                Monitor.Pulse(tupleQueue.SyncRoot);
-                Monitor.Exit(tupleQueue.SyncRoot);
+                Monitor.Pulse(processingOnOther);
+                Monitor.Exit(processingOnOther);
             }
+/* TODO: Remove
+Console.WriteLine("\t\t\t\tCONFIRMED ELECTION!!!");
+Console.WriteLine("\t\t\t\tTUPLE CONTENT: <" + string.Join(" - ", t.Tuple) + ">");
+Console.WriteLine("\t\t\t\tTUPLE ID: " + t.ID);
+*/
         }
 
         public void finishedProcessing(string tupleID, List<TupleWrapper> result, string url) {
+            while (frozen)
+                Thread.Sleep(1);
+
+            Monitor.Enter(processingOnOther);
+/* TODO: Remove
+foreach (KeyValuePair<string, Dictionary<string, OtherReplicaTuple>> entry in processingOnOther)
+Console.WriteLine("\t\tKEY OF OTHER REPLICA TUPLES: " + entry.Key);
+Console.WriteLine("\t\tKEY RECEIVED: " + url);
+*/
             Dictionary<string, OtherReplicaTuple> t = processingOnOther[url];
+            Monitor.Pulse(processingOnOther);
+            Monitor.Exit(processingOnOther);
             t[tupleID].finishedProcessing(result);
         }
 
-        public void finishedSending(string tupleID, string url) {//TODO check first if it isnt already in seen tuples
-            seenTuples.Add(tupleID);
+        public void finishedSending(string tupleID, string url) {
+            while (frozen)
+                Thread.Sleep(1);
 
+            Monitor.Enter(seenTuples);
+            seenTuples.Add(tupleID);
+            Monitor.Pulse(seenTuples);
+            Monitor.Exit(seenTuples);
+
+            Monitor.Enter(processingOnOther);
             Dictionary<string, OtherReplicaTuple> t = processingOnOther[url];
             t.Remove(tupleID);
+            Monitor.Pulse(processingOnOther);
+            Monitor.Exit(processingOnOther);
         }
 
         /// <summary>Used to see if the replica is ok</summary>
@@ -542,6 +588,12 @@ namespace Replica {
 
             // TODO: Include the current replica's URL in the list 
             // TODO: Use the majority of the replicas
+            // TODO: Include the address of the current replica in the same list, all lists of replicas should be in the same order
+            // Must be done on himself
+            toConfirm.Add(replicaAddress);
+            if (!tryElectionOfProcessingReplica(t, replicaAddress))
+                return;
+
             foreach (string url in otherReplicasURL) {
                 ReplicaInterface r;
 
@@ -561,7 +613,6 @@ namespace Replica {
                 // TODO: Confirm if this will be a problem!!!
                 if ((r = getReplica(replica)) == null)
                     continue;
-
                 r.confirmElection(t);
             }
         }

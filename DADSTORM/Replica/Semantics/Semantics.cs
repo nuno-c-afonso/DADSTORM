@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace Replica {
     public abstract class Semantics {
         // It is measured in milliseconds
-        public static int TIMEOUT_VALUE = 5000;
+        public static int TIMEOUT_VALUE = 10000;
 
         // Used for the asynchronous calls
         public delegate void RemoteAsyncDelegate(TupleWrapper tuple);
