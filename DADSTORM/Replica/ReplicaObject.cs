@@ -29,7 +29,6 @@ namespace Replica {
         private string operationName;
         private List<string> allReplicasURL;
         private Dictionary<string, int> failedPings;
-        private int majority;
 
         private bool start = false;
         private int waitingTime = 0;
@@ -59,7 +58,6 @@ namespace Replica {
             this.replicaAddress = replicaAddress;
             this.operationName = operationName;
             allReplicasURL = allAdresses;
-            majority = (int) ((allReplicasURL.Count) / 2) + 1;
             failedPings = new Dictionary<string, int>();
             replicasState = new Dictionary<string, int>();
 
@@ -120,6 +118,8 @@ namespace Replica {
             // TODO: Return a string, saying if it was decided or if it is final
             // TODO: See the behavior when it was decided, but the replica crashed
             if (once) {
+                int majority = (int)((allReplicasURL.Count) / 2) + 1;
+
                 Monitor.Enter(allTuples);
                 if (!allTuples.ContainsKey(tuple))
                     allTuples.Add(tuple, new DateTime());
@@ -245,8 +245,10 @@ namespace Replica {
                 failureDetectorThread.Start();//TODO check if this is used just in exacly once
             
             while (true) {
+                int majority = (int)((allReplicasURL.Count) / 2) + 1;
+
                 //see if it is feezed
-                while(frozen == true)
+                while (frozen == true)
                     Thread.Sleep(100);
 
                 //wait the defined time between processing
@@ -585,6 +587,8 @@ namespace Replica {
          * AGREEMENT THREAD *
          *******************/
         private void chooseProcessingReplica(TupleWrapper t) {
+            int majority = (int)((allReplicasURL.Count) / 2) + 1;
+
             int counter = 0;
             foreach (string url in allReplicasURL) {
                 ReplicaInterface r;
