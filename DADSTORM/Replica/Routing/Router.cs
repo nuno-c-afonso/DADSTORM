@@ -17,7 +17,9 @@ namespace Replica {
 
         public Router(List<string> output, string semantics) {
             Console.WriteLine("3-Router Created");
+
             nextOperator = output;
+
             string lowerCase = semantics.ToLower();
 
             if (lowerCase.Equals("at-most-once"))
@@ -48,10 +50,9 @@ namespace Replica {
                     nextOperator.Remove(outputReplica);
                     sendToNext(tuple);
                 } catch(CouldNotSendTupleException) { // The replica is alive, but slow
-                    //TODO: Check if we need to recheck the state of the unresponsive replica
                     Console.WriteLine("  ##!! " + outputReplica + " did not respond in time. Resending !!##\n");
                     sendToNext(tuple);
-                }
+                } catch(Exception) { }
             }
             //ELSE can write on file
 

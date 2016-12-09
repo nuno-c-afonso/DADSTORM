@@ -18,8 +18,10 @@ namespace Replica {
             int globalCounter = ++counter;
 
             foreach(string url in OtherReplicas) {
-                ReplicaInterface r = getGeneralReplica(url);
-                globalCounter += r.numberOfProcessedTuples();
+                try {
+                    ReplicaInterface r = getGeneralReplica(url);
+                    globalCounter += r.numberOfProcessedTuples();
+                } catch (System.Net.Sockets.SocketException) { }
             }
 
             List<string[]> l = new List<string[]>();

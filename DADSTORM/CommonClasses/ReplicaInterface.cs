@@ -23,7 +23,7 @@ namespace CommonClasses {
         void tryElectionOfProcessingReplica(TupleWrapper t, string url);
         void confirmElection(TupleWrapper t, string url);
         void finishedProcessing(string tupleID, List<TupleWrapper> result, string url);
-        void finishedSending(string tupleID, string url);
+        void finishedSending(TupleWrapper tuple, string url);
         bool ping(string originUrl, bool sameLayer);
         DTOtupleState getTupleState(TupleWrapper tuple);
 
