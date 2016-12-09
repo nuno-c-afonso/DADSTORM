@@ -36,6 +36,7 @@ namespace Replica {
         private bool frozen = false;
 
         private bool once;
+        private bool atLeastOnce;
         private Dictionary<TupleWrapper, DateTime> allTuples = new Dictionary<TupleWrapper, DateTime>();
         private HashSet<string> seenTuples = new HashSet<string>();
         private Dictionary<TupleWrapper, DecisionStructure> deciding = new Dictionary<TupleWrapper, DecisionStructure>();
@@ -75,6 +76,9 @@ namespace Replica {
             string[] splitted = routingLower.Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
 
             once = semantics.Equals("exactly-once");
+            atLeastOnce = semantics.Equals("at-least-once");
+
+            if (once||atLeastOnce)
             failureDetectorThread = new Thread(() => failureDetector());//TODO check if it is use in jus exacly once or some else;
             
 
@@ -482,15 +486,8 @@ Console.WriteLine("\t\tKEY RECEIVED: " + url);
 
         /// <summary>Used to see if the replica is ok</summary>
         public bool ping(string originUrl,bool sameLayer) {
+            while (frozen) { Thread.Sleep(100); }
 
-            while (frozen) {
-                Thread.Sleep(100);
-
-            }
-            /* if (sameLayer) {
-                 if (!otherReplicasURL.Contains(originUrl)) 
-                     otherReplicasURL.Add(originUrl);
-             }*/
             //Console.WriteLine("Ping requested by{0} in {1}", originUrl, replicaAddress);
             return true;
         }
@@ -565,6 +562,8 @@ Console.WriteLine("\t\tKEY RECEIVED: " + url);
         private string consensusForHandleCrash(string url) {
             //TODO make consensus to chosse who is going to handle the crashed
             //string consensusWiner = replicaAddress;
+
+            //if winer merge other tuples with mines
             string consensusWiner = "xxx";
 
 
@@ -572,33 +571,91 @@ Console.WriteLine("\t\tKEY RECEIVED: " + url);
         }
 
         /// <summary>Change the owner of the tuples from oldOwner to newOwner</summary>
-        private void changeOwner(string oldOwner,string newOwner) {
-            Dictionary<string, OtherReplicaTuple> oldtuples = processingOnOther[oldOwner];
-            foreach(string tupleid in oldtuples.Keys) {
+        private Dictionary<string, OtherReplicaTuple> changeOwner(string oldOwner,string newOwner) {
+            Dictionary<string, OtherReplicaTuple> oldtuples = new Dictionary<string, OtherReplicaTuple>(processingOnOther[oldOwner]);
+            foreach (string tupleid in oldtuples.Keys) {
                 processingOnOther[newOwner].Add(tupleid, processingOnOther[oldOwner][tupleid]);
                 processingOnOther[oldOwner].Remove(tupleid);
-            }//TODO devolver uma lista com todos os tuplos que tem para o caso de o;
+            }
+            return oldtuples;
         }
 
         /// <summary>Change the owner of the tuples from oldOwner to this replica</summary>
-        private void changeToMe(string oldOwner) {
-            //TODO make locks
-            Dictionary<string, OtherReplicaTuple> oldtuples = processingOnOther[oldOwner];
+        private void changeToMe(string oldOwner) {//TODO make locks
+
+            Dictionary<string, OtherReplicaTuple> notProcessed = new Dictionary<string, OtherReplicaTuple>();
+            Dictionary <string, OtherReplicaTuple> oldtuples =new Dictionary<string, OtherReplicaTuple>( processingOnOther[oldOwner]);
+
             foreach (string tupleid in oldtuples.Keys) {
-                if (processingOnOther[oldOwner][tupleid].isProcessed()) {
-                    processingOnOther[replicaAddress].Add(tupleid, processingOnOther[oldOwner][tupleid]);
+                if (oldtuples[tupleid].isProcessed()) {//Needs a majority
+                    Monitor.Enter(processingOnOther);
+                    TupleWrapper tuple = processingOnOther[oldOwner][tupleid].getTuple();
+                    List<TupleWrapper> result = processingOnOther[oldOwner][tupleid].getResult();
                     processingOnOther[oldOwner].Remove(tupleid);
+                    Monitor.Pulse(processingOnOther);
+                    Monitor.Exit(processingOnOther);
+
+                    Monitor.Enter(seenTuples);
+                    seenTuples.Add(tupleid);
+                    Monitor.Pulse(seenTuples);
+                    Monitor.Exit(seenTuples);
+
+                    foreach (TupleWrapper tup in result) {
+                        int n = 1; // To be used for calculating the minimum required number of working replicas
+                        object o = new object();//TODO need timeout
+                        foreach (string otherReplica in allReplicasURL) {
+                            if (!otherReplica.Equals(replicaAddress)) {
+                                Thread thread = new Thread(() => broadcastFinished(tup, otherReplica, ref n, ref o));
+                                thread.Start();
+                            }
+                        }
+
+                        int x = ((allReplicasURL.Count) / 2) + 1;
+                        while (true) {
+                            lock (o) {
+                                if (n == x)
+                                    break;
+                            }
+                            Thread.Sleep(1);
+                        }
+                    }
                 }
-                else {
-                    TupleWrapper t = processingOnOther[oldOwner][tupleid].getTuple();
-                    processingOnMe.Add(t);
-                    addToQueue(t, tupleQueue);
+                else {//needs all the others information
+                    notProcessed.Add(tupleid, oldtuples[tupleid]);
+                    Monitor.Enter(processingOnOther);
                     processingOnOther[oldOwner].Remove(tupleid);
+                    Monitor.Pulse(processingOnOther);
+                    Monitor.Exit(processingOnOther);
                 }
-            }//TODO devolver uma lista com todos os tuplos que tem para o caso de o;
-            //TODO
+            }
+            Thread t = new Thread(() => handleNotProcessed(notProcessed, allReplicasURL,replicaAddress));
+            t.Start();
         }
 
+        private static void handleNotProcessed(Dictionary<string, OtherReplicaTuple> notProcessed,List<string> allReplicasURL, string myUrl) {
+            if (notProcessed.Count == 0)
+                return;
+
+            ReplicaInterface r;
+            foreach (string tupleid in notProcessed.Keys) {
+                foreach (string url in allReplicasURL) {
+                    if (!url.Equals(myUrl)) {
+                        try {
+                            r = (ReplicaInterface)Activator.GetObject(typeof(ReplicaInterface), url);
+                            //r.getstate(id);
+
+                        } catch (System.Net.Sockets.SocketException) { }
+                    } 
+
+
+                }
+
+            }
+
+
+       }
+
+        
 
         /********************
          * AGREEMENT THREAD *
