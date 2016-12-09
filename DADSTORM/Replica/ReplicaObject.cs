@@ -111,6 +111,7 @@ namespace Replica {
                 object o = new object();
                 foreach (string otherReplica in otherReplicasURL) {
                     Thread t = new Thread(() => broadcastTuple(tuple, otherReplica, ref counter, ref o));
+                    t.Start();
                 }
 
                 int x = ((otherReplicasURL.Count + 1) / 2) + 1;
@@ -236,6 +237,7 @@ namespace Replica {
                         object o = new object();
                         foreach (string otherReplica in otherReplicasURL) {
                             Thread t = new Thread(() => broadcastResult(tuple, replicaAddress, convertedResult, ref n, ref o));
+                            t.Start();
                         }
 
                         int x = ((otherReplicasURL.Count + 1) / 2) + 1;
@@ -261,6 +263,7 @@ namespace Replica {
                         object o = new object();
                         foreach (string otherReplica in otherReplicasURL) {
                             Thread t = new Thread(() => broadcastFinished(tuple, replicaAddress, ref n, ref o));
+                            t.Start();
                         }
 
                         int x = ((otherReplicasURL.Count + 1) / 2) + 1;
@@ -377,11 +380,16 @@ namespace Replica {
                 if (!processingOnOther.ContainsKey(replica))
                     processingOnOther.Add(replica, new Dictionary<string, OtherReplicaTuple>());
                 processingOnOther[replica].Add(t.ID, new OtherReplicaTuple(t));
-                Monitor.Pulse(tupleQueue.SyncRoot);
-                Monitor.Exit(tupleQueue.SyncRoot);
+                Monitor.Pulse(processingOnOther);
+                Monitor.Exit(processingOnOther);
             }
+
+Console.WriteLine("\t\t\t\tCONFIRMED ELECTION!!!");
+Console.WriteLine("\t\t\t\tTUPLE CONTENT: <" + string.Join(" - ", t.Tuple) + ">");
+Console.WriteLine("\t\t\t\tTUPLE ID: " + t.ID);
         }
 
+        // TODO: Add the necessary mutual exclusion stuff
         public void finishedProcessing(string tupleID, List<TupleWrapper> result, string url) {
             Dictionary<string, OtherReplicaTuple> t = processingOnOther[url];
             t[tupleID].finishedProcessing(result);
@@ -421,7 +429,6 @@ namespace Replica {
                 // TODO: Confirm if this will be a problem!!!
                 if ((r = getReplica(replica)) == null)
                     continue;
-
                 r.confirmElection(t);
             }
         }

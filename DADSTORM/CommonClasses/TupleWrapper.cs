@@ -24,8 +24,7 @@ namespace CommonClasses {
             int MUL_FACTOR = 41;
 
             int hash = INIT_FACTOR;
-            hash = hash * MUL_FACTOR + id.GetHashCode();
-            return hash * MUL_FACTOR + tuple.GetHashCode();
+            return hash * MUL_FACTOR + id.GetHashCode();
         }
 
         public string ID {
