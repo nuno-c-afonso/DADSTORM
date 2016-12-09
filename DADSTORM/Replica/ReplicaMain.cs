@@ -33,7 +33,6 @@ namespace Replica {
             List<string> replicasUrl = new List<string>();// To store the URLs for all replicas
             List<string> outputs = new List<string>();    // To store the replica's outputsB
             List<string> inputs = new List<string>();       // To store the replica's inputs
-            List<Thread> fileReaders = new List<Thread>();
             int port;                                     // To store the port in which the service will be available
 
             int i;
@@ -128,11 +127,12 @@ namespace Replica {
             foreach (string input in inputs)
                 if (input.EndsWith(".dat") || input.EndsWith(".data")){
                     if (replicaIndex == 0) {
-                        TupleFileReader fr = new TupleFileReader(consumingOperator, input, incomingRouting, semantics, replicasUrl);
-                        ThreadStart tstart = new ThreadStart(fr.feedBuffer);
-                        Thread th = new Thread(tstart);
-                        th.Start();
-                        fileReaders.Add(th);
+                        Process process = new Process();
+                        process.StartInfo.FileName = "..\\..\\..\\ReadTuplesFromFile\\bin\\Debug\\ReadTuplesFromFile.exe";
+                        process.StartInfo.Arguments = input + " " + routing + " " + semantics;
+                        foreach (string s in replicasUrl)
+                            process.StartInfo.Arguments += " " + s;
+                        process.Start();
                     }
                 }
 

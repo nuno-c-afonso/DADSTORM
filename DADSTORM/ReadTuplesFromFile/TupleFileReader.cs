@@ -1,21 +1,25 @@
-﻿using CommonClasses;
+﻿using Replica;
+using CommonClasses;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
-namespace Replica {
+namespace ReadTuplesFromFile {
     public class TupleFileReader {
-        private ReplicaObject buffer;
-        private string[] lines;
-        private Router router;
 
-        public TupleFileReader(ReplicaObject buffer, string filepath, string routing, string semantics, List<string> replicas) {
-            this.buffer = buffer;
+        public static void Main(string[] args) {
+            string filepath = args[0];
+            string routingLower = args[1].ToLower();
+            string semantics = args[2];
+            List<string> replicas = new List<string>();
 
-            string routingLower = routing.ToLower();
+            for (int i = 3; i < args.Length; i++)
+                replicas.Add(args[i]);
+
+            string[] lines;
+            Router router;
             char[] delimiters = { '(', ')' };
             string[] splitted = routingLower.Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
             if (splitted[0].Equals("primary"))
@@ -28,30 +32,19 @@ namespace Replica {
 
             lines = System.IO.File.ReadAllLines(filepath);
             lines = lines.Where(line => (line.Length > 0 && line[0] != '%')).ToArray();
-        } 
-
-        public void feedBuffer() {
-            string[] tuple;
-            while (!buffer.Started)
-                Thread.Sleep(100);
-
+            
             int counter = 0;
-            foreach(string line in lines){
-                tuple = getTupleFromLine(line);
+            foreach (string line in lines) {
+                string[] tuple = getTupleFromLine(line);
                 TupleWrapper t = new TupleWrapper("", "" + counter++, tuple);
                 router.sendToNext(t);
-                //buffer.addTuple(tuple);
             }
-
         }
 
-        public string[] getTupleFromLine(string line){
+        public static string[] getTupleFromLine(string line) {
             string[] delimiters = { ", ", " " };
             string[] tuple = line.Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
             return tuple;
         }
-
-
-
     }
 }
