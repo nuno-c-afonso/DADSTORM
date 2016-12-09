@@ -30,7 +30,6 @@ namespace Replica {
         private List<string> allReplicasURL;
         private Dictionary<string, int> failedPings;
 
-
         private bool start = false;
         private int waitingTime = 0;
         private bool frozen = false;
@@ -54,7 +53,6 @@ namespace Replica {
             string logLevel, Operation operation, List<string> output, string replicaAddress, string operationName,
             List<string> allAdresses) {
             tupleQueue = new Queue();
-
             this.PuppetMasterUrl = PuppetMasterUrl;
             this.logLevel = logLevel.Equals("full");
             this.operation = operation;
@@ -118,12 +116,25 @@ namespace Replica {
 
             Console.WriteLine("addTuple({0})", tuple.Tuple);
 
-            // TODO: Check with other replicas
-            // TODO: Check on the other structures
-            // TODO: Must start as the same stuff as when it's new
-            // TODO: Return a string, saying if it was decided or if it is final
-            // TODO: See the behavior when it was decided, but the replica crashed
             if (once) {
+                int majority = (int)((allReplicasURL.Count) / 2) + 1;
+
+                if (isOnDeciding(tuple))
+                    return;
+
+                if (isOnProcessingOnMe(tuple))
+                    return;
+
+                if (isOnProcessingOnMe(tuple))
+                    return;
+
+                if (isOnProcessingOnOther(tuple))
+                    return;
+
+                if (isOnSeenTuples(tuple))
+                    return;
+
+                // ALL TUPLES
                 Monitor.Enter(allTuples);
                 if (!allTuples.ContainsKey(tuple))
                     allTuples.Add(tuple, new DateTime());
@@ -141,10 +152,9 @@ namespace Replica {
                     }
                 }
 
-                int x = ((allReplicasURL.Count) / 2) + 1;
                 while (true) {
                     lock(o) {
-                        if (counter == x)
+                        if (counter >= majority)
                             break;
                     }
                     Thread.Sleep(1);
@@ -250,8 +260,10 @@ namespace Replica {
                 failureDetectorThread.Start();//TODO check if this is used just in exacly once
             
             while (true) {
+                int majority = (int)((allReplicasURL.Count) / 2) + 1;
+
                 //see if it is feezed
-                while(frozen == true)
+                while (frozen == true)
                     Thread.Sleep(100);
 
                 //wait the defined time between processing
@@ -278,10 +290,9 @@ namespace Replica {
                             }
                         }
 
-                        int x = ((allReplicasURL.Count) / 2) + 1;
                         while (true) {
                             lock (o) {
-                                if (n == x)
+                                if (n >= majority)
                                     break;
                             }
                             Thread.Sleep(1);
@@ -316,10 +327,9 @@ namespace Replica {
                             }
                         }
 
-                        int x = ((allReplicasURL.Count) / 2) + 1;
                         while (true) {
                             lock (o) {
-                                if (n == x)
+                                if (n >= majority)
                                     break;
                             }
                             Thread.Sleep(1);
@@ -389,7 +399,7 @@ namespace Replica {
             Monitor.Exit(allTuples);
         }
 
-        public bool tryElectionOfProcessingReplica(TupleWrapper t, string url) {
+        public void tryElectionOfProcessingReplica(TupleWrapper t, string url) {
             while (frozen)
                 Thread.Sleep(1);
 
@@ -397,23 +407,22 @@ namespace Replica {
             if (deciding.ContainsKey(t)) {
                 Monitor.Pulse(deciding);
                 Monitor.Exit(deciding);
-                return false;
+                throw new AlreadyVotedException();
             }
 
             deciding.Add(t, new DecisionStructure(url));
             Monitor.Pulse(deciding);
             Monitor.Exit(deciding);
-            return true;
         }
 
-        public void confirmElection(TupleWrapper t) {
+        public void confirmElection(TupleWrapper t, string url) {
             while (frozen)
                 Thread.Sleep(1);
 
             // Remove from deciding pile
             Monitor.Enter(deciding);
-            string replica = deciding[t].URL;
-            deciding.Remove(t);
+            if(deciding.ContainsKey(t))
+                deciding.Remove(t);
             Monitor.Pulse(deciding);
             Monitor.Exit(deciding);
 
@@ -424,7 +433,7 @@ namespace Replica {
             Monitor.Exit(allTuples);
 
             // Add to the respective processing pile
-            if (replica.Equals(replicaAddress)) {
+            if (url.Equals(replicaAddress)) {
                 addToQueue(t, tupleQueue);
                 Monitor.Enter(processingOnMe);
                 processingOnMe.Add(t);
@@ -433,23 +442,13 @@ namespace Replica {
             }
 
             else {
-/* TODO: Remove
-Console.WriteLine("\t\t\t\tOTHER REPLICA URL: " + replica);
-Console.WriteLine("\t\t\t\tTUPLE CONTENT: <" + string.Join(" - ", t.Tuple) + ">");
-Console.WriteLine("\t\t\t\tTUPLE ID: " + t.ID);
-*/
                 Monitor.Enter(processingOnOther);
-                if (!processingOnOther.ContainsKey(replica))
-                    processingOnOther.Add(replica, new Dictionary<string, OtherReplicaTuple>());
-                processingOnOther[replica].Add(t.ID, new OtherReplicaTuple(t));
+                if (!processingOnOther.ContainsKey(url))
+                    processingOnOther.Add(url, new Dictionary<string, OtherReplicaTuple>());
+                processingOnOther[url].Add(t.ID, new OtherReplicaTuple(t));
                 Monitor.Pulse(processingOnOther);
                 Monitor.Exit(processingOnOther);
             }
-/* TODO: Remove
-Console.WriteLine("\t\t\t\tCONFIRMED ELECTION!!!");
-Console.WriteLine("\t\t\t\tTUPLE CONTENT: <" + string.Join(" - ", t.Tuple) + ">");
-Console.WriteLine("\t\t\t\tTUPLE ID: " + t.ID);
-*/
         }
 
         public void finishedProcessing(string tupleID, List<TupleWrapper> result, string url) {
@@ -457,11 +456,6 @@ Console.WriteLine("\t\t\t\tTUPLE ID: " + t.ID);
                 Thread.Sleep(1);
 
             Monitor.Enter(processingOnOther);
-/* TODO: Remove
-foreach (KeyValuePair<string, Dictionary<string, OtherReplicaTuple>> entry in processingOnOther)
-Console.WriteLine("\t\tKEY OF OTHER REPLICA TUPLES: " + entry.Key);
-Console.WriteLine("\t\tKEY RECEIVED: " + url);
-*/
             Dictionary<string, OtherReplicaTuple> t = processingOnOther[url];
             Monitor.Pulse(processingOnOther);
             Monitor.Exit(processingOnOther);
@@ -661,31 +655,73 @@ Console.WriteLine("\t\tKEY RECEIVED: " + url);
          * AGREEMENT THREAD *
          *******************/
         private void chooseProcessingReplica(TupleWrapper t) {
-            List<string> toConfirm = new List<string>();
+            int majority = (int)((allReplicasURL.Count) / 2) + 1;
 
-            // TODO: Include the current replica's URL in the list 
-            // TODO: Use the majority of the replicas
-            // TODO: Include the address of the current replica in the same list, all lists of replicas should be in the same order
+            int counter = 0;
             foreach (string url in allReplicasURL) {
                 ReplicaInterface r;
 
-                // TODO: Confirm if this will be a problem!!!
                 if ((r = getReplica(url)) == null)
                     continue;
 
-                if (!r.tryElectionOfProcessingReplica(t, replicaAddress))
-                    return;
+                int exception = -1;
+                Thread thread = new Thread(() =>
+                {
+                    try {
+                        tryElectionOfProcessingReplicaRelay(t, r, replicaAddress);
+                    }
+                    catch (AlreadyVotedException) {
+                        exception = 0;
+                    }
+                    catch(Exception) { }
+                });
 
-                toConfirm.Add(url);
+                thread.Start();
+                if (!thread.Join(3000)) {
+                    thread.Abort();
+                    if (exception == 0)
+                        return;
+                }
+
+                else
+                    counter++;
+
+                if (counter == majority)
+                    break;
             }
 
-            foreach(string replica in toConfirm) {
+            counter = 0;
+            object o = new object();
+            foreach(string replica in allReplicasURL) {
                 ReplicaInterface r;
 
-                // TODO: Confirm if this will be a problem!!!
                 if ((r = getReplica(replica)) == null)
                     continue;
-                r.confirmElection(t);
+
+                Thread thread = new Thread(() => {
+                    confirmElectionRelay(t, r, replicaAddress, ref counter, ref o);
+                });
+                thread.Start();
+            }
+
+            while (true) {
+                lock (o) {
+                    if (counter >= majority)
+                        break;
+                }
+                Thread.Sleep(1);
+            }
+        }
+
+        private void tryElectionOfProcessingReplicaRelay(TupleWrapper t, ReplicaInterface r, string replicaAddress) {
+            r.tryElectionOfProcessingReplica(t, replicaAddress);
+        }
+
+        private void confirmElectionRelay(TupleWrapper t, ReplicaInterface r, string replicaAddr, ref int counter, ref object o) {
+            r.confirmElection(t, replicaAddress);
+
+            lock(o) {
+                counter++;
             }
         }
 
@@ -721,5 +757,71 @@ Console.WriteLine("\t\tKEY RECEIVED: " + url);
 
             return null;
         }
+
+        public bool isOnDeciding(TupleWrapper t) {
+            Monitor.Enter(deciding);
+            if (deciding.ContainsKey(t)) {
+                Monitor.Pulse(deciding);
+                Monitor.Exit(deciding);
+                return true;
+            }
+            Monitor.Pulse(deciding);
+            Monitor.Exit(deciding);
+            return false;
+        }
+
+        public bool isOnProcessingOnMe(TupleWrapper t) {
+            Monitor.Enter(processingOnMe);
+            if (processingOnMe.Contains(t)) {
+                Monitor.Pulse(processingOnMe);
+                Monitor.Exit(processingOnMe);
+                return true;
+            }
+            Monitor.Pulse(processingOnMe);
+            Monitor.Exit(processingOnMe);
+            return false;
+        }
+
+        public bool isOnProcessingOnOther(TupleWrapper t) {
+            Monitor.Enter(processingOnOther);
+            foreach (KeyValuePair<string, Dictionary<string, OtherReplicaTuple>> entry in processingOnOther) {
+                foreach (Dictionary<string, OtherReplicaTuple> entry2 in processingOnOther.Values) {
+                    foreach (KeyValuePair<string, OtherReplicaTuple> entry3 in entry2) {
+                        if (t.Equals(entry3.Value.getTuple())) {
+                            Monitor.Pulse(processingOnOther);
+                            Monitor.Exit(processingOnOther);
+                            return true;
+                        }
+                    }
+                }
+            }
+            Monitor.Pulse(processingOnOther);
+            Monitor.Exit(processingOnOther);
+            return false;
+        }
+
+        public bool isOnSeenTuples(TupleWrapper t) {
+            Monitor.Enter(seenTuples);
+            if (seenTuples.Contains(t.ID)) {
+                Monitor.Pulse(seenTuples);
+                Monitor.Exit(seenTuples);
+                return true;
+            }
+            Monitor.Pulse(seenTuples);
+            Monitor.Exit(seenTuples);
+            return false;
+        }
+
+        public bool isOnAllTuples(TupleWrapper t) {
+            Monitor.Enter(allTuples);
+            if (allTuples.ContainsKey(t)) {
+                Monitor.Pulse(allTuples);
+                Monitor.Exit(allTuples);
+                return true;
+            }
+            Monitor.Pulse(allTuples);
+            Monitor.Exit(allTuples);
+            return false;
+        }        
     }
 }
