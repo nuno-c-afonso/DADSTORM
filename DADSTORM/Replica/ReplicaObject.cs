@@ -219,9 +219,10 @@ namespace Replica {
 
             while (!start)
                 Thread.Sleep(100);
-            if(failureDetectorThread != null) {
+
+            if(failureDetectorThread != null) 
                 failureDetectorThread.Start();//TODO check if this is used just in exacly once
-            }
+            
             while (true) {
                 //see if it is feezed
                 while(frozen == true)
@@ -405,11 +406,16 @@ namespace Replica {
         }
 
         public bool ping(string originUrl,bool sameLayer) {
+
+            while (frozen) {
+                Thread.Sleep(100);
+
+            }
             /* if (sameLayer) {
                  if (!otherReplicasURL.Contains(originUrl)) 
                      otherReplicasURL.Add(originUrl);
              }*/
-            Console.WriteLine("Ping requested by{0}", originUrl);
+            //Console.WriteLine("Ping requested by{0} in {1}", originUrl, replicaAddress);
             return true;
         }
 
@@ -430,32 +436,35 @@ namespace Replica {
                         thread.Start();
                         var completed = thread.Join(5000);
                         if (!completed) {
-                            Console.WriteLine("ping to {0} failed", url);
+                            Console.WriteLine("!!!ping to {0} failed", url);
                             failedPings[url] = failedPings[url] + 1;
                             thread.Abort();
-                            if (failedPings[url] == 6) {
+                            if (failedPings[url] == 6) {//TODO reduce the time needed to fail, or not
                                 failedPings[url] = 0;
                                 handleSlowReplica(url);
                             }
                         }
 
                         if (exception != null) {
-                            Console.WriteLine("!! {0} is crashed", url);
+                            Console.WriteLine("!!! {0} is crashed", url);
                             handleCrashedReplica(url);
                         }
-                    } catch { Console.WriteLine("exception on failure detection"); }
+                    } catch { Console.WriteLine("!!!exception on failure detection"); }
                 }
             }
         }
 
         private void handleCrashedReplica(string url) {
+            Console.WriteLine("!!!handleCrashedReplica({0})", url);
             lock (otherReplicasURL) {
                 otherReplicasURL.Remove(url);//TODO CHECK if we can do this !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             }
 
 
         }//TODO
-        private void handleSlowReplica(string url) { }//TODO
+        private void handleSlowReplica(string url) {
+            Console.WriteLine("!!!handleSlowReplica({0})", url);
+                }//TODO
 
 
         /********************
