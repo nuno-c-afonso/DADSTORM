@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using CommonClasses;
 
-namespace Replica {
+namespace CommonClasses {
     public class OtherReplicaTuple {
         private static int RECEIVED = 0;
         private static int PROCESSED = 1;

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+
 namespace CommonClasses {
     public interface ReplicaInterface {
         void addTuple(TupleWrapper tuple);
@@ -24,6 +25,7 @@ namespace CommonClasses {
         void finishedProcessing(string tupleID, List<TupleWrapper> result, string url);
         void finishedSending(string tupleID, string url);
         bool ping(string originUrl, bool sameLayer);
+        DTOtupleState getTupleState(TupleWrapper tuple);
 
 
     }

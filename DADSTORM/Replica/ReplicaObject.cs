@@ -122,13 +122,10 @@ namespace Replica {
                 if (isOnDeciding(tuple))
                     return;
 
-                if (isOnProcessingOnMe(tuple))
+                if (getOnProcessingOnMe(tuple)!=null)
                     return;
 
-                if (isOnProcessingOnMe(tuple))
-                    return;
-
-                if (isOnProcessingOnOther(tuple))
+                if (getOnProcessingOnOther(tuple)!=null)
                     return;
 
                 if (isOnSeenTuples(tuple))
@@ -725,6 +722,26 @@ namespace Replica {
             }
         }
 
+        public DTOtupleState getTupleState(TupleWrapper tuple) {
+            if (isOnSeenTuples(tuple)) {
+                return new DTOtupleState(tuple.ID);
+            }
+
+            if (getOnProcessingOnMe(tuple) != null) {
+                return new DTOtupleState(tuple, replicaAddress);
+            }
+
+            DTOtupleState result =  getOnProcessingOnOther(tuple);
+            if  (result != null)
+                return result;
+
+            if (isOnDeciding(tuple) || isOnAllTuples(tuple))
+                return new DTOtupleState(tuple);
+
+            else
+                return new DTOtupleState();
+        }
+
         /*****************
          * AUX FUNCTIONS *
          ****************/
@@ -770,34 +787,36 @@ namespace Replica {
             return false;
         }
 
-        public bool isOnProcessingOnMe(TupleWrapper t) {
+        public TupleWrapper getOnProcessingOnMe(TupleWrapper t) {
             Monitor.Enter(processingOnMe);
             if (processingOnMe.Contains(t)) {
                 Monitor.Pulse(processingOnMe);
                 Monitor.Exit(processingOnMe);
-                return true;
+                return t;
             }
             Monitor.Pulse(processingOnMe);
             Monitor.Exit(processingOnMe);
-            return false;
+            return null;
         }
 
-        public bool isOnProcessingOnOther(TupleWrapper t) {
+        public DTOtupleState getOnProcessingOnOther(TupleWrapper t) {
+            DTOtupleState output;
             Monitor.Enter(processingOnOther);
             foreach (KeyValuePair<string, Dictionary<string, OtherReplicaTuple>> entry in processingOnOther) {
                 foreach (Dictionary<string, OtherReplicaTuple> entry2 in processingOnOther.Values) {
                     foreach (KeyValuePair<string, OtherReplicaTuple> entry3 in entry2) {
-                        if (t.Equals(entry3.Value.getTuple())) {
+                        if (t.Equals(entry3.Value.getTuple())) {                         
+                            output = new DTOtupleState(entry3.Value, entry.Key);
                             Monitor.Pulse(processingOnOther);
                             Monitor.Exit(processingOnOther);
-                            return true;
+                            return output;
                         }
                     }
                 }
             }
             Monitor.Pulse(processingOnOther);
             Monitor.Exit(processingOnOther);
-            return false;
+            return null;
         }
 
         public bool isOnSeenTuples(TupleWrapper t) {

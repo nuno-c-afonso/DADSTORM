@@ -46,7 +46,6 @@
   <ItemGroup>
     <Compile Include="Operations\CouldNotInvokeMethodException.cs" />
     <Compile Include="Operations\OutputOperation.cs" />
-    <Compile Include="OtherReplicaTuple.cs" />
     <Compile Include="Semantics\AtLeastOnceSemantics.cs" />
     <Compile Include="Semantics\AtMostOnceSemantics.cs" />
     <Compile Include="Operations\CountOperation.cs" />
