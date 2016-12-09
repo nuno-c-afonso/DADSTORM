@@ -293,6 +293,16 @@ namespace Replica {
                     }
 
                     if (once) {
+                        Monitor.Enter(seenTuples);
+                        seenTuples.Add(tuple.ID);
+                        Monitor.Pulse(seenTuples);
+                        Monitor.Exit(seenTuples);
+
+                        Monitor.Enter(processingOnMe);
+                        processingOnMe.Remove(tuple);
+                        Monitor.Pulse(processingOnMe);
+                        Monitor.Exit(processingOnMe);
+
                         int n = 1; // To be used for calculating the minimum required number of working replicas
                         object o = new object();
                         foreach (string otherReplica in allReplicasURL) {
