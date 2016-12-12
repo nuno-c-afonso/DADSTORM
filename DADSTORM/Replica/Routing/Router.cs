@@ -43,8 +43,10 @@ namespace Replica {
                 }
 
                 try {
+                    // TODO FIXME something not right with tuple on mylib.dll version of professors
                     semantics.sendTuple(replica, tuple);
-                } catch(System.Net.Sockets.SocketException) { // The replica is dead
+                }
+                catch (System.Net.Sockets.SocketException) { // The replica is dead
                     Console.WriteLine("  ##!! "+ outputReplica + " was down, removed from nextOperator list. Resending !!##\n");
 
                     nextOperator.Remove(outputReplica);

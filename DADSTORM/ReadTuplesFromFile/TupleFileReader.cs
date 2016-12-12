@@ -30,15 +30,33 @@ namespace ReadTuplesFromFile {
                 router = new HashRouter(replicas, semantics, int.Parse(splitted[1]));
 
 
-            lines = System.IO.File.ReadAllLines(filepath);
-            lines = lines.Where(line => (line.Length > 0 && line[0] != '%')).ToArray();
-            
-            int counter = 0;
-            foreach (string line in lines) {
-                string[] tuple = getTupleFromLine(line);
-                TupleWrapper t = new TupleWrapper("", filepath + ":" + string.Join(" - ", replicas) + ":" + counter++, tuple);
-                router.sendToNext(t);
+            try
+            {
+                lines = System.IO.File.ReadAllLines(filepath);
+                lines = lines.Where(line => (line.Length > 0 && line[0] != '%')).ToArray();
+                int counter = 0;
+                foreach (string line in lines)
+                {
+                    string[] tuple = getTupleFromLine(line);
+                    TupleWrapper t = new TupleWrapper("", filepath + ":" + string.Join(" - ", replicas) + ":" + counter++, tuple);
+                    router.sendToNext(t);
+                }
+
             }
+            catch (System.IO.FileNotFoundException ex)
+            {
+                Console.WriteLine(ex);       
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }finally
+            {
+                Console.WriteLine("That's it Folks! Shutting down..");
+
+                Console.ReadLine();
+            }
+
         }
 
         public static string[] getTupleFromLine(string line) {
