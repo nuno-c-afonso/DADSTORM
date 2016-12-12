@@ -29,6 +29,7 @@ namespace Replica {
         private string operationName;
         private List<string> allReplicasURL;
         private Dictionary<string, int> failedPings;
+        private List<string> inputs = new List<string>();
 
         private bool start = false;
         private int waitingTime = 0;
@@ -45,6 +46,9 @@ namespace Replica {
         Thread failureDetectorThread = null;
         Thread notAssignedTuplesThread = null;
 
+        private string _routing;
+        private string _semantics;
+
 
         public bool Started {
             get { return start; }
@@ -52,7 +56,7 @@ namespace Replica {
 
         public ReplicaObject(string PuppetMasterUrl, string routing, string semantics,
             string logLevel, Operation operation, List<string> output, string replicaAddress, string operationName,
-            List<string> allAdresses) {
+            List<string> allAdresses, List<string> inputs) {
             tupleQueue = new Queue();
             this.PuppetMasterUrl = PuppetMasterUrl;
             this.logLevel = logLevel.Equals("full");
@@ -62,6 +66,10 @@ namespace Replica {
             allReplicasURL = allAdresses;
             failedPings = new Dictionary<string, int>();
             replicasState = new Dictionary<string, int>();
+
+            this.inputs = inputs;
+            this._routing = routing;
+            this._semantics = semantics;
 
             foreach (string s in allReplicasURL) {
                 if (!s.Equals(replicaAddress)) {
@@ -257,10 +265,36 @@ namespace Replica {
             Console.WriteLine("6-Waiting for START command");
             int counter = 0;
 
+           
+
             while (!start)
                 Thread.Sleep(100);
 
-            if(failureDetectorThread != null) 
+            Console.WriteLine("4-If needed creating File reader");
+
+            foreach (string input in inputs)
+                if (input.EndsWith(".dat") || input.EndsWith(".data"))
+                {
+
+                    Process process = new Process();
+                    process.StartInfo.FileName = "..\\..\\..\\ReadTuplesFromFile\\bin\\Debug\\ReadTuplesFromFile.exe";
+                    process.StartInfo.Arguments = input + " " + _routing + " " + _semantics;
+                    foreach (string s in allReplicasURL)
+                        process.StartInfo.Arguments += " " + s;
+
+                    //var thread_process = new Thread(() =>
+                    //{
+                    //    process.Start();
+                    //});
+
+                    //thread_process.Start();
+                    //thread_process.Join();
+                    process.Start();
+                }
+
+
+
+            if (failureDetectorThread != null) 
                 failureDetectorThread.Start();//TODO check if this is used just in exacly once
             
             while (true) {
@@ -278,7 +312,12 @@ namespace Replica {
 
                 List<string[]> result = operation.Operate(tuple.Tuple);
 
+                Console.WriteLine("after operation.Operate result params:");
+
                 if (result != null) {
+                    foreach (var a in result)
+                        Console.WriteLine("  " + a);
+
                     List<TupleWrapper> convertedResult = new List<TupleWrapper>();
 
                     foreach (string[] el in result)
@@ -365,6 +404,8 @@ namespace Replica {
                         }
                     }
                 }
+                else
+                    Console.WriteLine(" result of operation.Operate was null ???? ");
             }
         }
 

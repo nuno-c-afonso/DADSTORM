@@ -62,7 +62,17 @@ namespace Replica {
             }
         }
         public override List<string[]> Operate(string[] tuple){
+
+            Console.WriteLine("ON FILTER OPERATION:");
+            if (tuple != null)
+                foreach (var a in tuple)
+                    Console.WriteLine("   " + a);
+
+            Console.WriteLine("field number -1 = "+(fieldNumber - 1));
+
             if (conditionCheck(tuple[fieldNumber - 1], value)) {
+                Console.WriteLine("condition was checked" + value);
+
                 List<string[]> l = new List<string[]>();
                 l.Add(tuple);
                 return l;

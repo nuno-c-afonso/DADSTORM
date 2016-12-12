@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace ReadTuplesFromFile {
     public class TupleFileReader {
@@ -39,23 +40,35 @@ namespace ReadTuplesFromFile {
                 {
                     string[] tuple = getTupleFromLine(line);
                     TupleWrapper t = new TupleWrapper("", filepath + ":" + string.Join(" - ", replicas) + ":" + counter++, tuple);
-                    router.sendToNext(t);
+                    
+                    try
+                    {
+                        router.sendToNext(t);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                        //Console.ReadLine();
+                    }
                 }
 
             }
             catch (System.IO.FileNotFoundException ex)
             {
-                Console.WriteLine(ex);       
+                Console.WriteLine(ex);
+                //Console.ReadLine();
             }
             catch (Exception e)
             {
                 Console.WriteLine(e);
-            }finally
+                //Console.ReadLine();
+            }
+            finally
             {
                 Console.WriteLine("That's it Folks! Shutting down..");
-
-                Console.ReadLine();
+                //Console.ReadLine();
             }
+            Thread.Sleep(2000);
 
         }
 

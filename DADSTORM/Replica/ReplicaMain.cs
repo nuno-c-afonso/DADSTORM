@@ -113,25 +113,12 @@ namespace Replica {
             Console.WriteLine("2-Creating Buffer");
 
             //############ Create a  buffer ###################
+            if(replicaIndex != 0) inputs.Clear();
 
             consumingOperator = new ReplicaObject(PuppetMasterUrl, routing, semantics, logLevel, oper, outputs,
-                                                    replicasUrl[replicaIndex], operation[0], replicasUrl);
+                                                    replicasUrl[replicaIndex], operation[0], replicasUrl, inputs);
 
             RemotingServices.Marshal(consumingOperator, "op", typeof(ReplicaInterface));
-
-            Console.WriteLine("4-If needed creating File reader");
-
-            foreach (string input in inputs)
-                if (input.EndsWith(".dat") || input.EndsWith(".data")){
-                    if (replicaIndex == 0) {
-                        Process process = new Process();
-                        process.StartInfo.FileName = "..\\..\\..\\ReadTuplesFromFile\\bin\\Debug\\ReadTuplesFromFile.exe";
-                        process.StartInfo.Arguments = input + " " + routing + " " + semantics;
-                        foreach (string s in replicasUrl)
-                            process.StartInfo.Arguments += " " + s;
-                        process.Start();
-                    }
-                }
 
             Console.WriteLine("5-Start processing tuples");
 
@@ -140,6 +127,7 @@ namespace Replica {
             Thread t = new Thread(ts);
             t.Start();
             t.Join();
+                       
         }
     }
 }
